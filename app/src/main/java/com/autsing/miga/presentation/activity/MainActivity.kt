@@ -9,6 +9,7 @@ import com.autsing.miga.presentation.screen.MainScreen
 import com.autsing.miga.presentation.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
+
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
