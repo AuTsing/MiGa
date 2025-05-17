@@ -2,6 +2,7 @@ package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -162,6 +163,22 @@ class MainViewModel : ViewModel() {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = false)
             }
+        }
+    }
+
+    fun handleRunScene(
+        context: Context,
+        auth: Auth,
+        scene: Scene,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val message = ApiUtil.instance.runScene(auth, scene).getOrThrow()
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        }.onFailure {
+            Log.e(TAG, "handleRunScene: ${it.stackTraceToString()}")
         }
     }
 }

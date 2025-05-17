@@ -72,6 +72,7 @@ fun MainScreen(
                 MainContent(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
+                    onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }
@@ -155,9 +156,12 @@ private fun ChipText(label: String) {
 }
 
 @Composable
-private fun SceneChip(scene: Scene) {
+private fun SceneChip(
+    scene: Scene,
+    onClick: () -> Unit = {},
+) {
     Chip(
-        onClick = {},
+        onClick = onClick,
         icon = { ChipIcon(R.drawable.ic_fluent_layer_regular_icon) },
         label = { ChipText(scene.name) },
         colors = ChipDefaults.secondaryChipColors(),
@@ -202,6 +206,7 @@ private fun ReloadButton(
 private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
+    onClickScene: (Scene) -> Unit = {},
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
@@ -209,7 +214,12 @@ private fun MainContent(
         if (scenes.isEmpty()) {
             item { EmptyChip("无智能") }
         }
-        items(scenes) { SceneChip(it) }
+        items(scenes) {
+            SceneChip(
+                scene = it,
+                onClick = { onClickScene(it) },
+            )
+        }
         item { ListTitle("设备") }
         if (devices.isEmpty()) {
             item { EmptyChip("无设备") }

@@ -10,6 +10,8 @@ import com.autsing.miga.presentation.model.GetHomesResponse
 import com.autsing.miga.presentation.model.GetScenesData
 import com.autsing.miga.presentation.model.GetScenesResponse
 import com.autsing.miga.presentation.model.Home
+import com.autsing.miga.presentation.model.RunSceneData
+import com.autsing.miga.presentation.model.RunSceneResponse
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.util.Constants.TAG
 import kotlinx.coroutines.Dispatchers
@@ -154,6 +156,27 @@ class ApiUtil {
             val getDevicesResponse = Json.decodeFromString<GetDevicesResponse>(getDevicesJson)
 
             return@runCatching getDevicesResponse.result.list
+        }.onFailure {
+            Log.e(TAG, "getDevices: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun runScene(
+        auth: Auth,
+        scene: Scene,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
+            val data = RunSceneData(
+                scene_id = scene.scene_id,
+                trigger_key = "user.click",
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val runSceneJson = post(auth, uri, dataJson).getOrThrow()
+            val runSceneResponse = Json.decodeFromString<RunSceneResponse>(runSceneJson)
+
+            return@runCatching runSceneResponse.message
         }.onFailure {
             Log.e(TAG, "getDevices: ${it.stackTraceToString()}")
         }
