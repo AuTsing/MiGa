@@ -126,7 +126,38 @@ class MainViewModel : ViewModel() {
                 )
             }
         }.onFailure {
-            Log.e(TAG, "handleLoadDevices: ${it.stackTraceToString()}")
+            Log.e(TAG, "handleLoadScenesAndDevices: ${it.stackTraceToString()}")
+        }.also {
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(loading = false)
+            }
+        }
+    }
+
+    fun handleReload(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(loading = true)
+            }
+
+            val scenesJob = async(Dispatchers.IO) {
+                loadScenesRemote(auth).getOrDefault(emptyList())
+            }
+            val devicesJob = async(Dispatchers.IO) {
+                loadDevicesRemote(auth).getOrDefault(emptyList())
+            }
+
+            val scenes = scenesJob.await()
+            val devices = devicesJob.await()
+
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(
+                    scenes = scenes,
+                    devices = devices,
+                )
+            }
+        }.onFailure {
+            Log.e(TAG, "handleReload: ${it.stackTraceToString()}")
         }.also {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = false)

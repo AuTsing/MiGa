@@ -72,6 +72,7 @@ fun MainScreen(
                 MainContent(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
+                    onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }
         }
@@ -183,7 +184,26 @@ private fun DeviceChip(device: Device) {
 }
 
 @Composable
-private fun MainContent(scenes: List<Scene>, devices: List<Device>) {
+private fun ReloadButton(
+    onClick: () -> Unit = {},
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.padding(16.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_fluent_arrow_sync_regular_icon),
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun MainContent(
+    scenes: List<Scene>,
+    devices: List<Device>,
+    onClickReload: () -> Unit = {},
+) {
     ScalingLazyColumn {
         item { ListTitle("智能") }
         if (scenes.isEmpty()) {
@@ -195,12 +215,8 @@ private fun MainContent(scenes: List<Scene>, devices: List<Device>) {
             item { EmptyChip("无设备") }
         }
         items(devices) { DeviceChip(it) }
+        item { ReloadButton(onClickReload) }
     }
-}
-
-@Composable
-private fun EmptyContent() {
-    Text("无设备")
 }
 
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
@@ -213,7 +229,7 @@ private fun MainContentPreview() {
                 .background(MaterialTheme.colors.background),
             contentAlignment = Alignment.Center
         ) {
-            EmptyContent()
+
         }
     }
 }
