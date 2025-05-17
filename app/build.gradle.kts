@@ -1,3 +1,6 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,6 +21,23 @@ android {
 
     }
 
+    signingConfigs {
+        getByName("debug") {
+            val properties = gradleLocalProperties(rootDir, providers)
+            storeFile = file(properties.getProperty("STORE_FILE"))
+            storePassword = properties.getProperty("STORE_PASSWORD")
+            keyAlias = properties.getProperty("KEY_ALIAS")
+            keyPassword = properties.getProperty("KEY_PASSWORD")
+        }
+        create("release") {
+            val properties = gradleLocalProperties(rootDir, providers)
+            storeFile = file(properties.getProperty("STORE_FILE"))
+            storePassword = properties.getProperty("STORE_PASSWORD")
+            keyAlias = properties.getProperty("KEY_ALIAS")
+            keyPassword = properties.getProperty("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -27,15 +47,25 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
+    }
+
+    applicationVariants.all {
+        outputs.map { it as BaseVariantOutputImpl }
+            .forEach {
+                it.outputFileName = "${rootProject.name}_v${versionName}_${buildType.name}.apk"
+            }
     }
 }
 
