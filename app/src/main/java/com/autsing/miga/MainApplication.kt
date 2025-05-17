@@ -1,6 +1,7 @@
 package com.autsing.miga
 
 import android.app.Application
+import com.autsing.miga.presentation.util.ApiUtil
 import com.autsing.miga.presentation.util.FileUtil
 import com.autsing.miga.presentation.util.LoginUtil
 
@@ -11,6 +12,7 @@ class MainApplication : Application() {
 
         FileUtil.instance = FileUtil(this)
         LoginUtil.instance = LoginUtil()
+        ApiUtil.instance = ApiUtil()
     }
 
 }

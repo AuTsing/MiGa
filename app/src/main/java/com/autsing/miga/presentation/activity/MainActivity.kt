@@ -22,4 +22,11 @@ class MainActivity : ComponentActivity() {
         setContent { MainScreen(mainViewModel) }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (mainViewModel.uiState.auth == null) {
+            mainViewModel.loadAuth()
+        }
+    }
 }

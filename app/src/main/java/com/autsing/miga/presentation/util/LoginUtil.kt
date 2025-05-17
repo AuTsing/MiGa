@@ -28,6 +28,13 @@ class LoginUtil() {
         .take(16)
         .joinToString("")
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("User-Agent", Constants.USER_AGENT)
+                .addHeader("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
+                .build()
+            chain.proceed(request)
+        }
         .connectTimeout(Duration.ofSeconds(60L))
         .callTimeout(Duration.ofSeconds(60L))
         .build()
@@ -42,8 +49,6 @@ class LoginUtil() {
         runCatching {
             val loginIndexRequest = Request.Builder()
                 .url(Constants.MSG_URL)
-                .header("User-Agent", Constants.USER_AGENT)
-                .header("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
                 .build()
             val response = okHttpClient.newCall(loginIndexRequest)
                 .execute()
@@ -88,8 +93,6 @@ class LoginUtil() {
             val qrUrl = Constants.QR_URL + "?" + paramsString
             val qrRequest = Request.Builder()
                 .url(qrUrl)
-                .header("User-Agent", Constants.USER_AGENT)
-                .header("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
                 .build()
             val response = okHttpClient.newCall(qrRequest)
                 .execute()
@@ -111,9 +114,7 @@ class LoginUtil() {
         runCatching {
             val lpRequest = Request.Builder()
                 .url(loginUrlResponse.lp)
-                .header("User-Agent", Constants.USER_AGENT)
-                .header("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
-                .header("Connection", "keep-alive")
+                .addHeader("Connection", "keep-alive")
                 .build()
             val response = okHttpClient.newCall(lpRequest)
                 .execute()
@@ -135,8 +136,6 @@ class LoginUtil() {
         runCatching {
             val lpRequest = Request.Builder()
                 .url(loginLpResponse.location)
-                .header("User-Agent", Constants.USER_AGENT)
-                .header("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
                 .build()
             val response = okHttpClient.newCall(lpRequest)
                 .execute()
