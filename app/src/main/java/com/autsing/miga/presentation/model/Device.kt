@@ -10,4 +10,5 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 data class Device(
     val did: String,
     val name: String,
+    val isOnline: Boolean,
 )

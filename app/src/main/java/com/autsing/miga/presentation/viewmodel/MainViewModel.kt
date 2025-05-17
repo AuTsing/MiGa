@@ -31,7 +31,7 @@ class MainViewModel : ViewModel() {
     var uiState: MainUiState by mutableStateOf(MainUiState())
         private set
 
-    fun loadAuth() = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLoadAuth() = viewModelScope.launch(Dispatchers.IO) {
         val minDelay = launch(Dispatchers.IO) { delay(500) }
 
         runCatching {
@@ -46,7 +46,7 @@ class MainViewModel : ViewModel() {
                 uiState = uiState.copy(auth = auth)
             }
         }.onFailure {
-            Log.e(TAG, "loadAuth: ${it.stackTraceToString()}")
+            Log.e(TAG, "handleLoadAuth: ${it.stackTraceToString()}")
         }.also {
             minDelay.join()
             withContext(Dispatchers.Main) {
@@ -60,13 +60,34 @@ class MainViewModel : ViewModel() {
         uiState = uiState.copy(showedLogin = true)
     }
 
+    private suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val devicesJson = FileUtil.instance.readJson("devices.json").getOrThrow()
+            val devices = Json.decodeFromString<List<Device>>(devicesJson)
+                .sortedByDescending { it.isOnline }
+            return@runCatching devices
+        }
+    }
+
+    private suspend fun loadDevicesRemote(
+        auth: Auth,
+    ): Result<List<Device>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val devices = ApiUtil.instance.getDevices(auth).getOrThrow()
+                .sortedByDescending { it.isOnline }
+            val devicesJson = Json.encodeToString(devices)
+            FileUtil.instance.writeJson("devices.json", devicesJson).getOrThrow()
+            return@runCatching devices
+        }
+    }
+
     fun handleLoadDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = true)
             }
 
-            val devices = ApiUtil.instance.getDevices(auth).getOrThrow()
+            val devices = loadDevicesLocal().getOrElse { loadDevicesRemote(auth).getOrThrow() }
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(devices = devices)
