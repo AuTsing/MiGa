@@ -11,4 +11,5 @@ data class Device(
     val did: String,
     val name: String,
     val isOnline: Boolean,
+    val model: String,
 )

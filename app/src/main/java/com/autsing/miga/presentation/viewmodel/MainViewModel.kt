@@ -10,10 +10,12 @@ import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.util.ApiUtil
 import com.autsing.miga.presentation.util.Constants.TAG
 import com.autsing.miga.presentation.util.FileUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,7 +25,8 @@ data class MainUiState(
     val loading: Boolean = true,
     val auth: Auth? = null,
     val showedLogin: Boolean = false,
-    val devices: List<Device>? = null,
+    val scenes: List<Scene> = emptyList(),
+    val devices: List<Device> = emptyList(),
 )
 
 class MainViewModel : ViewModel() {
@@ -60,6 +63,25 @@ class MainViewModel : ViewModel() {
         uiState = uiState.copy(showedLogin = true)
     }
 
+    private suspend fun loadScenesLocal(): Result<List<Scene>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val scenesJson = FileUtil.instance.readJson("scenes.json").getOrThrow()
+            val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
+            return@runCatching scenes
+        }
+    }
+
+    private suspend fun loadScenesRemote(
+        auth: Auth,
+    ): Result<List<Scene>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val scenes = ApiUtil.instance.getScenes(auth).getOrThrow()
+            val scenesJson = Json.encodeToString(scenes)
+            FileUtil.instance.writeJson("scenes.json", scenesJson).getOrThrow()
+            return@runCatching scenes
+        }
+    }
+
     private suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
             val devicesJson = FileUtil.instance.readJson("devices.json").getOrThrow()
@@ -81,16 +103,27 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun handleLoadDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLoadScenesAndDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = true)
             }
 
-            val devices = loadDevicesLocal().getOrElse { loadDevicesRemote(auth).getOrThrow() }
+            val scenesJob = async(Dispatchers.IO) {
+                loadScenesLocal().getOrElse { loadScenesRemote(auth).getOrDefault(emptyList()) }
+            }
+            val devicesJob = async(Dispatchers.IO) {
+                loadDevicesLocal().getOrElse { loadDevicesRemote(auth).getOrDefault(emptyList()) }
+            }
+
+            val scenes = scenesJob.await()
+            val devices = devicesJob.await()
 
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(devices = devices)
+                uiState = uiState.copy(
+                    scenes = scenes,
+                    devices = devices,
+                )
             }
         }.onFailure {
             Log.e(TAG, "handleLoadDevices: ${it.stackTraceToString()}")

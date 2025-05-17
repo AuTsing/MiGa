@@ -1,9 +1,17 @@
 package com.autsing.miga.presentation.util
 
+import android.util.Log
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
+import com.autsing.miga.presentation.model.GetHomesData
+import com.autsing.miga.presentation.model.GetHomesResponse
+import com.autsing.miga.presentation.model.GetScenesData
+import com.autsing.miga.presentation.model.GetScenesResponse
+import com.autsing.miga.presentation.model.Home
+import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.util.Constants.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -46,7 +54,7 @@ class ApiUtil {
         return Base64.getEncoder().encodeToString(messageDigest.digest())
     }
 
-    fun generateSignature(
+    private fun generateSignature(
         uri: String,
         signedNonce: String,
         nonce: String,
@@ -59,16 +67,14 @@ class ApiUtil {
         return Base64.getEncoder().encodeToString(hmac.doFinal(sign.toByteArray(Charsets.UTF_8)))
     }
 
-    suspend fun getDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
+    private suspend fun post(
+        auth: Auth,
+        uri: String,
+        dataJson: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
         var maybeResponse: Response? = null
 
         runCatching {
-            val uri = "/home/device_list"
-            val data = GetDevicesData(
-                getVirtualModel = false,
-                getHuamiDevices = 0,
-            )
-            val dataJson = Json.encodeToString(data)
             val nonce = generateNonce()
             val signedNonce = generateSignedNonce(auth.ssecurity, nonce)
             val signature = generateSignature(uri, signedNonce, nonce, dataJson)
@@ -87,12 +93,69 @@ class ApiUtil {
                 )
                 .build()
             val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
-            val getDevicesJson = response.body?.string() ?: ""
+            val json = response.body?.string() ?: ""
+
+            return@runCatching json
+        }.also {
+            maybeResponse?.close()
+        }
+    }
+
+    suspend fun getHomes(auth: Auth): Result<List<Home>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/v2/homeroom/gethome"
+            val data = GetHomesData(
+                fg = false,
+                fetch_share = true,
+                fetch_share_dev = true,
+                limit = 300,
+                app_ver = 7,
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val getHomesJson = post(auth, uri, dataJson).getOrThrow()
+            val getHomesResponse = Json.decodeFromString<GetHomesResponse>(getHomesJson)
+
+            return@runCatching getHomesResponse.result.homelist
+        }.onFailure {
+            Log.e(TAG, "getHomes: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun getScenes(auth: Auth): Result<List<Scene>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val homes = getHomes(auth).getOrThrow()
+            val homeId = homes.first().id
+
+            val uri = "/appgateway/miot/appsceneservice/AppSceneService/GetSceneList"
+            val data = GetScenesData(
+                home_id = homeId,
+            )
+            val dataJson = Json.encodeToString(data)
+            val getScenesJson = post(auth, uri, dataJson).getOrThrow()
+            val getScenesResponse = Json.decodeFromString<GetScenesResponse>(getScenesJson)
+
+            return@runCatching getScenesResponse.result.scene_info_list
+        }.onFailure {
+            Log.e(TAG, "getScenes: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun getDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/home/device_list"
+            val data = GetDevicesData(
+                getVirtualModel = false,
+                getHuamiDevices = 0,
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val getDevicesJson = post(auth, uri, dataJson).getOrThrow()
             val getDevicesResponse = Json.decodeFromString<GetDevicesResponse>(getDevicesJson)
 
             return@runCatching getDevicesResponse.result.list
-        }.also {
-            maybeResponse?.close()
+        }.onFailure {
+            Log.e(TAG, "getDevices: ${it.stackTraceToString()}")
         }
     }
 }

@@ -7,15 +7,15 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonIgnoreUnknownKeys
-data class GetDevicesResult(
-    val list: List<Device>,
+data class GetScenesResult(
+    val scene_info_list: List<Scene>,
 )
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonIgnoreUnknownKeys
-data class GetDevicesResponse(
+data class GetScenesResponse(
     val code: Int,
     val message: String,
-    val result: GetDevicesResult,
+    val result: GetScenesResult,
 )

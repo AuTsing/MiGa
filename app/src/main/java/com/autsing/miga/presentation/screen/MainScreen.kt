@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,10 +27,12 @@ import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.OutlinedChip
 import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
 import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
 
@@ -48,7 +51,7 @@ fun MainScreen(
 
     LaunchedEffect(uiState.auth) {
         if (uiState.auth != null) {
-            mainViewModel.handleLoadDevices(uiState.auth)
+            mainViewModel.handleLoadScenesAndDevices(uiState.auth)
         }
     }
 
@@ -65,12 +68,11 @@ fun MainScreen(
                 LoginContent(
                     onClickLogin = { mainViewModel.handleNavigateToLogin(context) }
                 )
-            } else if (uiState.devices != null) {
-                DevicesContent(
+            } else {
+                MainContent(
+                    scenes = uiState.scenes,
                     devices = uiState.devices,
                 )
-            } else {
-                EmptyContent()
             }
         }
     }
@@ -107,39 +109,92 @@ private fun LoginContent(
 }
 
 @Composable
-private fun DevicesContent(devices: List<Device>) {
-    ScalingLazyColumn {
-        item {
+private fun ListTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.title2,
+        modifier = Modifier.padding(12.dp),
+    )
+}
+
+@Composable
+private fun EmptyChip(label: String) {
+    OutlinedChip(
+        onClick = {},
+        label = {
             Text(
-                text = "设备",
-                style = MaterialTheme.typography.title2,
-                modifier = Modifier.padding(12.dp),
-            )
-        }
-        items(devices) { device ->
-            Chip(
-                onClick = {},
-                icon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_fluent_device_meeting_room_icon),
-                        contentDescription = device.did,
-                        modifier = Modifier
-                            .size(ChipDefaults.IconSize)
-                            .wrapContentSize(align = Alignment.Center),
-                    )
-                },
-                label = {
-                    Text(
-                        text = device.name,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                colors = ChipDefaults.secondaryChipColors(),
-                enabled = device.isOnline,
+                text = label,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
+        },
+        enabled = false,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun ChipIcon(iconId: Int) {
+    Icon(
+        painter = painterResource(iconId),
+        contentDescription = null,
+        modifier = Modifier
+            .size(ChipDefaults.IconSize)
+            .wrapContentSize(align = Alignment.Center),
+    )
+}
+
+@Composable
+private fun ChipText(label: String) {
+    Text(
+        text = label,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun SceneChip(scene: Scene) {
+    Chip(
+        onClick = {},
+        icon = { ChipIcon(R.drawable.ic_fluent_layer_regular_icon) },
+        label = { ChipText(scene.name) },
+        colors = ChipDefaults.secondaryChipColors(),
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun DeviceChip(device: Device) {
+    Chip(
+        onClick = {},
+        icon = {
+            if (device.isOnline) {
+                ChipIcon(R.drawable.ic_fluent_device_meeting_room_icon)
+            } else {
+                ChipIcon(R.drawable.ic_fluent_plug_disconnected_regular_icon)
+            }
+        },
+        label = { ChipText(device.name) },
+        colors = ChipDefaults.secondaryChipColors(),
+        enabled = device.isOnline,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun MainContent(scenes: List<Scene>, devices: List<Device>) {
+    ScalingLazyColumn {
+        item { ListTitle("智能") }
+        if (scenes.isEmpty()) {
+            item { EmptyChip("无智能") }
         }
+        items(scenes) { SceneChip(it) }
+        item { ListTitle("设备") }
+        if (devices.isEmpty()) {
+            item { EmptyChip("无设备") }
+        }
+        items(devices) { DeviceChip(it) }
     }
 }
 
