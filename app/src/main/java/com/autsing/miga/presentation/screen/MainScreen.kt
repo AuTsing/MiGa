@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -19,15 +20,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.ExperimentalWearFoundationApi
+import androidx.wear.compose.foundation.RevealValue
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.foundation.rememberRevealState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CircularProgressIndicator
+import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.OutlinedChip
+import androidx.wear.compose.material.SwipeToRevealChip
+import androidx.wear.compose.material.SwipeToRevealDefaults
+import androidx.wear.compose.material.SwipeToRevealPrimaryAction
 import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
@@ -35,6 +43,7 @@ import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -72,7 +81,9 @@ fun MainScreen(
                 MainContent(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
+                    favoriteScenes = uiState.favoriteScenes,
                     onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
+                    onClickToggleSceneFavorite = mainViewModel::handleToggleSceneFavorite,
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }
@@ -155,18 +166,52 @@ private fun ChipText(label: String) {
     )
 }
 
+@OptIn(ExperimentalWearFoundationApi::class, ExperimentalWearMaterialApi::class)
 @Composable
 private fun SceneChip(
     scene: Scene,
-    onClick: () -> Unit = {},
+    favorite: Boolean,
+    onClick: (Scene) -> Unit = {},
+    onClickFavorite: (Scene) -> Unit = {},
 ) {
-    Chip(
-        onClick = onClick,
-        icon = { ChipIcon(R.drawable.ic_fluent_layer_regular_icon) },
-        label = { ChipText(scene.name) },
-        colors = ChipDefaults.secondaryChipColors(),
-        modifier = Modifier.fillMaxWidth(),
+    val revealState = rememberRevealState(
+        confirmValueChange = { it != RevealValue.Revealed },
     )
+    val scope = rememberCoroutineScope()
+
+    SwipeToRevealChip(
+        revealState = revealState,
+        primaryAction = {
+            SwipeToRevealPrimaryAction(
+                revealState = revealState,
+                icon = { Icon(painterResource(R.drawable.ic_fluent_star_regular_icon), null) },
+                label = { Text("收藏") },
+                onClick = {
+                    onClickFavorite(scene)
+                    scope.launch { revealState.animateTo(RevealValue.Covered) }
+                }
+            )
+        },
+        onFullSwipe = {},
+        colors = SwipeToRevealDefaults.actionColors(
+            primaryActionBackgroundColor = MaterialTheme.colors.primary,
+            primaryActionContentColor = MaterialTheme.colors.onPrimary,
+        ),
+    ) {
+        Chip(
+            onClick = { onClick(scene) },
+            icon = {
+                if (favorite) {
+                    ChipIcon(R.drawable.ic_fluent_star_regular_icon)
+                } else {
+                    ChipIcon(R.drawable.ic_fluent_layer_regular_icon)
+                }
+            },
+            label = { ChipText(scene.name) },
+            colors = ChipDefaults.secondaryChipColors(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
@@ -206,7 +251,9 @@ private fun ReloadButton(
 private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
+    favoriteScenes: Set<String>,
     onClickScene: (Scene) -> Unit = {},
+    onClickToggleSceneFavorite: (Scene) -> Unit = {},
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
@@ -217,7 +264,9 @@ private fun MainContent(
         items(scenes) {
             SceneChip(
                 scene = it,
-                onClick = { onClickScene(it) },
+                favorite = it.scene_id in favoriteScenes,
+                onClick = onClickScene,
+                onClickFavorite = onClickToggleSceneFavorite,
             )
         }
         item { ListTitle("设备") }

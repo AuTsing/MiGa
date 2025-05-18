@@ -28,6 +28,7 @@ data class MainUiState(
     val showedLogin: Boolean = false,
     val scenes: List<Scene> = emptyList(),
     val devices: List<Device> = emptyList(),
+    val favoriteScenes: Set<String> = emptySet(),
 )
 
 class MainViewModel : ViewModel() {
@@ -64,19 +65,32 @@ class MainViewModel : ViewModel() {
         uiState = uiState.copy(showedLogin = true)
     }
 
-    private suspend fun loadScenesLocal(): Result<List<Scene>> = withContext(Dispatchers.IO) {
+    private suspend fun loadFavoriteScenes(): Result<Set<String>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val favoriteScenesJson = FileUtil.instance.readJson("favorite_scenes.json").getOrThrow()
+            val favoriteScenes = Json.decodeFromString<Set<String>>(favoriteScenesJson)
+            return@runCatching favoriteScenes
+        }
+    }
+
+    private suspend fun loadScenesLocal(
+        favoriteScenes: Set<String>,
+    ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
             val scenesJson = FileUtil.instance.readJson("scenes.json").getOrThrow()
             val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
+                .sortedByDescending { it.scene_id in favoriteScenes }
             return@runCatching scenes
         }
     }
 
     private suspend fun loadScenesRemote(
         auth: Auth,
+        favoriteScenes: Set<String>,
     ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
             val scenes = ApiUtil.instance.getScenes(auth).getOrThrow()
+                .sortedByDescending { it.scene_id in favoriteScenes }
             val scenesJson = Json.encodeToString(scenes)
             FileUtil.instance.writeJson("scenes.json", scenesJson).getOrThrow()
             return@runCatching scenes
@@ -111,19 +125,23 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                loadScenesLocal().getOrElse { loadScenesRemote(auth).getOrDefault(emptyList()) }
+                val favoriteScenes = loadFavoriteScenes().getOrDefault(emptySet())
+                val scenes = loadScenesLocal(favoriteScenes)
+                    .getOrElse { loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList()) }
+                return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
                 loadDevicesLocal().getOrElse { loadDevicesRemote(auth).getOrDefault(emptyList()) }
             }
 
-            val scenes = scenesJob.await()
+            val (favoriteScenes, scenes) = scenesJob.await()
             val devices = devicesJob.await()
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     scenes = scenes,
                     devices = devices,
+                    favoriteScenes = favoriteScenes,
                 )
             }
         }.onFailure {
@@ -142,19 +160,23 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                loadScenesRemote(auth).getOrDefault(emptyList())
+                val favoriteScenes = loadFavoriteScenes().getOrDefault(emptySet())
+                val scenes = loadScenesLocal(favoriteScenes)
+                    .getOrElse { loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList()) }
+                return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
                 loadDevicesRemote(auth).getOrDefault(emptyList())
             }
 
-            val scenes = scenesJob.await()
+            val (favoriteScenes, scenes) = scenesJob.await()
             val devices = devicesJob.await()
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     scenes = scenes,
                     devices = devices,
+                    favoriteScenes = favoriteScenes,
                 )
             }
         }.onFailure {
@@ -179,6 +201,28 @@ class MainViewModel : ViewModel() {
             }
         }.onFailure {
             Log.e(TAG, "handleRunScene: ${it.stackTraceToString()}")
+        }
+    }
+
+    fun handleToggleSceneFavorite(scene: Scene) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val favoriteScenes = uiState.favoriteScenes
+                .toMutableSet()
+                .apply { if (scene.scene_id in this) remove(scene.scene_id) else add(scene.scene_id) }
+            val scenes = uiState.scenes
+                .sortedByDescending { it.scene_id in favoriteScenes }
+
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(
+                    scenes = scenes,
+                    favoriteScenes = favoriteScenes,
+                )
+            }
+
+            val favoriteScenesJson = Json.encodeToString(favoriteScenes)
+            FileUtil.instance.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
+        }.onFailure {
+            Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
         }
     }
 }
