@@ -4,8 +4,7 @@ MiGa (米咖) 是基于米家 API 开发的第三方智能家居应用，为手�
 
 ## 截图
 
-<img width="160" alt="" src="assets/Screenshot_20250519_132409.png"/>
-<img width="160" alt="" src="assets/Screenshot_20250518_013827.png"/>
+<img width="160" alt="" src="assets/Screenshot_20250519_132409.png"/> <img width="160" alt="" src="assets/Screenshot_20250518_013827.png"/>
 
 ## 功能
 
