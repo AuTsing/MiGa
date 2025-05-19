@@ -3,6 +3,7 @@ package com.autsing.miga.presentation.helper
 import android.util.Log
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.GetDeviceBaikeResponse
 import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
 import com.autsing.miga.presentation.model.GetHomesData
@@ -178,6 +179,25 @@ class ApiHelper {
             return@runCatching runSceneResponse.message
         }.onFailure {
             Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun getDeviceIconUrl(model: String): Result<String> = withContext(Dispatchers.IO) {
+        var maybeResponse: Response? = null
+
+        runCatching {
+            val request = Request.Builder()
+                .url("${Constants.PRODUCT_URL}?model=$model")
+                .build()
+            val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
+            val json = response.body?.string() ?: ""
+            val getDeviceBaikeResponse = Json.decodeFromString<GetDeviceBaikeResponse>(json)
+
+            return@runCatching getDeviceBaikeResponse.data.realIcon
+        }.onFailure {
+            Log.e(Constants.TAG, "getDeviceIconUrl: ${it.stackTraceToString()}")
+        }.also {
+            maybeResponse?.close()
         }
     }
 }

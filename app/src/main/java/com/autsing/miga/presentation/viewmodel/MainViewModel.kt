@@ -9,12 +9,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.activity.LoginActivity
-import com.autsing.miga.presentation.model.Auth
-import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.Constants.TAG
 import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.model.Auth
+import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.Scene
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -29,6 +29,7 @@ data class MainUiState(
     val scenes: List<Scene> = emptyList(),
     val devices: List<Device> = emptyList(),
     val favoriteScenes: Set<String> = emptySet(),
+    val deviceIconUrls: Map<String, String> = emptyMap(),
 )
 
 class MainViewModel : ViewModel() {
@@ -67,7 +68,8 @@ class MainViewModel : ViewModel() {
 
     private suspend fun loadFavoriteScenes(): Result<Set<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val favoriteScenesJson = FileHelper.instance.readJson("favorite_scenes.json").getOrThrow()
+            val favoriteScenesJson =
+                FileHelper.instance.readJson("favorite_scenes.json").getOrThrow()
             val favoriteScenes = Json.decodeFromString<Set<String>>(favoriteScenesJson)
             return@runCatching favoriteScenes
         }
@@ -118,6 +120,28 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    private suspend fun loadDeviceIconUrlsLocal(
+    ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val deviceIconsJson = FileHelper.instance.readJson("device_icon_urls.json").getOrThrow()
+            val deviceIcons = Json.decodeFromString<Map<String, String>>(deviceIconsJson)
+            return@runCatching deviceIcons
+        }
+    }
+
+    private suspend fun loadDeviceIconsRemote(
+        devices: List<Device>,
+    ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val deviceIconUrls = devices.associate {
+                Pair(it.model, ApiHelper.instance.getDeviceIconUrl(it.model).getOrDefault(""))
+            }
+            val deviceIconUrlsJson = Json.encodeToString(deviceIconUrls)
+            FileHelper.instance.writeJson("device_icon_urls.json", deviceIconUrlsJson).getOrThrow()
+            return@runCatching deviceIconUrls
+        }
+    }
+
     fun handleLoadScenesAndDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
             withContext(Dispatchers.Main) {
@@ -131,17 +155,22 @@ class MainViewModel : ViewModel() {
                 return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                loadDevicesLocal().getOrElse { loadDevicesRemote(auth).getOrDefault(emptyList()) }
+                val devices = loadDevicesLocal()
+                    .getOrElse { loadDevicesRemote(auth).getOrDefault(emptyList()) }
+                val deviceIconUrls = loadDeviceIconUrlsLocal()
+                    .getOrElse { loadDeviceIconsRemote(devices).getOrDefault(emptyMap()) }
+                return@async Pair(devices, deviceIconUrls)
             }
 
             val (favoriteScenes, scenes) = scenesJob.await()
-            val devices = devicesJob.await()
+            val (devices, deviceIconUrls) = devicesJob.await()
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     scenes = scenes,
                     devices = devices,
                     favoriteScenes = favoriteScenes,
+                    deviceIconUrls = deviceIconUrls,
                 )
             }
         }.onFailure {
@@ -161,22 +190,24 @@ class MainViewModel : ViewModel() {
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteScenes = loadFavoriteScenes().getOrDefault(emptySet())
-                val scenes = loadScenesLocal(favoriteScenes)
-                    .getOrElse { loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList()) }
+                val scenes = loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList())
                 return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                loadDevicesRemote(auth).getOrDefault(emptyList())
+                val devices = loadDevicesRemote(auth).getOrDefault(emptyList())
+                val deviceIconUrls = loadDeviceIconsRemote(devices).getOrDefault(emptyMap())
+                return@async Pair(devices, deviceIconUrls)
             }
 
             val (favoriteScenes, scenes) = scenesJob.await()
-            val devices = devicesJob.await()
+            val (devices, deviceIconUrls) = devicesJob.await()
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     scenes = scenes,
                     devices = devices,
                     favoriteScenes = favoriteScenes,
+                    deviceIconUrls = deviceIconUrls,
                 )
             }
         }.onFailure {

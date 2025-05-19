@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +39,7 @@ import androidx.wear.compose.material.SwipeToRevealDefaults
 import androidx.wear.compose.material.SwipeToRevealPrimaryAction
 import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
+import coil3.compose.AsyncImage
 import com.autsing.miga.R
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -82,6 +84,7 @@ fun MainScreen(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
                     favoriteScenes = uiState.favoriteScenes,
+                    deviceIconUrls = uiState.deviceIconUrls,
                     onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
                     onClickToggleSceneFavorite = mainViewModel::handleToggleSceneFavorite,
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
@@ -152,7 +155,19 @@ private fun ChipIcon(iconId: Int) {
         painter = painterResource(iconId),
         contentDescription = null,
         modifier = Modifier
-            .size(ChipDefaults.IconSize)
+            .size(ChipDefaults.LargeIconSize)
+            .wrapContentSize(align = Alignment.Center),
+    )
+}
+
+@Composable
+private fun AsyncChipIcon(iconUrl: String) {
+    AsyncImage(
+        model = iconUrl,
+        contentDescription = null,
+        modifier = Modifier
+            .size(ChipDefaults.LargeIconSize)
+            .background(Color(0xFFE6E6E6))
             .wrapContentSize(align = Alignment.Center),
     )
 }
@@ -215,14 +230,19 @@ private fun SceneChip(
 }
 
 @Composable
-private fun DeviceChip(device: Device) {
+private fun DeviceChip(
+    device: Device,
+    iconUrl: String,
+) {
     Chip(
         onClick = {},
         icon = {
-            if (device.isOnline) {
+            if (!device.isOnline) {
+                ChipIcon(R.drawable.ic_fluent_plug_disconnected_regular_icon)
+            } else if (iconUrl.isBlank()) {
                 ChipIcon(R.drawable.ic_fluent_device_meeting_room_icon)
             } else {
-                ChipIcon(R.drawable.ic_fluent_plug_disconnected_regular_icon)
+                AsyncChipIcon(iconUrl)
             }
         },
         label = { ChipText(device.name) },
@@ -252,6 +272,7 @@ private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
     favoriteScenes: Set<String>,
+    deviceIconUrls: Map<String, String>,
     onClickScene: (Scene) -> Unit = {},
     onClickToggleSceneFavorite: (Scene) -> Unit = {},
     onClickReload: () -> Unit = {},
@@ -273,7 +294,7 @@ private fun MainContent(
         if (devices.isEmpty()) {
             item { EmptyChip("无设备") }
         }
-        items(devices) { DeviceChip(it) }
+        items(devices) { DeviceChip(it, deviceIconUrls.getOrDefault(it.model, "")) }
         item { ReloadButton(onClickReload) }
     }
 }
