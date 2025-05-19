@@ -1,4 +1,4 @@
-package com.autsing.miga.presentation.util
+package com.autsing.miga.presentation.helper
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,12 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @SuppressLint("StaticFieldLeak")
-class FileUtil(
+class FileHelper(
     private val context: Context,
 ) {
 
     companion object {
-        lateinit var instance: FileUtil
+        lateinit var instance: FileHelper
     }
 
     suspend fun readJson(filename: String): Result<String> = withContext(Dispatchers.IO) {

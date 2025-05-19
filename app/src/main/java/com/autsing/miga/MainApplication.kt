@@ -1,18 +1,18 @@
 package com.autsing.miga
 
 import android.app.Application
-import com.autsing.miga.presentation.util.ApiUtil
-import com.autsing.miga.presentation.util.FileUtil
-import com.autsing.miga.presentation.util.LoginUtil
+import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.helper.LoginHelper
 
 class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        FileUtil.instance = FileUtil(this)
-        LoginUtil.instance = LoginUtil()
-        ApiUtil.instance = ApiUtil()
+        FileHelper.instance = FileHelper(this)
+        LoginHelper.instance = LoginHelper()
+        ApiHelper.instance = ApiHelper()
     }
 
 }

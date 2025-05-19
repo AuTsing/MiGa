@@ -1,4 +1,4 @@
-package com.autsing.miga.presentation.util
+package com.autsing.miga.presentation.helper
 
 import android.util.Log
 import com.autsing.miga.presentation.model.Auth
@@ -13,7 +13,6 @@ import com.autsing.miga.presentation.model.Home
 import com.autsing.miga.presentation.model.RunSceneData
 import com.autsing.miga.presentation.model.RunSceneResponse
 import com.autsing.miga.presentation.model.Scene
-import com.autsing.miga.presentation.util.Constants.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -26,10 +25,10 @@ import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-class ApiUtil {
+class ApiHelper {
 
     companion object {
-        lateinit var instance: ApiUtil
+        lateinit var instance: ApiHelper
     }
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
@@ -120,7 +119,7 @@ class ApiUtil {
 
             return@runCatching getHomesResponse.result.homelist
         }.onFailure {
-            Log.e(TAG, "getHomes: ${it.stackTraceToString()}")
+            Log.e(Constants.TAG, "getHomes: ${it.stackTraceToString()}")
         }
     }
 
@@ -139,7 +138,7 @@ class ApiUtil {
 
             return@runCatching getScenesResponse.result.scene_info_list
         }.onFailure {
-            Log.e(TAG, "getScenes: ${it.stackTraceToString()}")
+            Log.e(Constants.TAG, "getScenes: ${it.stackTraceToString()}")
         }
     }
 
@@ -157,7 +156,7 @@ class ApiUtil {
 
             return@runCatching getDevicesResponse.result.list
         }.onFailure {
-            Log.e(TAG, "getDevices: ${it.stackTraceToString()}")
+            Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
         }
     }
 
@@ -178,7 +177,7 @@ class ApiUtil {
 
             return@runCatching runSceneResponse.message
         }.onFailure {
-            Log.e(TAG, "getDevices: ${it.stackTraceToString()}")
+            Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.autsing.miga.presentation.util
+package com.autsing.miga.presentation.helper
 
 import com.autsing.miga.presentation.model.LoginIndexResponse
 import com.autsing.miga.presentation.model.LoginLpResponse
@@ -17,10 +17,10 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
-class LoginUtil() {
+class LoginHelper() {
 
     companion object {
-        lateinit var instance: LoginUtil
+        lateinit var instance: LoginHelper
     }
 
     private val deviceId: String = (('0'..'9') + ('a'..'z') + ('A'..'Z'))

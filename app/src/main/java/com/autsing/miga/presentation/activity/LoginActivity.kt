@@ -9,8 +9,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.screen.LoginScreen
-import com.autsing.miga.presentation.util.FileUtil
-import com.autsing.miga.presentation.util.LoginUtil
+import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.helper.LoginHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -42,18 +42,18 @@ class LoginActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             runCatching {
-                val loginIndexResponse = LoginUtil.instance.getLoginIndex().getOrThrow()
-                val loginUrlResponse = LoginUtil.instance
+                val loginIndexResponse = LoginHelper.instance.getLoginIndex().getOrThrow()
+                val loginUrlResponse = LoginHelper.instance
                     .getLoginUrl(loginIndexResponse)
                     .getOrThrow()
                 loginUrl.value = loginUrlResponse.loginUrl
-                val loginLpResponse = LoginUtil.instance
+                val loginLpResponse = LoginHelper.instance
                     .getLoginLpResponse(loginUrlResponse)
                     .getOrThrow()
-                val serviceToken = LoginUtil.instance
+                val serviceToken = LoginHelper.instance
                     .getLoginServiceToken(loginLpResponse)
                     .getOrThrow()
-                val deviceId = LoginUtil.instance.getDeviceId()
+                val deviceId = LoginHelper.instance.getDeviceId()
 
                 val auth = Auth(
                     userId = loginLpResponse.userId,
@@ -63,7 +63,7 @@ class LoginActivity : ComponentActivity() {
                 )
                 val authJson = Json.encodeToString(auth)
 
-                FileUtil.instance.writeJson("auth.json", authJson).getOrThrow()
+                FileHelper.instance.writeJson("auth.json", authJson).getOrThrow()
 
                 finish()
             }.onFailure {

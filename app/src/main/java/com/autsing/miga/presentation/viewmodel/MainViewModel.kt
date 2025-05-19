@@ -12,9 +12,9 @@ import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
-import com.autsing.miga.presentation.util.ApiUtil
-import com.autsing.miga.presentation.util.Constants.TAG
-import com.autsing.miga.presentation.util.FileUtil
+import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.helper.Constants.TAG
+import com.autsing.miga.presentation.helper.FileHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -44,7 +44,7 @@ class MainViewModel : ViewModel() {
                 uiState = uiState.copy(loading = true)
             }
 
-            val authJson = FileUtil.instance.readJson("auth.json").getOrThrow()
+            val authJson = FileHelper.instance.readJson("auth.json").getOrThrow()
             val auth = Json.decodeFromString<Auth>(authJson)
 
             withContext(Dispatchers.Main) {
@@ -67,7 +67,7 @@ class MainViewModel : ViewModel() {
 
     private suspend fun loadFavoriteScenes(): Result<Set<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val favoriteScenesJson = FileUtil.instance.readJson("favorite_scenes.json").getOrThrow()
+            val favoriteScenesJson = FileHelper.instance.readJson("favorite_scenes.json").getOrThrow()
             val favoriteScenes = Json.decodeFromString<Set<String>>(favoriteScenesJson)
             return@runCatching favoriteScenes
         }
@@ -77,7 +77,7 @@ class MainViewModel : ViewModel() {
         favoriteScenes: Set<String>,
     ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
-            val scenesJson = FileUtil.instance.readJson("scenes.json").getOrThrow()
+            val scenesJson = FileHelper.instance.readJson("scenes.json").getOrThrow()
             val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
                 .sortedByDescending { it.scene_id in favoriteScenes }
             return@runCatching scenes
@@ -89,17 +89,17 @@ class MainViewModel : ViewModel() {
         favoriteScenes: Set<String>,
     ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
-            val scenes = ApiUtil.instance.getScenes(auth).getOrThrow()
+            val scenes = ApiHelper.instance.getScenes(auth).getOrThrow()
                 .sortedByDescending { it.scene_id in favoriteScenes }
             val scenesJson = Json.encodeToString(scenes)
-            FileUtil.instance.writeJson("scenes.json", scenesJson).getOrThrow()
+            FileHelper.instance.writeJson("scenes.json", scenesJson).getOrThrow()
             return@runCatching scenes
         }
     }
 
     private suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devicesJson = FileUtil.instance.readJson("devices.json").getOrThrow()
+            val devicesJson = FileHelper.instance.readJson("devices.json").getOrThrow()
             val devices = Json.decodeFromString<List<Device>>(devicesJson)
                 .sortedByDescending { it.isOnline }
             return@runCatching devices
@@ -110,10 +110,10 @@ class MainViewModel : ViewModel() {
         auth: Auth,
     ): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devices = ApiUtil.instance.getDevices(auth).getOrThrow()
+            val devices = ApiHelper.instance.getDevices(auth).getOrThrow()
                 .sortedByDescending { it.isOnline }
             val devicesJson = Json.encodeToString(devices)
-            FileUtil.instance.writeJson("devices.json", devicesJson).getOrThrow()
+            FileHelper.instance.writeJson("devices.json", devicesJson).getOrThrow()
             return@runCatching devices
         }
     }
@@ -194,7 +194,7 @@ class MainViewModel : ViewModel() {
         scene: Scene,
     ) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
-            val message = ApiUtil.instance.runScene(auth, scene).getOrThrow()
+            val message = ApiHelper.instance.runScene(auth, scene).getOrThrow()
 
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -220,7 +220,7 @@ class MainViewModel : ViewModel() {
             }
 
             val favoriteScenesJson = Json.encodeToString(favoriteScenes)
-            FileUtil.instance.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
+            FileHelper.instance.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
         }
