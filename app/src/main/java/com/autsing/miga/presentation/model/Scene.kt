@@ -10,4 +10,5 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 data class Scene(
     val scene_id: String,
     val name: String,
+    val icon_url: String,
 )

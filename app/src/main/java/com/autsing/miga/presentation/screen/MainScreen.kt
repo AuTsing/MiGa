@@ -14,7 +14,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -167,7 +166,6 @@ private fun AsyncChipIcon(iconUrl: String) {
         contentDescription = null,
         modifier = Modifier
             .size(ChipDefaults.LargeIconSize)
-            .background(Color(0xFFE6E6E6))
             .wrapContentSize(align = Alignment.Center),
     )
 }
@@ -199,8 +197,14 @@ private fun SceneChip(
         primaryAction = {
             SwipeToRevealPrimaryAction(
                 revealState = revealState,
-                icon = { Icon(painterResource(R.drawable.ic_fluent_star_regular_icon), null) },
-                label = { Text("收藏") },
+                icon = {
+                    if (favorite) {
+                        Icon(painterResource(R.drawable.ic_fluent_star_off_regular_icon), null)
+                    } else {
+                        Icon(painterResource(R.drawable.ic_fluent_star_regular_icon), null)
+                    }
+                },
+                label = { Text(if (favorite) "取消收藏" else "收藏") },
                 onClick = {
                     onClickFavorite(scene)
                     scope.launch { revealState.animateTo(RevealValue.Covered) }
@@ -216,14 +220,19 @@ private fun SceneChip(
         Chip(
             onClick = { onClick(scene) },
             icon = {
-                if (favorite) {
-                    ChipIcon(R.drawable.ic_fluent_star_regular_icon)
-                } else {
+                if (scene.icon_url.isBlank()) {
                     ChipIcon(R.drawable.ic_fluent_layer_regular_icon)
+                } else {
+                    AsyncChipIcon(scene.icon_url)
                 }
             },
             label = { ChipText(scene.name) },
-            colors = ChipDefaults.secondaryChipColors(),
+            colors = ChipDefaults.gradientBackgroundChipColors(),
+            border = if (favorite) {
+                ChipDefaults.outlinedChipBorder()
+            } else {
+                ChipDefaults.chipBorder()
+            },
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -246,7 +255,7 @@ private fun DeviceChip(
             }
         },
         label = { ChipText(device.name) },
-        colors = ChipDefaults.secondaryChipColors(),
+        colors = ChipDefaults.gradientBackgroundChipColors(),
         enabled = device.isOnline,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -294,7 +303,12 @@ private fun MainContent(
         if (devices.isEmpty()) {
             item { EmptyChip("无设备") }
         }
-        items(devices) { DeviceChip(it, deviceIconUrls.getOrDefault(it.model, "")) }
+        items(devices) {
+            DeviceChip(
+                device = it,
+                iconUrl = deviceIconUrls.getOrDefault(it.model, ""),
+            )
+        }
         item { ReloadButton(onClickReload) }
     }
 }

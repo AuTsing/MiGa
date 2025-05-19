@@ -81,7 +81,10 @@ class MainViewModel : ViewModel() {
         runCatching {
             val scenesJson = FileHelper.instance.readJson("scenes.json").getOrThrow()
             val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
-                .sortedByDescending { it.scene_id in favoriteScenes }
+                .sortedWith(
+                    compareByDescending<Scene> { it.scene_id in favoriteScenes }
+                        .thenByDescending { it.icon_url.isNotBlank() }
+                )
             return@runCatching scenes
         }
     }
@@ -92,7 +95,11 @@ class MainViewModel : ViewModel() {
     ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
             val scenes = ApiHelper.instance.getScenes(auth).getOrThrow()
-                .sortedByDescending { it.scene_id in favoriteScenes }
+                .sortedWith(
+                    compareByDescending<Scene> { it.scene_id in favoriteScenes }
+                        .thenByDescending { it.icon_url.isNotBlank() }
+                )
+
             val scenesJson = Json.encodeToString(scenes)
             FileHelper.instance.writeJson("scenes.json", scenesJson).getOrThrow()
             return@runCatching scenes
