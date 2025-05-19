@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.autsing.miga"
-        minSdk = 33
+        minSdk = 28
         targetSdk = 35
         versionCode = 102
         versionName = "0.1.2"
