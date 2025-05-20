@@ -246,9 +246,7 @@ private fun DeviceChip(
     Chip(
         onClick = {},
         icon = {
-            if (!device.isOnline) {
-                ChipIcon(R.drawable.ic_fluent_plug_disconnected_regular_icon)
-            } else if (iconUrl.isBlank()) {
+            if (iconUrl.isBlank()) {
                 ChipIcon(R.drawable.ic_fluent_device_meeting_room_icon)
             } else {
                 AsyncChipIcon(iconUrl)

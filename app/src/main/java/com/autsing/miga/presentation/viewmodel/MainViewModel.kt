@@ -68,8 +68,8 @@ class MainViewModel : ViewModel() {
 
     private suspend fun loadFavoriteScenes(): Result<Set<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val favoriteScenesJson =
-                FileHelper.instance.readJson("favorite_scenes.json").getOrThrow()
+            val favoriteScenesJson = FileHelper.instance
+                .readJson("favorite_scenes.json").getOrThrow()
             val favoriteScenes = Json.decodeFromString<Set<String>>(favoriteScenesJson)
             return@runCatching favoriteScenes
         }
@@ -81,10 +81,8 @@ class MainViewModel : ViewModel() {
         runCatching {
             val scenesJson = FileHelper.instance.readJson("scenes.json").getOrThrow()
             val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
-                .sortedWith(
-                    compareByDescending<Scene> { it.scene_id in favoriteScenes }
-                        .thenByDescending { it.icon_url.isNotBlank() }
-                )
+                .filter { it.icon_url.isNotBlank() }
+                .sortedByDescending { it.scene_id in favoriteScenes }
             return@runCatching scenes
         }
     }
@@ -95,11 +93,8 @@ class MainViewModel : ViewModel() {
     ): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
             val scenes = ApiHelper.instance.getScenes(auth).getOrThrow()
-                .sortedWith(
-                    compareByDescending<Scene> { it.scene_id in favoriteScenes }
-                        .thenByDescending { it.icon_url.isNotBlank() }
-                )
-
+                .filter { it.icon_url.isNotBlank() }
+                .sortedByDescending { it.scene_id in favoriteScenes }
             val scenesJson = Json.encodeToString(scenes)
             FileHelper.instance.writeJson("scenes.json", scenesJson).getOrThrow()
             return@runCatching scenes
