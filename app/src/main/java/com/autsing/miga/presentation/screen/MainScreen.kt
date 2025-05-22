@@ -59,12 +59,6 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(uiState.auth) {
-        if (uiState.auth != null) {
-            mainViewModel.handleLoadScenesAndDevices(uiState.auth)
-        }
-    }
-
     MiGaTheme {
         Box(
             modifier = Modifier

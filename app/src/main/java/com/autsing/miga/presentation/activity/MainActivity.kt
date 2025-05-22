@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         if (mainViewModel.uiState.auth == null) {
-            mainViewModel.handleLoadAuth()
+            mainViewModel.handleLoad()
         }
     }
 }

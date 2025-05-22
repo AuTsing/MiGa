@@ -45,7 +45,7 @@ class MainViewModel : ViewModel() {
     var uiState: MainUiState by mutableStateOf(MainUiState())
         private set
 
-    fun handleLoadAuth() = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLoad() = viewModelScope.launch(Dispatchers.IO) {
         val minDelay = launch(Dispatchers.IO) { delay(500) }
 
         runCatching {
@@ -55,30 +55,6 @@ class MainViewModel : ViewModel() {
 
             val authJson = fileHelper.readJson("auth.json").getOrThrow()
             val auth = Json.decodeFromString<Auth>(authJson)
-
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(auth = auth)
-            }
-        }.onFailure {
-            Log.e(TAG, "handleLoadAuth: ${it.stackTraceToString()}")
-        }.also {
-            minDelay.join()
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = false)
-            }
-        }
-    }
-
-    fun handleNavigateToLogin(context: Context) = viewModelScope.launch {
-        LoginActivity.startActivity(context)
-        uiState = uiState.copy(showedLogin = true)
-    }
-
-    fun handleLoadScenesAndDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
-        runCatching {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = true)
-            }
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
@@ -107,6 +83,7 @@ class MainViewModel : ViewModel() {
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
+                    auth = auth,
                     scenes = scenes,
                     devices = devices,
                     favoriteScenes = favoriteScenes,
@@ -114,12 +91,18 @@ class MainViewModel : ViewModel() {
                 )
             }
         }.onFailure {
-            Log.e(TAG, "handleLoadScenesAndDevices: ${it.stackTraceToString()}")
+            Log.e(TAG, "handleLoad: ${it.stackTraceToString()}")
         }.also {
+            minDelay.join()
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = false)
             }
         }
+    }
+
+    fun handleNavigateToLogin(context: Context) = viewModelScope.launch {
+        LoginActivity.startActivity(context)
+        uiState = uiState.copy(showedLogin = true)
     }
 
     fun handleReload(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
