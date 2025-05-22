@@ -15,6 +15,8 @@ import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.repository.DeviceRepository
+import com.autsing.miga.presentation.repository.SceneRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -34,6 +36,11 @@ data class MainUiState(
 
 class MainViewModel : ViewModel() {
 
+    private val fileHelper: FileHelper = FileHelper.instance
+    private val apiHelper: ApiHelper = ApiHelper.instance
+    private val sceneRepository: SceneRepository = SceneRepository.instance
+    private val deviceRepository: DeviceRepository = DeviceRepository.instance
+
     var uiState: MainUiState by mutableStateOf(MainUiState())
         private set
 
@@ -45,7 +52,7 @@ class MainViewModel : ViewModel() {
                 uiState = uiState.copy(loading = true)
             }
 
-            val authJson = FileHelper.instance.readJson("auth.json").getOrThrow()
+            val authJson = fileHelper.readJson("auth.json").getOrThrow()
             val auth = Json.decodeFromString<Auth>(authJson)
 
             withContext(Dispatchers.Main) {
@@ -66,84 +73,6 @@ class MainViewModel : ViewModel() {
         uiState = uiState.copy(showedLogin = true)
     }
 
-    private suspend fun loadFavoriteScenes(): Result<Set<String>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val favoriteScenesJson = FileHelper.instance
-                .readJson("favorite_scenes.json").getOrThrow()
-            val favoriteScenes = Json.decodeFromString<Set<String>>(favoriteScenesJson)
-            return@runCatching favoriteScenes
-        }
-    }
-
-    private suspend fun loadScenesLocal(
-        favoriteScenes: Set<String>,
-    ): Result<List<Scene>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val scenesJson = FileHelper.instance.readJson("scenes.json").getOrThrow()
-            val scenes = Json.decodeFromString<List<Scene>>(scenesJson)
-                .filter { it.icon_url.isNotBlank() }
-                .sortedByDescending { it.scene_id in favoriteScenes }
-            return@runCatching scenes
-        }
-    }
-
-    private suspend fun loadScenesRemote(
-        auth: Auth,
-        favoriteScenes: Set<String>,
-    ): Result<List<Scene>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val scenes = ApiHelper.instance.getScenes(auth).getOrThrow()
-                .filter { it.icon_url.isNotBlank() }
-                .sortedByDescending { it.scene_id in favoriteScenes }
-            val scenesJson = Json.encodeToString(scenes)
-            FileHelper.instance.writeJson("scenes.json", scenesJson).getOrThrow()
-            return@runCatching scenes
-        }
-    }
-
-    private suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val devicesJson = FileHelper.instance.readJson("devices.json").getOrThrow()
-            val devices = Json.decodeFromString<List<Device>>(devicesJson)
-                .sortedByDescending { it.isOnline }
-            return@runCatching devices
-        }
-    }
-
-    private suspend fun loadDevicesRemote(
-        auth: Auth,
-    ): Result<List<Device>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val devices = ApiHelper.instance.getDevices(auth).getOrThrow()
-                .sortedByDescending { it.isOnline }
-            val devicesJson = Json.encodeToString(devices)
-            FileHelper.instance.writeJson("devices.json", devicesJson).getOrThrow()
-            return@runCatching devices
-        }
-    }
-
-    private suspend fun loadDeviceIconUrlsLocal(
-    ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val deviceIconsJson = FileHelper.instance.readJson("device_icon_urls.json").getOrThrow()
-            val deviceIcons = Json.decodeFromString<Map<String, String>>(deviceIconsJson)
-            return@runCatching deviceIcons
-        }
-    }
-
-    private suspend fun loadDeviceIconsRemote(
-        devices: List<Device>,
-    ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val deviceIconUrls = devices.associate {
-                Pair(it.model, ApiHelper.instance.getDeviceIconUrl(it.model).getOrDefault(""))
-            }
-            val deviceIconUrlsJson = Json.encodeToString(deviceIconUrls)
-            FileHelper.instance.writeJson("device_icon_urls.json", deviceIconUrlsJson).getOrThrow()
-            return@runCatching deviceIconUrls
-        }
-    }
-
     fun handleLoadScenesAndDevices(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
             withContext(Dispatchers.Main) {
@@ -151,16 +80,24 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteScenes = loadFavoriteScenes().getOrDefault(emptySet())
-                val scenes = loadScenesLocal(favoriteScenes)
-                    .getOrElse { loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList()) }
+                val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
+                val scenes = sceneRepository.loadScenesLocal(favoriteScenes)
+                    .getOrElse {
+                        sceneRepository
+                            .loadScenesRemote(auth, favoriteScenes)
+                            .getOrDefault(emptyList())
+                    }
                 return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                val devices = loadDevicesLocal()
-                    .getOrElse { loadDevicesRemote(auth).getOrDefault(emptyList()) }
-                val deviceIconUrls = loadDeviceIconUrlsLocal()
-                    .getOrElse { loadDeviceIconsRemote(devices).getOrDefault(emptyMap()) }
+                val devices = deviceRepository.loadDevicesLocal()
+                    .getOrElse {
+                        deviceRepository.loadDevicesRemote(auth).getOrDefault(emptyList())
+                    }
+                val deviceIconUrls = deviceRepository.loadDeviceIconUrlsLocal()
+                    .getOrElse {
+                        deviceRepository.loadDeviceIconsRemote(devices).getOrDefault(emptyMap())
+                    }
                 return@async Pair(devices, deviceIconUrls)
             }
 
@@ -191,13 +128,17 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteScenes = loadFavoriteScenes().getOrDefault(emptySet())
-                val scenes = loadScenesRemote(auth, favoriteScenes).getOrDefault(emptyList())
+                val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
+                val scenes = sceneRepository
+                    .loadScenesRemote(auth, favoriteScenes)
+                    .getOrDefault(emptyList())
                 return@async Pair(favoriteScenes, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                val devices = loadDevicesRemote(auth).getOrDefault(emptyList())
-                val deviceIconUrls = loadDeviceIconsRemote(devices).getOrDefault(emptyMap())
+                val devices = deviceRepository.loadDevicesRemote(auth).getOrDefault(emptyList())
+                val deviceIconUrls = deviceRepository
+                    .loadDeviceIconsRemote(devices)
+                    .getOrDefault(emptyMap())
                 return@async Pair(devices, deviceIconUrls)
             }
 
@@ -227,7 +168,7 @@ class MainViewModel : ViewModel() {
         scene: Scene,
     ) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
-            val message = ApiHelper.instance.runScene(auth, scene).getOrThrow()
+            val message = apiHelper.runScene(auth, scene).getOrThrow()
 
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -253,7 +194,7 @@ class MainViewModel : ViewModel() {
             }
 
             val favoriteScenesJson = Json.encodeToString(favoriteScenes)
-            FileHelper.instance.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
+            fileHelper.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
         }
