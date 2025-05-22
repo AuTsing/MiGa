@@ -1,6 +1,8 @@
 package com.autsing.miga.tile
 
 import android.content.Context
+import androidx.wear.protolayout.ActionBuilders.AndroidActivity
+import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import androidx.wear.protolayout.ColorBuilders.ColorProp
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
 import androidx.wear.protolayout.DimensionBuilders
@@ -21,6 +23,7 @@ import androidx.wear.protolayout.material.Colors
 import androidx.wear.protolayout.material.Text
 import androidx.wear.protolayout.material.Typography
 import com.autsing.miga.R
+import com.autsing.miga.presentation.activity.MainActivity
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_SCENE
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
@@ -159,7 +162,15 @@ private fun triggerButton(context: Context, text: String): LayoutElement {
 }
 
 private fun addButton(context: Context): LayoutElement {
+    val activity = AndroidActivity.Builder()
+        .setPackageName(context.packageName)
+        .setClassName(MainActivity::class.java.name)
+        .build()
+    val action = LaunchAction.Builder()
+        .setAndroidActivity(activity)
+        .build()
     val clickable = Clickable.Builder()
+        .setOnClick(action)
         .build()
 
     return button(
