@@ -85,7 +85,9 @@ fun MainScreen(
                     favoriteScenes = uiState.favoriteScenes,
                     deviceIconUrls = uiState.deviceIconUrls,
                     onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
-                    onClickToggleSceneFavorite = mainViewModel::handleToggleSceneFavorite,
+                    onClickToggleSceneFavorite = {
+                        mainViewModel.handleToggleSceneFavorite(context, it)
+                    },
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }

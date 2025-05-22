@@ -17,6 +17,7 @@ import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.repository.SceneRepository
+import com.autsing.miga.tile.MainTileService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -178,7 +179,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun handleToggleSceneFavorite(scene: Scene) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleToggleSceneFavorite(
+        context: Context,
+        scene: Scene,
+    ) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
             val favoriteScenes = uiState.favoriteScenes
                 .toMutableSet()
@@ -195,6 +199,8 @@ class MainViewModel : ViewModel() {
 
             val favoriteScenesJson = Json.encodeToString(favoriteScenes)
             fileHelper.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
+
+            MainTileService.requestUpdate(context)
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
         }

@@ -1,5 +1,6 @@
 package com.autsing.miga.tile
 
+import android.content.Context
 import androidx.wear.protolayout.ResourceBuilders.Resources
 import androidx.wear.tiles.RequestBuilders.ResourcesRequest
 import androidx.wear.tiles.RequestBuilders.TileRequest
@@ -10,6 +11,12 @@ import com.google.android.horologist.tiles.SuspendingTileService
 
 @OptIn(ExperimentalHorologistApi::class)
 class MainTileService : SuspendingTileService() {
+
+    companion object {
+        fun requestUpdate(context: Context) {
+            getUpdater(context).requestUpdate(MainTileService::class.java)
+        }
+    }
 
     private val sceneRepository: SceneRepository = SceneRepository.instance
 
