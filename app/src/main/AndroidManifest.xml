@@ -71,6 +71,12 @@
             android:taskAffinity=""
             android:theme="@style/MainActivityTheme.Starting" />
 
+        <activity
+            android:name=".presentation.activity.RunSceneActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@style/MainActivityTheme.Starting" />
+
     </application>
 
 </manifest>

@@ -1,7 +1,9 @@
 package com.autsing.miga.tile
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
+import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import androidx.wear.protolayout.ColorBuilders.ColorProp
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
@@ -24,6 +26,8 @@ import androidx.wear.protolayout.material.Text
 import androidx.wear.protolayout.material.Typography
 import com.autsing.miga.R
 import com.autsing.miga.presentation.activity.MainActivity
+import com.autsing.miga.presentation.activity.RunSceneActivity
+import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_SCENE
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
@@ -61,7 +65,7 @@ class MainTileRenderer(context: Context) : SingleTileLayoutRenderer<MainTileStat
 }
 
 private fun tileLayout(context: Context, state: MainTileState): LayoutElement {
-    val buttons = state.scenes.map { triggerButton(context, it.name) }
+    val buttons = state.scenes.map { triggerButton(context, it) }
         .toMutableList()
         .apply {
             if (size < 4) {
@@ -147,8 +151,21 @@ private fun buttonContent(
         .build()
 }
 
-private fun triggerButton(context: Context, text: String): LayoutElement {
+@SuppressLint("RestrictedApi")
+private fun triggerButton(context: Context, scene: Scene): LayoutElement {
+    val extra = AndroidStringExtra.Builder()
+        .setValue(scene.scene_id)
+        .build()
+    val activity = AndroidActivity.Builder()
+        .setPackageName(context.packageName)
+        .setClassName(RunSceneActivity::class.java.name)
+        .addKeyToExtraMapping(RunSceneActivity.EXTRA_SCENE_ID, extra)
+        .build()
+    val action = LaunchAction.Builder()
+        .setAndroidActivity(activity)
+        .build()
     val clickable = Clickable.Builder()
+        .setOnClick(action)
         .build()
 
     return button(
@@ -156,7 +173,7 @@ private fun triggerButton(context: Context, text: String): LayoutElement {
         clickable = clickable,
         iconId = RES_IC_SCENE,
         iconColor = 0xFFFFC107.toInt(),
-        text = text,
+        text = scene.name,
         textColor = Colors.DEFAULT.onSurface,
     )
 }
