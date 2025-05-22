@@ -28,7 +28,6 @@ import androidx.wear.compose.foundation.rememberRevealState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
@@ -40,6 +39,7 @@ import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import coil3.compose.AsyncImage
 import com.autsing.miga.R
+import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
@@ -73,7 +73,7 @@ fun MainScreen(
             contentAlignment = Alignment.Center
         ) {
             if (uiState.loading) {
-                LoadingContent()
+                LoadingContent("加载中...")
             } else if (uiState.auth == null) {
                 LoginContent(
                     onClickLogin = { mainViewModel.handleNavigateToLogin(context) }
@@ -93,11 +93,6 @@ fun MainScreen(
             }
         }
     }
-}
-
-@Composable
-private fun LoadingContent() {
-    CircularProgressIndicator()
 }
 
 @Composable
