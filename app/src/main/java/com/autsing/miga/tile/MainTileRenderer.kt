@@ -21,6 +21,7 @@ import androidx.wear.protolayout.material.Colors
 import androidx.wear.protolayout.material.Text
 import androidx.wear.protolayout.material.Typography
 import com.autsing.miga.R
+import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_SCENE
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.tiles.images.drawableResToImageResource
@@ -30,6 +31,7 @@ import com.google.android.horologist.tiles.render.SingleTileLayoutRenderer
 class MainTileRenderer(context: Context) : SingleTileLayoutRenderer<MainTileState, Unit>(context) {
     companion object {
         const val RES_IC_SCENE = "res_ic_scene"
+        const val RES_IC_ADD = "res_ic_add"
     }
 
     override fun ResourceBuilders.Resources.Builder.produceRequestedResources(
@@ -40,6 +42,10 @@ class MainTileRenderer(context: Context) : SingleTileLayoutRenderer<MainTileStat
         addIdToImageMapping(
             RES_IC_SCENE,
             drawableResToImageResource(R.drawable.ic_fluent_star_regular_icon),
+        )
+        addIdToImageMapping(
+            RES_IC_ADD,
+            drawableResToImageResource(R.drawable.ic_fluent_add_regular_icon),
         )
     }
 
@@ -84,7 +90,9 @@ private fun button(
     context: Context,
     clickable: Clickable,
     iconId: String,
+    iconColor: Int,
     text: String,
+    textColor: Int,
 ): LayoutElement {
     val padding = Padding.Builder()
         .setAll(dp(2F))
@@ -93,7 +101,7 @@ private fun button(
         .setPadding(padding)
         .build()
     val button = Button.Builder(context, clickable)
-        .setCustomContent(buttonContent(context, iconId, text))
+        .setCustomContent(buttonContent(context, iconId, iconColor, text, textColor))
         .setSize(ButtonDefaults.EXTRA_LARGE_SIZE)
         .setButtonColors(ButtonDefaults.SECONDARY_COLORS)
         .build()
@@ -104,21 +112,29 @@ private fun button(
         .build()
 }
 
-private fun buttonContent(context: Context, iconId: String, text: String): LayoutElement {
-    val color = ColorProp.Builder(Colors.DEFAULT.onSurface)
+private fun buttonContent(
+    context: Context,
+    iconId: String,
+    iconColor: Int,
+    text: String,
+    textColor: Int,
+): LayoutElement {
+    val iconColorProp = ColorProp.Builder(iconColor)
         .build()
-    val colorFilter = ColorFilter.Builder()
-        .setTint(color)
+    val iconColorFilter = ColorFilter.Builder()
+        .setTint(iconColorProp)
         .build()
     val iconContent = Image.Builder()
         .setWidth(dp(36F))
         .setHeight(dp(36F))
         .setResourceId(iconId)
-        .setColorFilter(colorFilter)
+        .setColorFilter(iconColorFilter)
+        .build()
+    val textColorProp = ColorProp.Builder(textColor)
         .build()
     val labelContent = Text.Builder(context, text)
         .setTypography(Typography.TYPOGRAPHY_CAPTION1)
-        .setColor(color)
+        .setColor(textColorProp)
         .build()
 
     return Column.Builder()
@@ -132,12 +148,26 @@ private fun triggerButton(context: Context, text: String): LayoutElement {
     val clickable = Clickable.Builder()
         .build()
 
-    return button(context, clickable, RES_IC_SCENE, text)
+    return button(
+        context = context,
+        clickable = clickable,
+        iconId = RES_IC_SCENE,
+        iconColor = 0xFFFFC107.toInt(),
+        text = text,
+        textColor = Colors.DEFAULT.onSurface,
+    )
 }
 
 private fun addButton(context: Context): LayoutElement {
     val clickable = Clickable.Builder()
         .build()
 
-    return button(context, clickable, RES_IC_SCENE, "添加收藏")
+    return button(
+        context = context,
+        clickable = clickable,
+        iconId = RES_IC_ADD,
+        iconColor = 0xFF4CAF50.toInt(),
+        text = "添加收藏",
+        textColor = Colors.DEFAULT.onSurface,
+    )
 }
