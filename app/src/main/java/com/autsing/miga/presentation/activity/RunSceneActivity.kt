@@ -11,6 +11,7 @@ import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -57,6 +58,11 @@ class RunSceneActivity : ComponentActivity() {
 
             message.value = apiHelper.runScene(auth, scene).getOrThrow()
             loading.value = false
+
+            if (message.value == "ok") {
+                delay(1000)
+                finish()
+            }
         }.onFailure {
             message.value = it.message ?: it.stackTraceToString()
             loading.value = false
