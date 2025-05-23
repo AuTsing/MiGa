@@ -8,7 +8,8 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 @Serializable
 @JsonIgnoreUnknownKeys
 data class LoginLpResponse(
-    val userId: Int,
+    @Serializable(with = IntToStringTransformingSerializer::class)
+    val userId: String,
     val ssecurity: String,
     val location: String,
 )

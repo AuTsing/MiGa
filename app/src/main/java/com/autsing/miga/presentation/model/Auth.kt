@@ -4,7 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Auth(
-    val userId: Int,
+    @Serializable(with = IntToStringTransformingSerializer::class)
+    val userId: String,
     val ssecurity: String,
     val deviceId: String,
     val serviceToken: String,
