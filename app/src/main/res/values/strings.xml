@@ -1,10 +1,8 @@
 <resources>
     <string name="app_name">MiGa</string>
-    <!--
-    This string is used for square devices and overridden by hello_world in
-    values-round/strings.xml for round devices.
-    -->
-    <string name="hello_world">From the Square world,\nHello, %1$s!</string>
     <string name="tile_label">智能场景</string>
-    <string name="complication_label">智能场景</string>
+    <string name="favorite_scene_1_complication_label">智能场景1</string>
+    <string name="favorite_scene_2_complication_label">智能场景2</string>
+    <string name="favorite_scene_3_complication_label">智能场景3</string>
+    <string name="favorite_scene_4_complication_label">智能场景4</string>
 </resources>

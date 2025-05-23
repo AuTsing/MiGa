@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.Constants.TAG
@@ -57,14 +58,15 @@ class MainViewModel : ViewModel() {
             val auth = Json.decodeFromString<Auth>(authJson)
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
-                val scenes = sceneRepository.loadScenesLocal(favoriteScenes)
+                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
+                    .getOrDefault(emptySet())
+                val scenes = sceneRepository.loadScenesLocal(favoriteSceneIds)
                     .getOrElse {
                         sceneRepository
-                            .loadScenesRemote(auth, favoriteScenes)
+                            .loadScenesRemote(auth, favoriteSceneIds)
                             .getOrDefault(emptyList())
                     }
-                return@async Pair(favoriteScenes, scenes)
+                return@async Pair(favoriteSceneIds, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
                 val devices = deviceRepository.loadDevicesLocal()
@@ -112,11 +114,12 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
+                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
+                    .getOrDefault(emptySet())
                 val scenes = sceneRepository
-                    .loadScenesRemote(auth, favoriteScenes)
+                    .loadScenesRemote(auth, favoriteSceneIds)
                     .getOrDefault(emptyList())
-                return@async Pair(favoriteScenes, scenes)
+                return@async Pair(favoriteSceneIds, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
                 val devices = deviceRepository.loadDevicesRemote(auth).getOrDefault(emptyList())
@@ -181,9 +184,10 @@ class MainViewModel : ViewModel() {
             }
 
             val favoriteScenesJson = Json.encodeToString(favoriteScenes)
-            fileHelper.writeJson("favorite_scenes.json", favoriteScenesJson).getOrThrow()
+            fileHelper.writeJson("favorite_scene_ids.json", favoriteScenesJson).getOrThrow()
 
             MainTileService.requestUpdate(context)
+            FavoriteSceneComplicationService.requestUpdate(context)
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
         }

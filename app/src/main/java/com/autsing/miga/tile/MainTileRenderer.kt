@@ -1,6 +1,5 @@
 package com.autsing.miga.tile
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
@@ -151,7 +150,6 @@ private fun buttonContent(
         .build()
 }
 
-@SuppressLint("RestrictedApi")
 private fun triggerButton(context: Context, scene: Scene): LayoutElement {
     val extra = AndroidStringExtra.Builder()
         .setValue(scene.scene_id)

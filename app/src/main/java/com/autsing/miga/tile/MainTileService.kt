@@ -33,13 +33,10 @@ class MainTileService : SuspendingTileService() {
     }
 
     override suspend fun tileRequest(requestParams: TileRequest): Tile {
-        val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptySet())
-        val scenes = sceneRepository.loadScenesLocal(favoriteScenes)
-            .getOrDefault(emptyList())
-            .filter { it.scene_id in favoriteScenes }
+        val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptyList())
 
         val state = MainTileState(
-            scenes = scenes,
+            scenes = favoriteScenes,
         )
 
         return renderer.renderTimeline(state, requestParams)
