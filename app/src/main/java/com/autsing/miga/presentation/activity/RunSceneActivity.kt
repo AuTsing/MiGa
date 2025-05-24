@@ -89,7 +89,7 @@ class RunSceneActivity : ComponentActivity() {
             }.getOrElse { throw Exception("用户信息无效") }
             val scene = runCatching {
                 val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
-                val scenes = sceneRepository.loadScenesLocal(emptySet()).getOrThrow()
+                val scenes = sceneRepository.loadScenesLocal(emptyList()).getOrThrow()
                 scenes.first { it.scene_id == sceneId }
             }.getOrElse { throw Exception("场景信息无效") }
 

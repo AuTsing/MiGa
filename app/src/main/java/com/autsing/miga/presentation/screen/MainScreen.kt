@@ -76,7 +76,7 @@ fun MainScreen(
                 MainContent(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
-                    favoriteScenes = uiState.favoriteScenes,
+                    favoriteSceneIds = uiState.favoriteSceneIds,
                     deviceIconUrls = uiState.deviceIconUrls,
                     onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
                     onClickToggleSceneFavorite = {
@@ -269,7 +269,7 @@ private fun ReloadButton(
 private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
-    favoriteScenes: Set<String>,
+    favoriteSceneIds: List<String>,
     deviceIconUrls: Map<String, String>,
     onClickScene: (Scene) -> Unit = {},
     onClickToggleSceneFavorite: (Scene) -> Unit = {},
@@ -283,7 +283,7 @@ private fun MainContent(
         items(scenes) {
             SceneChip(
                 scene = it,
-                favorite = it.scene_id in favoriteScenes,
+                favorite = it.scene_id in favoriteSceneIds,
                 onClick = onClickScene,
                 onClickFavorite = onClickToggleSceneFavorite,
             )

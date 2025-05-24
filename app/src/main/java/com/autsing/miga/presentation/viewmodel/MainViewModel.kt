@@ -32,7 +32,7 @@ data class MainUiState(
     val showedLogin: Boolean = false,
     val scenes: List<Scene> = emptyList(),
     val devices: List<Device> = emptyList(),
-    val favoriteScenes: Set<String> = emptySet(),
+    val favoriteSceneIds: List<String> = emptyList(),
     val deviceIconUrls: Map<String, String> = emptyMap(),
 )
 
@@ -59,7 +59,7 @@ class MainViewModel : ViewModel() {
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
-                    .getOrDefault(emptySet())
+                    .getOrDefault(emptyList())
                 val scenes = sceneRepository.loadScenesLocal(favoriteSceneIds)
                     .getOrElse {
                         sceneRepository
@@ -88,7 +88,7 @@ class MainViewModel : ViewModel() {
                     auth = auth,
                     scenes = scenes,
                     devices = devices,
-                    favoriteScenes = favoriteScenes,
+                    favoriteSceneIds = favoriteScenes,
                     deviceIconUrls = deviceIconUrls,
                 )
             }
@@ -115,7 +115,7 @@ class MainViewModel : ViewModel() {
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
-                    .getOrDefault(emptySet())
+                    .getOrDefault(emptyList())
                 val scenes = sceneRepository
                     .loadScenesRemote(auth, favoriteSceneIds)
                     .getOrDefault(emptyList())
@@ -136,7 +136,7 @@ class MainViewModel : ViewModel() {
                 uiState = uiState.copy(
                     scenes = scenes,
                     devices = devices,
-                    favoriteScenes = favoriteScenes,
+                    favoriteSceneIds = favoriteScenes,
                     deviceIconUrls = deviceIconUrls,
                 )
             }
@@ -170,20 +170,22 @@ class MainViewModel : ViewModel() {
         scene: Scene,
     ) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
-            val favoriteScenes = uiState.favoriteScenes
-                .toMutableSet()
+            val favoriteSceneIds = uiState.favoriteSceneIds
+                .toMutableList()
                 .apply { if (scene.scene_id in this) remove(scene.scene_id) else add(scene.scene_id) }
+            val favoriteSceneIdsMap = favoriteSceneIds.withIndex()
+                .associate { it.value to it.index }
             val scenes = uiState.scenes
-                .sortedByDescending { it.scene_id in favoriteScenes }
+                .sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
 
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     scenes = scenes,
-                    favoriteScenes = favoriteScenes,
+                    favoriteSceneIds = favoriteSceneIds,
                 )
             }
 
-            val favoriteScenesJson = Json.encodeToString(favoriteScenes)
+            val favoriteScenesJson = Json.encodeToString(favoriteSceneIds)
             fileHelper.writeJson("favorite_scene_ids.json", favoriteScenesJson).getOrThrow()
 
             MainTileService.requestUpdate(context)
