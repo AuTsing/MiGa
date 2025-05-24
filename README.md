@@ -4,7 +4,7 @@ MiGa (米咖) 是基于米家 API 开发的第三方应用，为手表开发，�
 
 ## 截图
 
-<img width="160" alt="" src="assets/Screenshot_20250520_122648.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122733.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122706.png"/> <img width="160" alt="" src="assets/Screenshot_20250523_031623.png"/>
+<img width="160" alt="" src="assets/Screenshot_20250520_122648.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122733.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122706.png"/> <img width="160" alt="" src="assets/Screenshot_20250523_031623.png"/> <img width="160" alt="" src="assets/Screenshot_20250525_004517.png"/>
 
 ## 功能
 
@@ -12,8 +12,8 @@ MiGa (米咖) 是基于米家 API 开发的第三方应用，为手表开发，�
 -   ✅ 浏览智能场景列表
 -   ✅ 手动触发智能场景
 -   ✅ 收藏智能场景
--   ✅ 通过功能块触发智能场景
--   [ ] 通过表盘触发智能场景
+-   ✅ 通过功能块(卡片)触发智能场景
+-   ✅ 通过复杂功能(表盘)触发智能场景
 -   [ ] 设备控制
 
 ## 感谢
