@@ -58,9 +58,11 @@ class SceneRepository(
     suspend fun loadFavoriteScenes(): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
             val favoriteSceneIds = loadFavoriteSceneIds().getOrThrow()
-            val scenes = loadScenesLocal(favoriteSceneIds)
-                .getOrThrow()
+            val favoriteSceneIdsMap = favoriteSceneIds.withIndex()
+                .associate { it.value to it.index }
+            val scenes = loadScenesLocal(favoriteSceneIds).getOrThrow()
                 .filter { it.scene_id in favoriteSceneIds }
+                .sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
             return@runCatching scenes
         }
     }
