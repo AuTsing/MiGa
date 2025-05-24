@@ -61,11 +61,16 @@ abstract class FavoriteSceneComplicationService : SuspendingComplicationDataSour
         val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptyList())
         val maybeScene = favoriteScenes.getOrNull(favoriteIndex)
         if (maybeScene == null) {
-            return ComplicationDataUtil.createAddComplicationData()
+            return ComplicationDataUtil.createAddComplicationData(
+                context = this,
+                requestCode = request.complicationInstanceId,
+            )
         }
         return ComplicationDataUtil.createTriggerComplicationData(
             text = maybeScene.name,
             contentDescription = maybeScene.name,
+            context = this,
+            requestCode = request.complicationInstanceId,
             sceneId = maybeScene.scene_id,
         )
     }

@@ -1,9 +1,6 @@
 package com.autsing.miga.tile
 
 import android.content.Context
-import androidx.wear.protolayout.ActionBuilders.AndroidActivity
-import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
-import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import androidx.wear.protolayout.ColorBuilders.ColorProp
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
 import androidx.wear.protolayout.DimensionBuilders
@@ -151,17 +148,7 @@ private fun buttonContent(
 }
 
 private fun triggerButton(context: Context, scene: Scene): LayoutElement {
-    val extra = AndroidStringExtra.Builder()
-        .setValue(scene.scene_id)
-        .build()
-    val activity = AndroidActivity.Builder()
-        .setPackageName(context.packageName)
-        .setClassName(RunSceneActivity::class.java.name)
-        .addKeyToExtraMapping(RunSceneActivity.EXTRA_SCENE_ID, extra)
-        .build()
-    val action = LaunchAction.Builder()
-        .setAndroidActivity(activity)
-        .build()
+    val action = RunSceneActivity.createLaunchAction(context, scene.scene_id)
     val clickable = Clickable.Builder()
         .setOnClick(action)
         .build()
@@ -177,13 +164,7 @@ private fun triggerButton(context: Context, scene: Scene): LayoutElement {
 }
 
 private fun addButton(context: Context): LayoutElement {
-    val activity = AndroidActivity.Builder()
-        .setPackageName(context.packageName)
-        .setClassName(MainActivity::class.java.name)
-        .build()
-    val action = LaunchAction.Builder()
-        .setAndroidActivity(activity)
-        .build()
+    val action = MainActivity.createLaunchAction(context)
     val clickable = Clickable.Builder()
         .setOnClick(action)
         .build()
