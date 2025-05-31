@@ -69,8 +69,6 @@ class RunSceneActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setTheme(android.R.style.Theme_DeviceDefault)
-
         setContent {
             val loading = loading.collectAsState()
             val message = message.collectAsState()

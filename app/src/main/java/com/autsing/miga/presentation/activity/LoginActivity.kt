@@ -7,10 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
-import com.autsing.miga.presentation.model.Auth
-import com.autsing.miga.presentation.screen.LoginScreen
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.helper.LoginHelper
+import com.autsing.miga.presentation.model.Auth
+import com.autsing.miga.presentation.screen.LoginScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -30,8 +30,6 @@ class LoginActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
             val loginUrl = loginUrl.collectAsState()

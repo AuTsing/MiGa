@@ -46,8 +46,6 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        setTheme(android.R.style.Theme_DeviceDefault)
-
         setContent { MainScreen(mainViewModel) }
     }
 
