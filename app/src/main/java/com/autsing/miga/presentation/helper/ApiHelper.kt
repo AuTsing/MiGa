@@ -3,7 +3,9 @@ package com.autsing.miga.presentation.helper
 import android.util.Log
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.GetDeviceBaikeResponse
+import com.autsing.miga.presentation.model.GetDeviceInfoResponse
 import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
 import com.autsing.miga.presentation.model.GetHomesData
@@ -186,9 +188,7 @@ class ApiHelper {
         var maybeResponse: Response? = null
 
         runCatching {
-            val request = Request.Builder()
-                .url("${Constants.PRODUCT_URL}?model=$model")
-                .build()
+            val request = Request.Builder().url("${Constants.PRODUCT_URL}?model=$model").build()
             val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
             val json = response.body?.string() ?: ""
             val getDeviceBaikeResponse = Json.decodeFromString<GetDeviceBaikeResponse>(json)
@@ -196,6 +196,85 @@ class ApiHelper {
             return@runCatching getDeviceBaikeResponse.data.realIcon
         }.onFailure {
             Log.e(Constants.TAG, "getDeviceIconUrl: ${it.stackTraceToString()}")
+        }.also {
+            maybeResponse?.close()
+        }
+    }
+
+    suspend fun getDeviceInfo(device: Device): Result<DeviceInfo> = withContext(Dispatchers.IO) {
+        var maybeResponse: Response? = null
+
+        runCatching {
+            val request = Request.Builder().url("${Constants.DEVICE_URL}/${device.model}").build()
+            val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
+            val responseContent = response.body?.string() ?: throw Exception("获取设备信息失败")
+            val getDeviceInfoContent = Regex("""data-page="(.*?)">""").find(responseContent)
+                ?.groups
+                ?.get(1)
+                ?.value
+                ?: throw Exception("获取设备信息失败")
+            val getDeviceInfoJson = getDeviceInfoContent.replace("&quot;", "\"")
+            val getDeviceInfoResponse = Json
+                .decodeFromString<GetDeviceInfoResponse>(getDeviceInfoJson)
+
+            val (deviceInfoName, deviceInfoModel) = if (getDeviceInfoResponse.props.product != null) {
+                Pair(
+                    getDeviceInfoResponse.props.product.name,
+                    getDeviceInfoResponse.props.product.model,
+                )
+            } else {
+                Pair(getDeviceInfoResponse.props.spec.name, device.model)
+            }
+            val deviceInfoProperties = mutableListOf<DeviceInfo.Property>()
+            val deviceInfoActions = mutableListOf<DeviceInfo.Action>()
+
+            val services = getDeviceInfoResponse.props.spec.services.values
+            for (service in services) {
+
+                val properties = service.properties?.values ?: emptyList()
+                for (property in properties) {
+                    deviceInfoProperties.add(
+                        DeviceInfo.Property(
+                            name = property.name,
+                            description = property.description,
+                            descZhCn = property.desc_zh_cn ?: "",
+                            type = property.format,
+                            accesses = property.access,
+                            unit = property.unit ?: "",
+                            range = property.valueRange ?: emptyList(),
+                            values = property.valueList ?: emptyList(),
+                            method = DeviceInfo.Property.Method(
+                                ssid = service.iid,
+                                piid = property.iid,
+                            )
+                        )
+                    )
+                }
+
+                val actions = service.actions?.values ?: emptyList()
+                for (action in actions) {
+                    deviceInfoActions.add(
+                        DeviceInfo.Action(
+                            name = action.name,
+                            description = action.description,
+                            descZhCn = action.desc_zh_cn ?: "",
+                            method = DeviceInfo.Action.Method(
+                                ssid = service.iid,
+                                aiid = action.iid,
+                            ),
+                        )
+                    )
+                }
+            }
+
+            return@runCatching DeviceInfo(
+                name = deviceInfoName,
+                model = deviceInfoModel,
+                properties = deviceInfoProperties,
+                actions = deviceInfoActions,
+            )
+        }.onFailure {
+            Log.e(Constants.TAG, "getDeviceInfo: ${it.stackTraceToString()}")
         }.also {
             maybeResponse?.close()
         }

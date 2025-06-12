@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.complication.FavoriteSceneComplicationService
+import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.Constants.TAG
@@ -58,25 +59,20 @@ class MainViewModel : ViewModel() {
             val auth = Json.decodeFromString<Auth>(authJson)
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
-                    .getOrDefault(emptyList())
-                val scenes = sceneRepository.loadScenesLocal(favoriteSceneIds)
-                    .getOrElse {
-                        sceneRepository
-                            .loadScenesRemote(auth, favoriteSceneIds)
-                            .getOrDefault(emptyList())
-                    }
+                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds().getOrNull()
+                    ?: emptyList()
+                val scenes = sceneRepository.loadScenesLocal(favoriteSceneIds).getOrNull()
+                    ?: sceneRepository.loadScenesRemote(auth, favoriteSceneIds).getOrNull()
+                    ?: emptyList()
                 return@async Pair(favoriteSceneIds, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                val devices = deviceRepository.loadDevicesLocal()
-                    .getOrElse {
-                        deviceRepository.loadDevicesRemote(auth).getOrDefault(emptyList())
-                    }
-                val deviceIconUrls = deviceRepository.loadDeviceIconUrlsLocal()
-                    .getOrElse {
-                        deviceRepository.loadDeviceIconsRemote(devices).getOrDefault(emptyMap())
-                    }
+                val devices = deviceRepository.loadDevicesLocal().getOrNull()
+                    ?: deviceRepository.loadDevicesRemote(auth).getOrNull()
+                    ?: emptyList()
+                val deviceIconUrls = deviceRepository.loadDeviceIconUrlsLocal().getOrNull()
+                    ?: deviceRepository.loadDeviceIconsRemote(devices).getOrNull()
+                    ?: emptyMap()
                 return@async Pair(devices, deviceIconUrls)
             }
 
@@ -114,18 +110,17 @@ class MainViewModel : ViewModel() {
             }
 
             val scenesJob = async(Dispatchers.IO) {
-                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds()
-                    .getOrDefault(emptyList())
-                val scenes = sceneRepository
-                    .loadScenesRemote(auth, favoriteSceneIds)
-                    .getOrDefault(emptyList())
+                val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds().getOrNull()
+                    ?: emptyList()
+                val scenes = sceneRepository.loadScenesRemote(auth, favoriteSceneIds).getOrNull()
+                    ?: emptyList()
                 return@async Pair(favoriteSceneIds, scenes)
             }
             val devicesJob = async(Dispatchers.IO) {
-                val devices = deviceRepository.loadDevicesRemote(auth).getOrDefault(emptyList())
-                val deviceIconUrls = deviceRepository
-                    .loadDeviceIconsRemote(devices)
-                    .getOrDefault(emptyMap())
+                val devices = deviceRepository.loadDevicesRemote(auth).getOrNull()
+                    ?: emptyList()
+                val deviceIconUrls = deviceRepository.loadDeviceIconsRemote(devices).getOrNull()
+                    ?: emptyMap()
                 return@async Pair(devices, deviceIconUrls)
             }
 
@@ -192,6 +187,14 @@ class MainViewModel : ViewModel() {
             FavoriteSceneComplicationService.requestUpdate(context)
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
+        }
+    }
+
+    fun handleOpenDevice(context: Context, device: Device) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            DeviceActivity.startActivity(context, device.model)
+        }.onFailure {
+            Log.e(TAG, "handleOpenDevice: ${it.stackTraceToString()}")
         }
     }
 }

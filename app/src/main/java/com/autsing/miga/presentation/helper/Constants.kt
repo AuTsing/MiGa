@@ -8,6 +8,6 @@ object Constants {
     const val LOGIN_URL = "https://account.xiaomi.com/pass/serviceLoginAuth2"
     const val QR_URL = "https://account.xiaomi.com/longPolling/loginUrl"
     const val API_URL = "https://api.io.mi.com/app"
-    const val DEVICE_URL = "https://home.miot-spec.com/spec/"
+    const val DEVICE_URL = "https://home.miot-spec.com/spec"
     const val PRODUCT_URL = "https://home.mi.com/cgi-op/api/v1/baike/v2/product"
 }

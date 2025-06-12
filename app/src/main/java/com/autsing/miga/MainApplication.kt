@@ -24,5 +24,4 @@ class MainApplication : Application() {
             apiHelper = ApiHelper.instance,
         )
     }
-
 }

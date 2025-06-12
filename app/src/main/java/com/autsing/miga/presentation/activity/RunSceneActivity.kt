@@ -25,7 +25,7 @@ import kotlinx.serialization.json.Json
 class RunSceneActivity : ComponentActivity() {
 
     companion object {
-        const val EXTRA_SCENE_ID: String = "extra_scene_id"
+        private const val EXTRA_SCENE_ID: String = "extra_scene_id"
 
         fun createLaunchAction(context: Context, sceneId: String): LaunchAction {
             val extra = AndroidStringExtra.Builder()

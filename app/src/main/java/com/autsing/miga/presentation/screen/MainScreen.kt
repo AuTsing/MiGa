@@ -82,6 +82,7 @@ fun MainScreen(
                     onClickToggleSceneFavorite = {
                         mainViewModel.handleToggleSceneFavorite(context, it)
                     },
+                    onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }
@@ -233,9 +234,10 @@ private fun SceneChip(
 private fun DeviceChip(
     device: Device,
     iconUrl: String,
+    onClick: () -> Unit = {},
 ) {
     Chip(
-        onClick = {},
+        onClick = onClick,
         icon = {
             if (iconUrl.isBlank()) {
                 ChipIcon(R.drawable.ic_fluent_device_meeting_room_icon)
@@ -273,6 +275,7 @@ private fun MainContent(
     deviceIconUrls: Map<String, String>,
     onClickScene: (Scene) -> Unit = {},
     onClickToggleSceneFavorite: (Scene) -> Unit = {},
+    onClickDevice: (Device) -> Unit = {},
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
@@ -296,6 +299,7 @@ private fun MainContent(
             DeviceChip(
                 device = it,
                 iconUrl = deviceIconUrls.getOrDefault(it.model, ""),
+                onClick = { onClickDevice(it) }
             )
         }
         item { ReloadButton(onClickReload) }
