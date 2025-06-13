@@ -241,7 +241,7 @@ class ApiHelper {
                             type = property.format,
                             accesses = property.access,
                             unit = property.unit ?: "",
-                            range = property.valueRange ?: emptyList(),
+                            range = property.valueRange ?: GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.None(),
                             values = property.valueList ?: emptyList(),
                             method = DeviceInfo.Property.Method(
                                 ssid = service.iid,

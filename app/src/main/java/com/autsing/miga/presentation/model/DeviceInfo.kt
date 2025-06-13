@@ -18,7 +18,7 @@ data class DeviceInfo(
         val type: String,
         val accesses: Set<GetDeviceInfoResponse.Props.Spec.Service.Property.Access>,
         val unit: String,
-        val range: List<Int>,
+        val range: GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges,
         val values: List<GetDeviceInfoResponse.Props.Spec.Service.Property.Value>,
         val method: Method,
     ) {

@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.MaterialTheme
 import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.DeviceViewModel
 
@@ -26,9 +29,18 @@ fun DeviceScreen(
         ) {
             if (uiState.loading) {
                 LoadingContent("加载中...")
-            } else {
-
+            } else if (uiState.deviceInfo != null) {
+                DeviceInfoContent(uiState.deviceInfo)
             }
+        }
+    }
+}
+
+@Composable
+fun DeviceInfoContent(deviceInfo: DeviceInfo) {
+    ScalingLazyColumn {
+        items(deviceInfo.properties) {
+
         }
     }
 }

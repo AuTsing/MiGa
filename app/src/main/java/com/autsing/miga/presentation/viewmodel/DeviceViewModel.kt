@@ -1,5 +1,6 @@
 package com.autsing.miga.presentation.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -51,6 +52,7 @@ class DeviceViewModel : ViewModel() {
 //            withContext(Dispatchers.Main) {
 //                uiState = uiState.copy(loading = false)
 //            }
+            Log.d("TAG", "handleLoad: $it")
         }
     }
 }
