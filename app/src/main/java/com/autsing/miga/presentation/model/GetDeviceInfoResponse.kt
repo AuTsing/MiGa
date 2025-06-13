@@ -9,6 +9,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonEncoder
@@ -71,7 +72,7 @@ data class GetDeviceInfoResponse(
                     val format: String,
                     val name: String,
                     val description: String,
-                    val access: Set<Access>,
+                    val access: List<String>,
                     val unit: String? = null,
                     @SerialName("value-range")
                     val valueRange: Ranges? = null,
@@ -108,31 +109,26 @@ data class GetDeviceInfoResponse(
                                 put("description", JsonPrimitive(property.description))
                                 put(
                                     "access",
-                                    JsonArray(property.access.map { JsonPrimitive(it.value) }),
+                                    JsonArray(property.access.map { JsonPrimitive(it) }),
                                 )
 
                                 property.unit?.let { put("unit", JsonPrimitive(it)) }
                                 property.valueRange?.let {
                                     val array = when (it) {
-                                        is Ranges.Uint8 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Uint16 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Uint32 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Int8 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Int16 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Int32 -> it.values.map { JsonPrimitive(it.toInt()) }
-                                        is Ranges.Float -> it.values.map { JsonPrimitive(it.toFloat()) }
+                                        is Ranges.Uint8 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Uint16 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Uint32 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Int8 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Int16 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Int32 -> it.values.map { JsonPrimitive(it) }
+                                        is Ranges.Float -> it.values.map { JsonPrimitive(it) }
                                         is Ranges.None -> emptyList()
                                     }
                                     put("value-range", JsonArray(array))
                                 }
                                 property.valueList?.let { value ->
                                     val array = value.map { v ->
-                                        buildJsonObject {
-                                            put("value", JsonPrimitive(v.value))
-                                            put("description", JsonPrimitive(v.description))
-                                            v.desc_zh_cn
-                                                ?.let { put("desc_zh_cn", JsonPrimitive(it)) }
-                                        }
+                                        Json.encodeToJsonElement(Value.serializer(), v)
                                     }
                                     put("value-list", JsonArray(array))
                                 }
@@ -147,13 +143,8 @@ data class GetDeviceInfoResponse(
 
                             val jsonObject = decoder.decodeJsonElement().jsonObject
                             val format = jsonObject["format"]!!.jsonPrimitive.content
-                            val accessArray = jsonObject["access"]!!.jsonArray
-                            val access = mutableSetOf<Access>().apply {
-                                val accesses = accessArray.map { it.jsonPrimitive.content }
-                                if ("read" in accesses) add(Access.Read)
-                                if ("write" in accesses) add(Access.Write)
-                                if ("notify" in accesses) add(Access.Notify)
-                            }
+                            val access = jsonObject["access"]!!.jsonArray
+                                .map { it.jsonPrimitive.content }
                             val valueRangeArray = jsonObject["value-range"]?.jsonArray
                             val valueRange = valueRangeArray
                                 ?.takeIf { it.isNotEmpty() }
@@ -170,14 +161,7 @@ data class GetDeviceInfoResponse(
                                     }
                                 }
                             val valueList = jsonObject["value-list"]?.jsonArray
-                                ?.map { value ->
-                                    val valueObject = value.jsonObject
-                                    Value(
-                                        value = valueObject["value"]!!.jsonPrimitive.int,
-                                        description = valueObject["description"]!!.jsonPrimitive.content,
-                                        desc_zh_cn = valueObject["desc_zh_cn"]?.jsonPrimitive?.content,
-                                    )
-                                }
+                                ?.map { Json.decodeFromJsonElement(Value.serializer(), it) }
 
                             return Property(
                                 iid = jsonObject["iid"]!!.jsonPrimitive.int,
@@ -192,12 +176,6 @@ data class GetDeviceInfoResponse(
                                 desc_zh_cn = jsonObject["desc_zh_cn"]?.jsonPrimitive?.content,
                             )
                         }
-                    }
-
-                    enum class Access(val value: String) {
-                        Read("read"),
-                        Write("write"),
-                        Notify("notify"),
                     }
 
                     @Serializable

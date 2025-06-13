@@ -233,15 +233,68 @@ class ApiHelper {
 
                 val properties = service.properties?.values ?: emptyList()
                 for (property in properties) {
+
+                    val access = DeviceInfo.Property.Access(
+                        read = property.access.contains("read"),
+                        write = property.access.contains("write"),
+                        notify = property.access.contains("notify"),
+                    )
+                    val range = when (property.valueRange) {
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint8 -> DeviceInfo.Property.Range.Uint8(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint16 -> DeviceInfo.Property.Range.Uint16(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint32 -> DeviceInfo.Property.Range.Uint32(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int8 -> DeviceInfo.Property.Range.Int8(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int16 -> DeviceInfo.Property.Range.Int16(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int32 -> DeviceInfo.Property.Range.Int32(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Float -> DeviceInfo.Property.Range.Float(
+                            from = property.valueRange.values[0],
+                            to = property.valueRange.values[1],
+                            step = property.valueRange.values[2],
+                        )
+
+                        else -> DeviceInfo.Property.Range.None()
+                    }
+
                     deviceInfoProperties.add(
                         DeviceInfo.Property(
                             name = property.name,
                             description = property.description,
                             descZhCn = property.desc_zh_cn ?: "",
                             type = property.format,
-                            accesses = property.access,
+                            access = access,
                             unit = property.unit ?: "",
-                            range = property.valueRange ?: GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.None(),
+                            range = range,
                             values = property.valueList ?: emptyList(),
                             method = DeviceInfo.Property.Method(
                                 ssid = service.iid,
