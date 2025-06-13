@@ -234,6 +234,7 @@ class ApiHelper {
                 val properties = service.properties?.values ?: emptyList()
                 for (property in properties) {
 
+                    val type = property.format
                     val access = DeviceInfo.Property.Access(
                         read = property.access.contains("read"),
                         write = property.access.contains("write"),
@@ -291,7 +292,7 @@ class ApiHelper {
                             name = property.name,
                             description = property.description,
                             descZhCn = property.desc_zh_cn ?: "",
-                            type = property.format,
+                            type = type,
                             access = access,
                             unit = property.unit ?: "",
                             range = range,

@@ -1,6 +1,8 @@
 package com.autsing.miga.presentation.model
 
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
@@ -39,33 +41,82 @@ data class DeviceInfo(
         @Serializable(with = Range.Serializer::class)
         sealed class Range {
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Uint8(val from: UByte, val to: UByte, val step: UByte) : Range()
+            data class Uint8(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "uint8",
+                val from: UByte,
+                val to: UByte,
+                val step: UByte,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Uint16(val from: UShort, val to: UShort, val step: UShort) : Range()
+            data class Uint16(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "uint16",
+                val from: UShort,
+                val to: UShort,
+                val step: UShort,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Uint32(val from: UInt, val to: UInt, val step: UInt) : Range()
+            data class Uint32(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "uint32",
+                val from: UInt,
+                val to: UInt,
+                val step: UInt,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Int8(val from: Byte, val to: Byte, val step: Byte) : Range()
+            data class Int8(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "int8",
+                val from: Byte,
+                val to: Byte,
+                val step: Byte,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Int16(val from: Short, val to: Short, val step: Short) : Range()
+            data class Int16(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "uint16",
+                val from: Short,
+                val to: Short,
+                val step: Short,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Int32(val from: Int, val to: Int, val step: Int) : Range()
+            data class Int32(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "uint32",
+                val from: Int,
+                val to: Int,
+                val step: Int,
+            ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             data class Float(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "float",
                 val from: kotlin.Float,
                 val to: kotlin.Float,
                 val step: kotlin.Float,
             ) : Range()
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            class None() : Range()
+            data class None(
+                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+                val type: String = "none"
+            ) : Range()
 
             object Serializer : JsonContentPolymorphicSerializer<Range>(Range::class) {
                 override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Range> {

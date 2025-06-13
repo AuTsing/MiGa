@@ -122,7 +122,6 @@ data class GetDeviceInfoResponse(
                                         is Ranges.Int16 -> it.values.map { JsonPrimitive(it) }
                                         is Ranges.Int32 -> it.values.map { JsonPrimitive(it) }
                                         is Ranges.Float -> it.values.map { JsonPrimitive(it) }
-                                        is Ranges.None -> emptyList()
                                     }
                                     put("value-range", JsonArray(array))
                                 }
@@ -157,7 +156,7 @@ data class GetDeviceInfoResponse(
                                         "int16" -> Ranges.Int16(array.map { it.jsonPrimitive.int.toShort() })
                                         "int32" -> Ranges.Int32(array.map { it.jsonPrimitive.int })
                                         "float" -> Ranges.Float(array.map { it.jsonPrimitive.float })
-                                        else -> Ranges.None()
+                                        else -> null
                                     }
                                 }
                             val valueList = jsonObject["value-list"]?.jsonArray
@@ -187,7 +186,6 @@ data class GetDeviceInfoResponse(
                         data class Int16(val values: List<Short>) : Ranges()
                         data class Int32(val values: List<Int>) : Ranges()
                         data class Float(val values: List<kotlin.Float>) : Ranges()
-                        class None : Ranges()
                     }
 
                     @OptIn(ExperimentalSerializationApi::class)
