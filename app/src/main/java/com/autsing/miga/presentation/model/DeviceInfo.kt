@@ -43,26 +43,6 @@ data class DeviceInfo(
 
             @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Uint8(
-                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-                val type: String = "uint8",
-                val from: UByte,
-                val to: UByte,
-                val step: UByte,
-            ) : Range()
-
-            @OptIn(ExperimentalSerializationApi::class)
-            @Serializable
-            data class Uint16(
-                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-                val type: String = "uint16",
-                val from: UShort,
-                val to: UShort,
-                val step: UShort,
-            ) : Range()
-
-            @OptIn(ExperimentalSerializationApi::class)
-            @Serializable
             data class Uint32(
                 @EncodeDefault(EncodeDefault.Mode.ALWAYS)
                 val type: String = "uint32",
@@ -73,29 +53,9 @@ data class DeviceInfo(
 
             @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            data class Int8(
-                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-                val type: String = "int8",
-                val from: Byte,
-                val to: Byte,
-                val step: Byte,
-            ) : Range()
-
-            @OptIn(ExperimentalSerializationApi::class)
-            @Serializable
-            data class Int16(
-                @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-                val type: String = "uint16",
-                val from: Short,
-                val to: Short,
-                val step: Short,
-            ) : Range()
-
-            @OptIn(ExperimentalSerializationApi::class)
-            @Serializable
             data class Int32(
                 @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-                val type: String = "uint32",
+                val type: String = "int32",
                 val from: Int,
                 val to: Int,
                 val step: Int,
@@ -123,11 +83,7 @@ data class DeviceInfo(
                     val type = element.jsonObject["type"]?.jsonPrimitive?.content
                         ?: throw SerializationException("Missing `type` field")
                     return when (type) {
-                        "uint8" -> Uint8.serializer()
-                        "uint16" -> Uint16.serializer()
                         "uint32" -> Uint32.serializer()
-                        "int8" -> Int8.serializer()
-                        "int16" -> Int16.serializer()
                         "int32" -> Int32.serializer()
                         "float" -> Float.serializer()
                         else -> None.serializer()

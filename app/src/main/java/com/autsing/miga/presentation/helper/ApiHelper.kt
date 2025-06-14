@@ -242,16 +242,16 @@ class ApiHelper {
                     )
                     val range = when (property.valueRange) {
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint8 -> DeviceInfo.Property.Range.Uint8(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint8 -> DeviceInfo.Property.Range.Uint32(
+                            from = property.valueRange.values[0].toUInt(),
+                            to = property.valueRange.values[1].toUInt(),
+                            step = property.valueRange.values[2].toUInt(),
                         )
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint16 -> DeviceInfo.Property.Range.Uint16(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint16 -> DeviceInfo.Property.Range.Uint32(
+                            from = property.valueRange.values[0].toUInt(),
+                            to = property.valueRange.values[1].toUInt(),
+                            step = property.valueRange.values[2].toUInt(),
                         )
 
                         is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint32 -> DeviceInfo.Property.Range.Uint32(
@@ -260,16 +260,16 @@ class ApiHelper {
                             step = property.valueRange.values[2],
                         )
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int8 -> DeviceInfo.Property.Range.Int8(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int8 -> DeviceInfo.Property.Range.Int32(
+                            from = property.valueRange.values[0].toInt(),
+                            to = property.valueRange.values[1].toInt(),
+                            step = property.valueRange.values[2].toInt(),
                         )
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int16 -> DeviceInfo.Property.Range.Int16(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int16 -> DeviceInfo.Property.Range.Int32(
+                            from = property.valueRange.values[0].toInt(),
+                            to = property.valueRange.values[1].toInt(),
+                            step = property.valueRange.values[2].toInt(),
                         )
 
                         is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int32 -> DeviceInfo.Property.Range.Int32(

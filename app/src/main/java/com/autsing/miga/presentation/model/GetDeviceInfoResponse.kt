@@ -59,8 +59,8 @@ data class GetDeviceInfoResponse(
             data class Service(
                 val iid: Int,
                 val urn: String,
-                val properties: Map<String, Property>?,
-                val actions: Map<String, Action>?,
+                val properties: Map<String, Property>? = null,
+                val actions: Map<String, Action>? = null,
             ) {
 
                 @OptIn(ExperimentalSerializationApi::class)
