@@ -27,6 +27,7 @@ import androidx.wear.compose.material.Switch
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.ToggleChip
 import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.DeviceViewModel
@@ -46,6 +47,8 @@ fun DeviceScreen(
         ) {
             if (uiState.loading) {
                 LoadingContent("加载中...")
+            } else if (uiState.exception.isNotBlank()) {
+                MessageContent(uiState.exception)
             } else if (uiState.components.isNotEmpty()) {
                 DeviceInfoContent(uiState.components)
             }

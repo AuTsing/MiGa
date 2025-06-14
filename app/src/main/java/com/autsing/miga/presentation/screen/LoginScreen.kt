@@ -14,9 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.google.android.horologist.compose.layout.fillMaxRectangle
 import qrcode.QRCode
@@ -40,34 +41,14 @@ fun LoginScreen(
             ) {
                 Text("使用米家扫描登录")
                 if (exception.isNotBlank()) {
-                    ExceptionContent(exception)
+                    MessageContent(exception)
                 } else if (loginUrl.isBlank()) {
-                    LoadingContent()
+                    LoadingContent("加载中...")
                 } else {
                     QrcodeContent(loginUrl)
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ExceptionContent(exception: String) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        Text(exception)
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        CircularProgressIndicator()
     }
 }
 

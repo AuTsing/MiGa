@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.theme.MiGaTheme
 
 @Composable
@@ -37,14 +37,14 @@ fun RunSceneScreen(
             if (loading) {
                 LoadingContent("执行中...")
             } else {
-                MessageContent(message)
+                ResultContent(message)
             }
         }
     }
 }
 
 @Composable
-private fun MessageContent(message: String) {
+private fun ResultContent(message: String) {
     val context = LocalContext.current
 
     Column(
@@ -57,7 +57,7 @@ private fun MessageContent(message: String) {
                 .fillMaxSize()
                 .weight(1F),
         ) {
-            Text(message)
+            MessageContent(message)
         }
         Button(
             onClick = { (context as Activity).finish() },
