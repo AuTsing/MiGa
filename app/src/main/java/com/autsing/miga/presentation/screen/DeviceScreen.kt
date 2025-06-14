@@ -72,7 +72,7 @@ private fun DeviceInfoContent(components: List<Component>) {
 
 @Composable
 private fun SwitchComponent(component: Component.Switch) {
-    var value by remember { mutableStateOf(false) }
+    var value by remember { mutableStateOf(component.value) }
 
     ToggleChip(
         checked = value,
@@ -95,13 +95,13 @@ private fun ComponentTitle(text: String) {
 
 @Composable
 private fun SliderComponent(component: Component.Slider) {
-    var value by remember { mutableIntStateOf(0) }
+    var value by remember { mutableIntStateOf(component.value) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        ComponentTitle("${component.headline}(${component.valueDisplay})")
+        ComponentTitle("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
             onValueChange = { value = it },
@@ -116,13 +116,13 @@ private fun SliderComponent(component: Component.Slider) {
 
 @Composable
 private fun SelectorComponent(component: Component.Selector) {
-    var value by remember { mutableIntStateOf(0) }
+    var value by remember { mutableIntStateOf(component.value) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        ComponentTitle("${component.headline}(${component.valueDisplay})")
+        ComponentTitle("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
             onValueChange = { value = it },

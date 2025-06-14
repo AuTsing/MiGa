@@ -6,6 +6,8 @@ import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.GetDeviceBaikeResponse
 import com.autsing.miga.presentation.model.GetDeviceInfoResponse
+import com.autsing.miga.presentation.model.GetDevicePropertiesData
+import com.autsing.miga.presentation.model.GetDevicePropertiesResponse
 import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
 import com.autsing.miga.presentation.model.GetHomesData
@@ -331,6 +333,39 @@ class ApiHelper {
             Log.e(Constants.TAG, "getDeviceInfo: ${it.stackTraceToString()}")
         }.also {
             maybeResponse?.close()
+        }
+    }
+
+    suspend fun getDeviceProperties(
+        auth: Auth,
+        device: Device,
+        deviceInfo: DeviceInfo,
+    ): Result<List<Pair<
+            DeviceInfo.Property,
+            GetDevicePropertiesResponse.Result.Value>>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/miotspec/prop/get"
+            val data = GetDevicePropertiesData(
+                params = deviceInfo.properties.map {
+                    GetDevicePropertiesData.Params(
+                        did = device.did,
+                        siid = it.method.ssid,
+                        piid = it.method.piid,
+                    )
+                }
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val getDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
+            val getDevicePropertiesResponse = Json
+                .decodeFromString<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+            val deviceProperties = deviceInfo.properties.mapIndexed { i, it ->
+                Pair(it, getDevicePropertiesResponse.result[i].value)
+            }
+
+            return@runCatching deviceProperties
+        }.onFailure {
+            Log.e(Constants.TAG, "getDeviceProperties: ${it.stackTraceToString()}")
         }
     }
 }
