@@ -4,6 +4,7 @@ import android.util.Log
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
+import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.model.GetDeviceBaikeResponse
 import com.autsing.miga.presentation.model.GetDeviceInfoResponse
 import com.autsing.miga.presentation.model.GetDevicePropertiesData
@@ -18,6 +19,8 @@ import com.autsing.miga.presentation.model.Home
 import com.autsing.miga.presentation.model.RunSceneData
 import com.autsing.miga.presentation.model.RunSceneResponse
 import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.model.SetDevicePropertiesData
+import com.autsing.miga.presentation.model.SetDevicePropertiesResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -340,9 +343,7 @@ class ApiHelper {
         auth: Auth,
         device: Device,
         deviceInfo: DeviceInfo,
-    ): Result<List<Pair<
-            DeviceInfo.Property,
-            GetDevicePropertiesResponse.Result.Value>>> = withContext(Dispatchers.IO) {
+    ): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
         runCatching {
             val uri = "/miotspec/prop/get"
             val data = GetDevicePropertiesData(
@@ -366,6 +367,72 @@ class ApiHelper {
             return@runCatching deviceProperties
         }.onFailure {
             Log.e(Constants.TAG, "getDeviceProperties: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun getDeviceProperty(
+        auth: Auth,
+        device: Device,
+        deviceProperty: DeviceInfo.Property,
+    ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/miotspec/prop/get"
+            val data = GetDevicePropertiesData(
+                params = listOf(
+                    GetDevicePropertiesData.Params(
+                        did = device.did,
+                        siid = deviceProperty.method.ssid,
+                        piid = deviceProperty.method.piid,
+                    )
+                )
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val getDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
+            val getDevicePropertiesResponse = Json
+                .decodeFromString<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+            val deviceProperty = Pair(deviceProperty, getDevicePropertiesResponse.result[0].value)
+
+            return@runCatching deviceProperty
+        }.onFailure {
+            Log.e(Constants.TAG, "getDeviceProperties: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun setDeviceProperty(
+        auth: Auth,
+        device: Device,
+        deviceProperty: DeviceInfo.Property,
+        value: DevicePropertyValue,
+    ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/miotspec/prop/set"
+            val data = SetDevicePropertiesData(
+                params = listOf(
+                    SetDevicePropertiesData.Params(
+                        did = device.did,
+                        siid = deviceProperty.method.ssid,
+                        piid = deviceProperty.method.piid,
+                        value = value,
+                    )
+                )
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val setDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
+            val setDevicePropertiesResponse = Json
+                .decodeFromString<SetDevicePropertiesResponse>(setDevicePropertiesJson)
+
+            val deviceProperty = if (setDevicePropertiesResponse.result[0].code == 0) {
+                val newDeviceProperty = getDeviceProperty(auth, device, deviceProperty).getOrThrow()
+                Pair(deviceProperty, newDeviceProperty.second)
+            } else {
+                Pair(deviceProperty, value)
+            }
+
+            return@runCatching deviceProperty
+        }.onFailure {
+            Log.e(Constants.TAG, "setDeviceProperties: ${it.stackTraceToString()}")
         }
     }
 }

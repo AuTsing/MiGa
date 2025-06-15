@@ -56,6 +56,7 @@ fun DeviceScreen(
                     sliders = uiState.sliderComponents,
                     selectors = uiState.selectorComponents,
                     triggers = uiState.triggerComponents,
+                    onClickSwitch = deviceViewModel::handleChangeSwitch,
                 )
             }
         }
@@ -68,26 +69,38 @@ private fun DeviceInfoContent(
     sliders: List<Component.Slider>,
     selectors: List<Component.Selector>,
     triggers: List<Component.Trigger>,
+    onClickSwitch: (Component.Switch, Boolean) -> Unit = { _, _ -> },
+    onClickSlider: (Component.Slider, Int) -> Unit = { _, _ -> },
+    onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
+    onClickTrigger: (Component.Trigger) -> Unit = {},
 ) {
     ScalingLazyColumn {
         item { ListTitle("开关") }
-        items(switches) { SwitchComponent(it) }
+        items(switches) { switch -> SwitchComponent(switch) { onClickSwitch(switch, it) } }
         item { ListTitle("调整") }
-        items(sliders) { SliderComponent(it) }
-        item { ListTitle("切换") }
-        items(selectors) { SelectorComponent(it) }
-        item { ListTitle("触发") }
-        items(triggers) { TriggerComponent(it) }
+        items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
+        item { ListTitle("模式") }
+        items(selectors) { selector ->
+            SelectorComponent(selector) { onClickSelector(selector, it) }
+        }
+        item { ListTitle("动作") }
+        items(triggers) { trigger -> TriggerComponent(trigger) { onClickTrigger(trigger) } }
     }
 }
 
 @Composable
-private fun SwitchComponent(component: Component.Switch) {
+private fun SwitchComponent(
+    component: Component.Switch,
+    onClick: (Boolean) -> Unit = {},
+) {
     var value by remember { mutableStateOf(component.value) }
 
     ToggleChip(
         checked = value,
-        onCheckedChange = { value = it },
+        onCheckedChange = {
+            value = it
+            onClick(it)
+        },
         label = { Text(component.headline) },
         toggleControl = { Switch(value) },
         enabled = !component.readOnly,
@@ -105,7 +118,10 @@ private fun ComponentTitle(text: String) {
 }
 
 @Composable
-private fun SliderComponent(component: Component.Slider) {
+private fun SliderComponent(
+    component: Component.Slider,
+    onClick: (Int) -> Unit = {},
+) {
     var value by remember { mutableIntStateOf(component.value) }
 
     Column(
@@ -115,7 +131,10 @@ private fun SliderComponent(component: Component.Slider) {
         ComponentTitle("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
-            onValueChange = { value = it },
+            onValueChange = {
+                value = it
+                onClick(it)
+            },
             valueProgression = 0..10,
             segmented = false,
             enabled = !component.readOnly,
@@ -126,7 +145,10 @@ private fun SliderComponent(component: Component.Slider) {
 }
 
 @Composable
-private fun SelectorComponent(component: Component.Selector) {
+private fun SelectorComponent(
+    component: Component.Selector,
+    onClick: (Int) -> Unit = {},
+) {
     var value by remember { mutableIntStateOf(component.value) }
 
     Column(
@@ -136,7 +158,10 @@ private fun SelectorComponent(component: Component.Selector) {
         ComponentTitle("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
-            onValueChange = { value = it },
+            onValueChange = {
+                value = it
+                onClick(it)
+            },
             valueProgression = 0..component.values.size - 1,
             segmented = true,
             enabled = !component.readOnly,
@@ -147,9 +172,12 @@ private fun SelectorComponent(component: Component.Selector) {
 }
 
 @Composable
-private fun TriggerComponent(component: Component.Trigger) {
+private fun TriggerComponent(
+    component: Component.Trigger,
+    onClick: () -> Unit = {},
+) {
     Chip(
-        onClick = {},
+        onClick = onClick,
         label = { Text(component.headline) },
         colors = ChipDefaults.gradientBackgroundChipColors(),
         modifier = Modifier.fillMaxWidth(),

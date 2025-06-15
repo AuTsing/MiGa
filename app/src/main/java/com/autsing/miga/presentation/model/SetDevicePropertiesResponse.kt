@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 @Serializable
-data class GetDevicePropertiesResponse(
+data class SetDevicePropertiesResponse(
     val code: Int,
     val message: String,
     val result: List<Result>,
@@ -19,7 +19,6 @@ data class GetDevicePropertiesResponse(
         val iid: String,
         val siid: Int,
         val piid: Int,
-        val value: DevicePropertyValue = DevicePropertyValue.None,
         val code: Int,
     )
 }

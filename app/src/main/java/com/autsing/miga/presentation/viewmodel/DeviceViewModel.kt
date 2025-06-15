@@ -1,16 +1,19 @@
 package com.autsing.miga.presentation.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.helper.Constants
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
+import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.GetDevicePropertiesResponse
+import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.DeviceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,6 +23,8 @@ import kotlinx.serialization.json.Json
 data class DeviceUiState(
     val loading: Boolean = true,
     val exception: String = "",
+    val auth: Auth? = null,
+    val device: Device? = null,
     val deviceInfo: DeviceInfo? = null,
     val switchComponents: List<Component.Switch> = emptyList(),
     val sliderComponents: List<Component.Slider> = emptyList(),
@@ -55,12 +60,13 @@ class DeviceViewModel : ViewModel() {
 
             val switchProperties = deviceProperties.filter { it.first.type == "bool" }
                 .map { (property, value) ->
-                    val v = if (value is GetDevicePropertiesResponse.Result.Value.Boolean) {
+                    val v = if (value is DevicePropertyValue.Boolean) {
                         value.value
                     } else {
                         false
                     }
                     Component.Switch(
+                        property = property,
                         headline = property.descZhCn.takeIf { it.isNotBlank() }
                             ?.split(" ", "，")[0]
                             ?: property.description,
@@ -74,13 +80,13 @@ class DeviceViewModel : ViewModel() {
                     val (sliderV, sliderDisplay) = when (property.range) {
 
                         is DeviceInfo.Property.Range.Int32 -> {
-                            if (value is GetDevicePropertiesResponse.Result.Value.Int) {
+                            if (value is DevicePropertyValue.Int) {
                                 val v = value.value
                                 val min = property.range.from
                                 val max = property.range.to
                                 val percentage = (v - min).toFloat() / (max - min) * 100
                                 val sliderV = (percentage / 100 * 10).toInt()
-                                val sliderDisplay = "$v${property.unit}"
+                                val sliderDisplay = "$v ${property.unit}"
                                 Pair(sliderV, sliderDisplay)
                             } else {
                                 Pair(0, "")
@@ -88,13 +94,13 @@ class DeviceViewModel : ViewModel() {
                         }
 
                         is DeviceInfo.Property.Range.Uint32 -> {
-                            if (value is GetDevicePropertiesResponse.Result.Value.Int) {
+                            if (value is DevicePropertyValue.Int) {
                                 val v = value.value.toUInt()
                                 val min = property.range.from
                                 val max = property.range.to
                                 val percentage = (v - min).toFloat() / (max - min).toInt() * 100
                                 val sliderV = (percentage / 100 * 10).toInt()
-                                val sliderDisplay = "$v${property.unit}"
+                                val sliderDisplay = "$v ${property.unit}"
                                 Pair(sliderV, sliderDisplay)
                             } else {
                                 Pair(0, "")
@@ -102,13 +108,13 @@ class DeviceViewModel : ViewModel() {
                         }
 
                         is DeviceInfo.Property.Range.Float -> {
-                            if (value is GetDevicePropertiesResponse.Result.Value.Float) {
+                            if (value is DevicePropertyValue.Float) {
                                 val v = value.value
                                 val min = property.range.from
                                 val max = property.range.to
                                 val percentage = (v - min).toFloat() / (max - min).toInt() * 100
                                 val sliderV = (percentage / 100 * 10).toInt()
-                                val sliderDisplay = "$v${property.unit}"
+                                val sliderDisplay = "$v ${property.unit}"
                                 Pair(sliderV, sliderDisplay)
                             } else {
                                 Pair(0, "")
@@ -118,6 +124,7 @@ class DeviceViewModel : ViewModel() {
                         else -> Pair(0, "")
                     }
                     Component.Slider(
+                        property = property,
                         headline = property.descZhCn.takeIf { it.isNotBlank() }
                             ?.split(" ", "，")[0]
                             ?: property.description,
@@ -129,13 +136,14 @@ class DeviceViewModel : ViewModel() {
                 }
             val selectorProperties = deviceProperties.filter { it.first.values.size > 1 }
                 .map { (property, value) ->
-                    val v = if (value is GetDevicePropertiesResponse.Result.Value.Int) {
+                    val v = if (value is DevicePropertyValue.Int) {
                         value.value
                     } else {
                         0
                     }
                     val vDisplay = property.values[v].desc_zh_cn ?: property.values[v].description
                     Component.Selector(
+                        property = property,
                         headline = property.descZhCn.takeIf { it.isNotBlank() } ?: property.name,
                         value = v,
                         values = property.values,
@@ -145,6 +153,7 @@ class DeviceViewModel : ViewModel() {
                 }
             val actions = deviceInfo.actions.map {
                 Component.Trigger(
+                    action = it,
                     headline = it.descZhCn.takeIf { it.isNotBlank() }
                         ?.split(" ", "，")[0]
                         ?: it.name,
@@ -154,6 +163,8 @@ class DeviceViewModel : ViewModel() {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     exception = "",
+                    auth = auth,
+                    device = device,
                     deviceInfo = deviceInfo,
                     switchComponents = switchProperties,
                     sliderComponents = sliderProperties,
@@ -169,6 +180,26 @@ class DeviceViewModel : ViewModel() {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(loading = false)
             }
+        }
+    }
+
+    fun handleChangeSwitch(
+        component: Component.Switch,
+        value: Boolean,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val auth = uiState.auth ?: throw Exception("读取权限失败")
+            val device = uiState.device ?: throw Exception("读取设备失败")
+            val value = DevicePropertyValue.Boolean(value)
+            val newDeviceProperties = apiHelper.setDeviceProperty(
+                auth,
+                device,
+                component.property,
+                value,
+            ).getOrThrow()
+
+        }.onFailure {
+            Log.e(Constants.TAG, "handleChangeSwitch: ${it.stackTraceToString()}")
         }
     }
 }
