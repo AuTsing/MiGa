@@ -26,6 +26,7 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Switch
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.ToggleChip
+import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.model.Component
@@ -49,24 +50,34 @@ fun DeviceScreen(
                 LoadingContent("加载中...")
             } else if (uiState.exception.isNotBlank()) {
                 MessageContent(uiState.exception)
-            } else if (uiState.components.isNotEmpty()) {
-                DeviceInfoContent(uiState.components)
+            } else {
+                DeviceInfoContent(
+                    switches = uiState.switchComponents,
+                    sliders = uiState.sliderComponents,
+                    selectors = uiState.selectorComponents,
+                    triggers = uiState.triggerComponents,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun DeviceInfoContent(components: List<Component>) {
+private fun DeviceInfoContent(
+    switches: List<Component.Switch>,
+    sliders: List<Component.Slider>,
+    selectors: List<Component.Selector>,
+    triggers: List<Component.Trigger>,
+) {
     ScalingLazyColumn {
-        items(components) {
-            when (it) {
-                is Component.Switch -> SwitchComponent(it)
-                is Component.Slider -> SliderComponent(it)
-                is Component.Selector -> SelectorComponent(it)
-                is Component.Trigger -> TriggerComponent(it)
-            }
-        }
+        item { ListTitle("开关") }
+        items(switches) { SwitchComponent(it) }
+        item { ListTitle("调整") }
+        items(sliders) { SliderComponent(it) }
+        item { ListTitle("切换") }
+        items(selectors) { SelectorComponent(it) }
+        item { ListTitle("触发") }
+        items(triggers) { TriggerComponent(it) }
     }
 }
 

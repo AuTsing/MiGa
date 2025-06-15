@@ -21,7 +21,10 @@ data class DeviceUiState(
     val loading: Boolean = true,
     val exception: String = "",
     val deviceInfo: DeviceInfo? = null,
-    val components: List<Component> = emptyList(),
+    val switchComponents: List<Component.Switch> = emptyList(),
+    val sliderComponents: List<Component.Slider> = emptyList(),
+    val selectorComponents: List<Component.Selector> = emptyList(),
+    val triggerComponents: List<Component.Trigger> = emptyList(),
 )
 
 class DeviceViewModel : ViewModel() {
@@ -152,7 +155,10 @@ class DeviceViewModel : ViewModel() {
                 uiState = uiState.copy(
                     exception = "",
                     deviceInfo = deviceInfo,
-                    components = switchProperties + sliderProperties + selectorProperties + actions,
+                    switchComponents = switchProperties,
+                    sliderComponents = sliderProperties,
+                    selectorComponents = selectorProperties,
+                    triggerComponents = actions,
                 )
             }
         }.onFailure {

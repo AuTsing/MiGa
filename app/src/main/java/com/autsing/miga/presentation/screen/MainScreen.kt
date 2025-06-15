@@ -39,6 +39,7 @@ import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import coil3.compose.AsyncImage
 import com.autsing.miga.R
+import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -113,15 +114,6 @@ private fun LoginContent(
         }
     }
 
-}
-
-@Composable
-private fun ListTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.title2,
-        modifier = Modifier.padding(12.dp),
-    )
 }
 
 @Composable
