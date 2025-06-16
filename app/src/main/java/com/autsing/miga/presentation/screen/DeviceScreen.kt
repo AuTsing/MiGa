@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ fun DeviceScreen(
                     selectors = uiState.selectorComponents,
                     triggers = uiState.triggerComponents,
                     onClickSwitch = deviceViewModel::handleChangeSwitch,
+                    onClickSlider = deviceViewModel::handleChangeSlider,
                 )
             }
         }
@@ -70,7 +72,7 @@ private fun DeviceInfoContent(
     selectors: List<Component.Selector>,
     triggers: List<Component.Trigger>,
     onClickSwitch: (Component.Switch, Boolean) -> Unit = { _, _ -> },
-    onClickSlider: (Component.Slider, Int) -> Unit = { _, _ -> },
+    onClickSlider: (Component.Slider, Float) -> Unit = { _, _ -> },
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
     onClickTrigger: (Component.Trigger) -> Unit = {},
 ) {
@@ -120,9 +122,9 @@ private fun ComponentTitle(text: String) {
 @Composable
 private fun SliderComponent(
     component: Component.Slider,
-    onClick: (Int) -> Unit = {},
+    onClick: (Float) -> Unit = {},
 ) {
-    var value by remember { mutableIntStateOf(component.value) }
+    var value by remember { mutableFloatStateOf(component.value) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -135,7 +137,8 @@ private fun SliderComponent(
                 value = it
                 onClick(it)
             },
-            valueProgression = 0..10,
+            valueRange = 0F..1F,
+            steps = 9,
             segmented = false,
             enabled = !component.readOnly,
             increaseIcon = { Icon(InlineSliderDefaults.Increase, "Increase") },

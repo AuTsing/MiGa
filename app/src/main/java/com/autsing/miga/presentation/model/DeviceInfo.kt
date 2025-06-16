@@ -41,6 +41,34 @@ data class DeviceInfo(
         @Serializable(with = Range.Serializer::class)
         sealed class Range {
 
+            fun getValueOfPercentage(percentage: kotlin.Float): DevicePropertyValue {
+                return when (this) {
+
+                    is Uint32 -> {
+                        val length = (to - from).toInt()
+                        val point = (length * percentage).toInt()
+                        val at = point + from.toInt()
+                        DevicePropertyValue.Int(at)
+                    }
+
+                    is Int32 -> {
+                        val length = to - from
+                        val point = (length * percentage).toInt()
+                        val at = point + from
+                        DevicePropertyValue.Int(at)
+                    }
+
+                    is Float -> {
+                        val length = to - from
+                        val point = length * percentage
+                        val at = point + from
+                        DevicePropertyValue.Float(at)
+                    }
+
+                    is None -> DevicePropertyValue.None
+                }
+            }
+
             @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             data class Uint32(

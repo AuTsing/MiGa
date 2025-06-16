@@ -1,13 +1,11 @@
 package com.autsing.miga.presentation.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.helper.ApiHelper
-import com.autsing.miga.presentation.helper.Constants
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
@@ -84,12 +82,11 @@ class DeviceViewModel : ViewModel() {
                                 val v = value.value
                                 val min = property.range.from
                                 val max = property.range.to
-                                val percentage = (v - min).toFloat() / (max - min) * 100
-                                val sliderV = (percentage / 100 * 10).toInt()
+                                val percentage = (v - min).toFloat() / (max - min)
                                 val sliderDisplay = "$v ${property.unit}"
-                                Pair(sliderV, sliderDisplay)
+                                Pair(percentage, sliderDisplay)
                             } else {
-                                Pair(0, "")
+                                Pair(0F, "")
                             }
                         }
 
@@ -98,12 +95,11 @@ class DeviceViewModel : ViewModel() {
                                 val v = value.value.toUInt()
                                 val min = property.range.from
                                 val max = property.range.to
-                                val percentage = (v - min).toFloat() / (max - min).toInt() * 100
-                                val sliderV = (percentage / 100 * 10).toInt()
+                                val percentage = (v - min).toFloat() / (max - min).toInt()
                                 val sliderDisplay = "$v ${property.unit}"
-                                Pair(sliderV, sliderDisplay)
+                                Pair(percentage, sliderDisplay)
                             } else {
-                                Pair(0, "")
+                                Pair(0F, "")
                             }
                         }
 
@@ -112,16 +108,15 @@ class DeviceViewModel : ViewModel() {
                                 val v = value.value
                                 val min = property.range.from
                                 val max = property.range.to
-                                val percentage = (v - min).toFloat() / (max - min).toInt() * 100
-                                val sliderV = (percentage / 100 * 10).toInt()
+                                val percentage = (v - min).toFloat() / (max - min).toInt()
                                 val sliderDisplay = "$v ${property.unit}"
-                                Pair(sliderV, sliderDisplay)
+                                Pair(percentage, sliderDisplay)
                             } else {
-                                Pair(0, "")
+                                Pair(0F, "")
                             }
                         }
 
-                        else -> Pair(0, "")
+                        else -> Pair(0F, "")
                     }
                     Component.Slider(
                         property = property,
@@ -190,16 +185,56 @@ class DeviceViewModel : ViewModel() {
         runCatching {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
-            val value = DevicePropertyValue.Boolean(value)
-            val newDeviceProperties = apiHelper.setDeviceProperty(
+            val devicePropertyValue = DevicePropertyValue.Boolean(value)
+            apiHelper.setDeviceProperty(
                 auth,
                 device,
                 component.property,
-                value,
+                devicePropertyValue,
+            ).getOrThrow()
+        }.onFailure {
+            withContext(Dispatchers.IO) {
+                uiState = uiState.copy(exception = it.stackTraceToString())
+            }
+        }
+    }
+
+    fun handleChangeSlider(
+        component: Component.Slider,
+        value: Float,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val auth = uiState.auth ?: throw Exception("读取权限失败")
+            val device = uiState.device ?: throw Exception("读取设备失败")
+            val devicePropertyValue = component.range.getValueOfPercentage(value)
+            val (newDeviceProperty, newDevicePropertyValue) = apiHelper.setDeviceProperty(
+                auth,
+                device,
+                component.property,
+                devicePropertyValue,
             ).getOrThrow()
 
+            withContext(Dispatchers.Main) {
+                val newSliderComponents = uiState.sliderComponents.map {
+                    if (it.property == newDeviceProperty) {
+                        val v = when (newDevicePropertyValue) {
+                            is DevicePropertyValue.Int -> "${newDevicePropertyValue.value}"
+                            is DevicePropertyValue.Float -> "${newDevicePropertyValue.value}"
+                            else -> ""
+                        }
+                        it.copy(valueDisplay = "$v ${it.property.unit}")
+                    } else {
+                        it
+                    }
+                }
+                uiState = uiState.copy(
+                    sliderComponents = newSliderComponents,
+                )
+            }
         }.onFailure {
-            Log.e(Constants.TAG, "handleChangeSwitch: ${it.stackTraceToString()}")
+            withContext(Dispatchers.IO) {
+                uiState = uiState.copy(exception = it.stackTraceToString())
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ sealed class Component {
     data class Slider(
         val property: DeviceInfo.Property,
         val headline: String,
-        val value: Int,
+        val value: Float,
         val range: DeviceInfo.Property.Range,
         val readOnly: Boolean,
         val valueDisplay: String,

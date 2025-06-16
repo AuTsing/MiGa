@@ -406,6 +406,8 @@ class ApiHelper {
         value: DevicePropertyValue,
     ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
         runCatching {
+            val newDeviceProperty = getDeviceProperty(auth, device, deviceProperty).getOrThrow()
+
             val uri = "/miotspec/prop/set"
             val data = SetDevicePropertiesData(
                 params = listOf(
@@ -424,10 +426,9 @@ class ApiHelper {
                 .decodeFromString<SetDevicePropertiesResponse>(setDevicePropertiesJson)
 
             val deviceProperty = if (setDevicePropertiesResponse.result[0].code == 0) {
-                val newDeviceProperty = getDeviceProperty(auth, device, deviceProperty).getOrThrow()
-                Pair(deviceProperty, newDeviceProperty.second)
-            } else {
                 Pair(deviceProperty, value)
+            } else {
+                Pair(deviceProperty, newDeviceProperty.second)
             }
 
             return@runCatching deviceProperty
