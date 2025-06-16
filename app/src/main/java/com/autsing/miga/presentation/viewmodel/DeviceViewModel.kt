@@ -130,20 +130,21 @@ class DeviceViewModel : ViewModel() {
                     )
                 }
             val selectorProperties = deviceProperties.filter { it.first.values.size > 1 }
-                .map { (property, value) ->
-                    val v = if (value is DevicePropertyValue.Int) {
-                        value.value
+                .map { (property, devicePropertyValue) ->
+                    val v = if (devicePropertyValue is DevicePropertyValue.Int) {
+                        devicePropertyValue.value
                     } else {
                         0
                     }
-                    val vDisplay = property.values[v].desc_zh_cn ?: property.values[v].description
+                    val value = property.values.find { it.value == v } ?: property.values[0]
+                    val valueDisplay = value.desc_zh_cn ?: value.description
                     Component.Selector(
                         property = property,
                         headline = property.descZhCn.takeIf { it.isNotBlank() } ?: property.name,
-                        value = v,
+                        value = property.values.indexOf(value),
                         values = property.values,
                         readOnly = !property.access.write,
-                        valueDisplay = vDisplay,
+                        valueDisplay = valueDisplay,
                     )
                 }
             val actions = deviceInfo.actions.map {
@@ -229,6 +230,48 @@ class DeviceViewModel : ViewModel() {
                 }
                 uiState = uiState.copy(
                     sliderComponents = newSliderComponents,
+                )
+            }
+        }.onFailure {
+            withContext(Dispatchers.IO) {
+                uiState = uiState.copy(exception = it.stackTraceToString())
+            }
+        }
+    }
+
+    fun handleChangeSelector(
+        component: Component.Selector,
+        value: Int,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val auth = uiState.auth ?: throw Exception("读取权限失败")
+            val device = uiState.device ?: throw Exception("读取设备失败")
+            val devicePropertyValue = DevicePropertyValue.Int(component.values[value].value)
+            val (newDeviceProperty, newDevicePropertyValue) = apiHelper.setDeviceProperty(
+                auth,
+                device,
+                component.property,
+                devicePropertyValue,
+            ).getOrThrow()
+
+            withContext(Dispatchers.Main) {
+                val newSelectorComponents = uiState.selectorComponents.map {
+                    if (it.property == newDeviceProperty) {
+                        val v = if (newDevicePropertyValue is DevicePropertyValue.Int) {
+                            devicePropertyValue.value
+                        } else {
+                            0
+                        }
+                        val value = newDeviceProperty.values.find { it.value == v }
+                            ?: newDeviceProperty.values[0]
+                        val valueDisplay = value.desc_zh_cn ?: value.description
+                        it.copy(valueDisplay = valueDisplay)
+                    } else {
+                        it
+                    }
+                }
+                uiState = uiState.copy(
+                    selectorComponents = newSelectorComponents,
                 )
             }
         }.onFailure {

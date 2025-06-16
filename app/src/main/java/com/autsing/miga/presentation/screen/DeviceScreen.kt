@@ -59,6 +59,7 @@ fun DeviceScreen(
                     triggers = uiState.triggerComponents,
                     onClickSwitch = deviceViewModel::handleChangeSwitch,
                     onClickSlider = deviceViewModel::handleChangeSlider,
+                    onClickSelector = deviceViewModel::handleChangeSelector,
                 )
             }
         }
