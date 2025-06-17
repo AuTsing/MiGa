@@ -190,11 +190,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun handleOpenDevice(context: Context, device: Device) = viewModelScope.launch(Dispatchers.IO) {
-        runCatching {
-            DeviceActivity.startActivity(context, device.model)
-        }.onFailure {
-            Log.e(TAG, "handleOpenDevice: ${it.stackTraceToString()}")
-        }
+    fun handleOpenDevice(context: Context, device: Device) {
+        DeviceActivity.startActivity(context, device.model)
     }
 }

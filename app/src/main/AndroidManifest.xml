@@ -136,6 +136,11 @@
             android:taskAffinity="com.autsing.miga" />
 
         <activity
+            android:name=".presentation.activity.RunActionActivity"
+            android:exported="true"
+            android:taskAffinity="com.autsing.miga" />
+
+        <activity
             android:name=".presentation.activity.RunSceneActivity"
             android:excludeFromRecents="true"
             android:exported="true"

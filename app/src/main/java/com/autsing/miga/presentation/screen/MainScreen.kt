@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
@@ -18,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.ExperimentalWearFoundationApi
 import androidx.wear.compose.foundation.RevealValue
@@ -36,11 +34,11 @@ import androidx.wear.compose.material.SwipeToRevealChip
 import androidx.wear.compose.material.SwipeToRevealDefaults
 import androidx.wear.compose.material.SwipeToRevealPrimaryAction
 import androidx.wear.compose.material.Text
-import androidx.wear.tooling.preview.devices.WearDevices
 import coil3.compose.AsyncImage
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.component.PrimaryButton
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
@@ -245,21 +243,6 @@ private fun DeviceChip(
 }
 
 @Composable
-private fun ReloadButton(
-    onClick: () -> Unit = {},
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.padding(16.dp),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_fluent_arrow_sync_regular_icon),
-            contentDescription = null,
-        )
-    }
-}
-
-@Composable
 private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
@@ -294,21 +277,11 @@ private fun MainContent(
                 onClick = { onClickDevice(it) }
             )
         }
-        item { ReloadButton(onClickReload) }
-    }
-}
-
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
-@Composable
-private fun MainContentPreview() {
-    MiGaTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
-
+        item {
+            PrimaryButton(
+                iconId = R.drawable.ic_fluent_arrow_sync_regular_icon,
+                onClick = onClickReload,
+            )
         }
     }
 }

@@ -1,10 +1,12 @@
 package com.autsing.miga.presentation.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autsing.miga.presentation.activity.RunActionActivity
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
@@ -189,12 +191,18 @@ class DeviceViewModel : ViewModel() {
         }
     }
 
-    fun handleClickTrigger(component: Component.Trigger) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleClickTrigger(
+        context: Context,
+        component: Component.Trigger,
+    ) = viewModelScope.launch(Dispatchers.IO) {
         runCatching {
-            val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
-            apiHelper.runAction(auth, device, component.action).getOrThrow()
-
+            RunActionActivity.startActivity(
+                context = context,
+                deviceModel = device.model,
+                siid = component.action.method.siid,
+                aiid = component.action.method.aiid,
+            )
         }.onFailure {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(exception = it.stackTraceToString())

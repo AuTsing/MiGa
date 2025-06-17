@@ -18,6 +18,7 @@ import com.autsing.miga.presentation.model.GetScenesData
 import com.autsing.miga.presentation.model.GetScenesResponse
 import com.autsing.miga.presentation.model.Home
 import com.autsing.miga.presentation.model.RunActionData
+import com.autsing.miga.presentation.model.RunActionResponse
 import com.autsing.miga.presentation.model.RunSceneData
 import com.autsing.miga.presentation.model.RunSceneResponse
 import com.autsing.miga.presentation.model.Scene
@@ -418,25 +419,25 @@ class ApiHelper {
     suspend fun runAction(
         auth: Auth,
         device: Device,
-        deviceAction: DeviceInfo.Action,
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+        action: DeviceInfo.Action,
+        inValues: List<DevicePropertyValue>,
+    ): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
             val uri = "/miotspec/action"
             val data = RunActionData(
                 params = RunActionData.Params(
                     did = device.did,
-                    siid = deviceAction.method.siid,
-                    aiid = deviceAction.method.aiid,
-                    _in = listOf(),
+                    siid = action.method.siid,
+                    aiid = action.method.aiid,
+                    _in = inValues,
                 ),
             )
             val dataJson = Json.encodeToString(data)
 
             val runActionJson = post(auth, uri, dataJson).getOrThrow()
-            Log.d("TAG", "runAction: $runActionJson")
-//            val runSceneResponse = Json.decodeFromString<RunSceneResponse>(runActionJson)
+            val runActionResponse = Json.decodeFromString<RunActionResponse>(runActionJson)
 
-            return@runCatching
+            return@runCatching runActionResponse.result.code
         }.onFailure {
             Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
         }

@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 data class RunActionResponse(
     val code: Int,
     val message: String,
-    val result: List<Result>,
+    val result: Result,
 ) {
 
     @OptIn(ExperimentalSerializationApi::class)
