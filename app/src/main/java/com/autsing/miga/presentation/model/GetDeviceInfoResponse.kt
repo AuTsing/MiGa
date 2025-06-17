@@ -4,6 +4,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -77,7 +78,7 @@ data class GetDeviceInfoResponse(
                     @SerialName("value-range")
                     val valueRange: Ranges? = null,
                     @SerialName("value-list")
-                    val valueList: List<Value>? = null,
+                    val valueList: Values? = null,
                     val desc_zh_cn: String? = null,
                 ) {
 
@@ -125,9 +126,21 @@ data class GetDeviceInfoResponse(
                                     }
                                     put("value-range", JsonArray(array))
                                 }
-                                property.valueList?.let { value ->
-                                    val array = value.map { v ->
-                                        Json.encodeToJsonElement(Value.serializer(), v)
+                                property.valueList?.let {
+                                    val array = when (it) {
+                                        is Values.Uint8 -> it.values.map { v ->
+                                            Json.encodeToJsonElement(
+                                                Value.serializer(UByte.serializer()),
+                                                v,
+                                            )
+                                        }
+
+                                        is Values.String -> it.values.map { v ->
+                                            Json.encodeToJsonElement(
+                                                Value.serializer(String.serializer()),
+                                                v,
+                                            )
+                                        }
                                     }
                                     put("value-list", JsonArray(array))
                                 }
@@ -160,7 +173,28 @@ data class GetDeviceInfoResponse(
                                     }
                                 }
                             val valueList = jsonObject["value-list"]?.jsonArray
-                                ?.map { Json.decodeFromJsonElement(Value.serializer(), it) }
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { array ->
+                                    when (format) {
+                                        "uint8" -> Values.Uint8(array.map {
+                                            Value(
+                                                value = it.jsonObject["value"]!!.jsonPrimitive.int.toUByte(),
+                                                description = it.jsonObject["description"]!!.jsonPrimitive.content,
+                                                desc_zh_cn = it.jsonObject["desc_zh_cn"]?.jsonPrimitive?.content,
+                                            )
+                                        })
+
+                                        "string" -> Values.String(array.map {
+                                            Value(
+                                                value = it.jsonObject["value"]!!.jsonPrimitive.content,
+                                                description = it.jsonObject["description"]!!.jsonPrimitive.content,
+                                                desc_zh_cn = it.jsonObject["desc_zh_cn"]?.jsonPrimitive?.content,
+                                            )
+                                        })
+
+                                        else -> null
+                                    }
+                                }
 
                             return Property(
                                 iid = jsonObject["iid"]!!.jsonPrimitive.int,
@@ -177,7 +211,6 @@ data class GetDeviceInfoResponse(
                         }
                     }
 
-                    @Serializable
                     sealed class Ranges() {
                         data class Uint8(val values: List<UByte>) : Ranges()
                         data class Uint16(val values: List<UShort>) : Ranges()
@@ -188,11 +221,16 @@ data class GetDeviceInfoResponse(
                         data class Float(val values: List<kotlin.Float>) : Ranges()
                     }
 
+                    sealed class Values() {
+                        data class Uint8(val values: List<Value<UByte>>) : Values()
+                        data class String(val values: List<Value<kotlin.String>>) : Values()
+                    }
+
                     @OptIn(ExperimentalSerializationApi::class)
                     @Serializable
                     @JsonIgnoreUnknownKeys
-                    data class Value(
-                        val value: Int,
+                    data class Value<T>(
+                        val value: T,
                         val description: String,
                         val desc_zh_cn: String? = null,
                     )
@@ -207,6 +245,10 @@ data class GetDeviceInfoResponse(
                     val name: String,
                     val description: String,
                     val desc_zh_cn: String? = null,
+                    @SerialName("in")
+                    val _in: List<Int>,
+                    @SerialName("out")
+                    val _out: List<Int>,
                 )
             }
         }

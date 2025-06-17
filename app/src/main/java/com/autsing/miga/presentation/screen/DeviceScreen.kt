@@ -60,6 +60,7 @@ fun DeviceScreen(
                     onClickSwitch = deviceViewModel::handleChangeSwitch,
                     onClickSlider = deviceViewModel::handleChangeSlider,
                     onClickSelector = deviceViewModel::handleChangeSelector,
+                    onClickTrigger = deviceViewModel::handleClickTrigger,
                 )
             }
         }

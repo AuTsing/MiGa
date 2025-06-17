@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.int
@@ -25,6 +26,7 @@ sealed class DevicePropertyValue {
     data class Boolean(val value: kotlin.Boolean) : DevicePropertyValue()
     data class Int(val value: kotlin.Int) : DevicePropertyValue()
     data class Float(val value: kotlin.Float) : DevicePropertyValue()
+    data class String(val value: kotlin.String) : DevicePropertyValue()
     object None : DevicePropertyValue()
 
     object Serializer : KSerializer<DevicePropertyValue> {
@@ -35,6 +37,7 @@ sealed class DevicePropertyValue {
             PolymorphicKind.SEALED,
         )
 
+        @OptIn(ExperimentalSerializationApi::class)
         override fun serialize(encoder: Encoder, value: DevicePropertyValue) {
             require(encoder is JsonEncoder)
 
@@ -42,7 +45,8 @@ sealed class DevicePropertyValue {
                 is Int -> encoder.encodeInt(value.value)
                 is Float -> encoder.encodeFloat(value.value)
                 is Boolean -> encoder.encodeBoolean(value.value)
-                None -> encoder.encodeString("none")
+                is String -> encoder.encodeString(value.value)
+                is None -> encoder.encodeNull()
             }
         }
 
@@ -55,6 +59,7 @@ sealed class DevicePropertyValue {
                     jsonElement.intOrNull != null -> Int(jsonElement.int)
                     jsonElement.floatOrNull != null -> Float(jsonElement.float)
                     jsonElement.booleanOrNull != null -> Boolean(jsonElement.boolean)
+                    jsonElement.contentOrNull != null -> String(jsonElement.content)
                     else -> None
                 }
             } else {

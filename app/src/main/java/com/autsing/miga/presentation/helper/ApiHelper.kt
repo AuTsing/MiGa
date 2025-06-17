@@ -4,6 +4,7 @@ import android.util.Log
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
+import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.model.GetDeviceBaikeResponse
 import com.autsing.miga.presentation.model.GetDeviceInfoResponse
@@ -16,6 +17,7 @@ import com.autsing.miga.presentation.model.GetHomesResponse
 import com.autsing.miga.presentation.model.GetScenesData
 import com.autsing.miga.presentation.model.GetScenesResponse
 import com.autsing.miga.presentation.model.Home
+import com.autsing.miga.presentation.model.RunActionData
 import com.autsing.miga.presentation.model.RunSceneData
 import com.autsing.miga.presentation.model.RunSceneResponse
 import com.autsing.miga.presentation.model.Scene
@@ -245,51 +247,25 @@ class ApiHelper {
                         write = property.access.contains("write"),
                         notify = property.access.contains("notify"),
                     )
-                    val range = when (property.valueRange) {
+                    val range = DevicePropertyRange.from(property.valueRange)
+                    val values = when (property.valueList) {
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Values.Uint8 -> property.valueList.values.map {
+                            DeviceInfo.Property.Value(
+                                value = DevicePropertyValue.Int(it.value.toInt()),
+                                description = it.description,
+                                desc_zh_cn = it.desc_zh_cn,
+                            )
+                        }
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint8 -> DeviceInfo.Property.Range.Uint32(
-                            from = property.valueRange.values[0].toUInt(),
-                            to = property.valueRange.values[1].toUInt(),
-                            step = property.valueRange.values[2].toUInt(),
-                        )
+                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Values.String -> property.valueList.values.map {
+                            DeviceInfo.Property.Value(
+                                value = DevicePropertyValue.String(it.value),
+                                description = it.description,
+                                desc_zh_cn = it.desc_zh_cn,
+                            )
+                        }
 
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint16 -> DeviceInfo.Property.Range.Uint32(
-                            from = property.valueRange.values[0].toUInt(),
-                            to = property.valueRange.values[1].toUInt(),
-                            step = property.valueRange.values[2].toUInt(),
-                        )
-
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Uint32 -> DeviceInfo.Property.Range.Uint32(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
-                        )
-
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int8 -> DeviceInfo.Property.Range.Int32(
-                            from = property.valueRange.values[0].toInt(),
-                            to = property.valueRange.values[1].toInt(),
-                            step = property.valueRange.values[2].toInt(),
-                        )
-
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int16 -> DeviceInfo.Property.Range.Int32(
-                            from = property.valueRange.values[0].toInt(),
-                            to = property.valueRange.values[1].toInt(),
-                            step = property.valueRange.values[2].toInt(),
-                        )
-
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Int32 -> DeviceInfo.Property.Range.Int32(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
-                        )
-
-                        is GetDeviceInfoResponse.Props.Spec.Service.Property.Ranges.Float -> DeviceInfo.Property.Range.Float(
-                            from = property.valueRange.values[0],
-                            to = property.valueRange.values[1],
-                            step = property.valueRange.values[2],
-                        )
-
-                        else -> DeviceInfo.Property.Range.None()
+                        else -> emptyList()
                     }
 
                     deviceInfoProperties.add(
@@ -301,9 +277,9 @@ class ApiHelper {
                             access = access,
                             unit = property.unit ?: "",
                             range = range,
-                            values = property.valueList ?: emptyList(),
+                            values = values,
                             method = DeviceInfo.Property.Method(
-                                ssid = service.iid,
+                                siid = service.iid,
                                 piid = property.iid,
                             )
                         )
@@ -318,9 +294,11 @@ class ApiHelper {
                             description = action.description,
                             descZhCn = action.desc_zh_cn ?: "",
                             method = DeviceInfo.Action.Method(
-                                ssid = service.iid,
+                                siid = service.iid,
                                 aiid = action.iid,
                             ),
+                            inPiids = action._in,
+                            outPiids = action._out,
                         )
                     )
                 }
@@ -350,7 +328,7 @@ class ApiHelper {
                 params = deviceInfo.properties.map {
                     GetDevicePropertiesData.Params(
                         did = device.did,
-                        siid = it.method.ssid,
+                        siid = it.method.siid,
                         piid = it.method.piid,
                     )
                 }
@@ -381,7 +359,7 @@ class ApiHelper {
                 params = listOf(
                     GetDevicePropertiesData.Params(
                         did = device.did,
-                        siid = deviceProperty.method.ssid,
+                        siid = deviceProperty.method.siid,
                         piid = deviceProperty.method.piid,
                     )
                 )
@@ -406,14 +384,14 @@ class ApiHelper {
         value: DevicePropertyValue,
     ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
         runCatching {
-            val newDeviceProperty = getDeviceProperty(auth, device, deviceProperty).getOrThrow()
+            val oldDeviceProperty = getDeviceProperty(auth, device, deviceProperty).getOrThrow()
 
             val uri = "/miotspec/prop/set"
             val data = SetDevicePropertiesData(
                 params = listOf(
                     SetDevicePropertiesData.Params(
                         did = device.did,
-                        siid = deviceProperty.method.ssid,
+                        siid = deviceProperty.method.siid,
                         piid = deviceProperty.method.piid,
                         value = value,
                     )
@@ -428,12 +406,39 @@ class ApiHelper {
             val deviceProperty = if (setDevicePropertiesResponse.result[0].code == 0) {
                 Pair(deviceProperty, value)
             } else {
-                Pair(deviceProperty, newDeviceProperty.second)
+                Pair(deviceProperty, oldDeviceProperty.second)
             }
 
             return@runCatching deviceProperty
         }.onFailure {
             Log.e(Constants.TAG, "setDeviceProperties: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun runAction(
+        auth: Auth,
+        device: Device,
+        deviceAction: DeviceInfo.Action,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/miotspec/action"
+            val data = RunActionData(
+                params = RunActionData.Params(
+                    did = device.did,
+                    siid = deviceAction.method.siid,
+                    aiid = deviceAction.method.aiid,
+                    _in = listOf(),
+                ),
+            )
+            val dataJson = Json.encodeToString(data)
+
+            val runActionJson = post(auth, uri, dataJson).getOrThrow()
+            Log.d("TAG", "runAction: $runActionJson")
+//            val runSceneResponse = Json.decodeFromString<RunSceneResponse>(runActionJson)
+
+            return@runCatching
+        }.onFailure {
+            Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
         }
     }
 }
