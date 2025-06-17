@@ -72,7 +72,7 @@ private fun RunActionContent(
         }
         item {
             PrimaryButton(
-                iconId = R.drawable.ic_fluent_star_regular_icon,
+                iconId = R.drawable.ic_fluent_play_regular_icon,
                 onClick = onClickRun,
             )
         }

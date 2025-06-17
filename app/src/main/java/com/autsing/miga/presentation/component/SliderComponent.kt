@@ -9,9 +9,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.InlineSlider
-import androidx.wear.compose.material.InlineSliderDefaults
+import com.autsing.miga.R
 import com.autsing.miga.presentation.model.Component
 
 @Composable
@@ -36,8 +37,12 @@ fun SliderComponent(
             steps = 9,
             segmented = false,
             enabled = !component.readOnly,
-            increaseIcon = { Icon(InlineSliderDefaults.Increase, "Increase") },
-            decreaseIcon = { Icon(InlineSliderDefaults.Decrease, "Decrease") },
+            increaseIcon = {
+                Icon(painterResource(R.drawable.ic_fluent_add_regular_icon), "Increase")
+            },
+            decreaseIcon = {
+                Icon(painterResource(R.drawable.ic_fluent_subtract_regular_icon), "Decrease")
+            },
         )
     }
 }
