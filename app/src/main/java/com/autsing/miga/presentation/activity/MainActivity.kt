@@ -8,14 +8,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import com.autsing.miga.presentation.screen.MainScreen
 import com.autsing.miga.presentation.viewmodel.MainViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -51,14 +47,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent { MainScreen(mainViewModel) }
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            delay(1000)
-            DeviceActivity.startActivity(
-                context = this@MainActivity,
-                deviceModel = "yeelink.light.lamp27",
-            )
-        }
     }
 
     override fun onResume() {
