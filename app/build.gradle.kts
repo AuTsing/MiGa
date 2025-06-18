@@ -16,8 +16,8 @@ android {
         applicationId = "com.autsing.miga"
         minSdk = 26
         targetSdk = 35
-        versionCode = 108
-        versionName = "0.1.8"
+        versionCode = 10000
+        versionName = "1.0.0"
     }
 
     signingConfigs {
