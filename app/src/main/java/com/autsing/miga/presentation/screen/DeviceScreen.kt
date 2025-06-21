@@ -2,6 +2,7 @@ package com.autsing.miga.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -10,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Text
 import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.MessageContent
@@ -36,7 +38,10 @@ fun DeviceScreen(
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.loading) {
-                LoadingContent("加载中...")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    LoadingContent("加载中...")
+                    Text("(首次加载可能时间较长)")
+                }
             } else if (uiState.exception.isNotBlank()) {
                 MessageContent(uiState.exception)
             } else {
