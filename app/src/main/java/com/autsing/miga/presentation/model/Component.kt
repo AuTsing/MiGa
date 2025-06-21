@@ -41,8 +41,8 @@ sealed class Component {
             fun from(property: DeviceInfo.Property, value: DevicePropertyValue): Slider {
                 val (sliderValue, sliderDisplay) = when (property.range) {
 
-                    is DevicePropertyRange.Int -> {
-                        if (value is DevicePropertyValue.Int) {
+                    is DevicePropertyRange.Long -> {
+                        if (value is DevicePropertyValue.Long) {
                             val v = value.value
                             val min = property.range.from
                             val max = property.range.to
@@ -54,8 +54,8 @@ sealed class Component {
                         }
                     }
 
-                    is DevicePropertyRange.Float -> {
-                        if (value is DevicePropertyValue.Float) {
+                    is DevicePropertyRange.Double -> {
+                        if (value is DevicePropertyValue.Double) {
                             val v = value.value
                             val min = property.range.from
                             val max = property.range.to

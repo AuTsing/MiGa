@@ -100,8 +100,8 @@ class RunActionActivity : ComponentActivity() {
                 .filter { it.range is DevicePropertyRange.None == false }
                 .map {
                     val v = when (it.range) {
-                        is DevicePropertyRange.Int -> DevicePropertyValue.Int(it.range.from)
-                        is DevicePropertyRange.Float -> DevicePropertyValue.Float(it.range.from)
+                        is DevicePropertyRange.Long -> DevicePropertyValue.Long(it.range.from)
+                        is DevicePropertyRange.Double -> DevicePropertyValue.Double(it.range.from)
                         is DevicePropertyRange.None -> DevicePropertyValue.None
                     }
                     Component.Slider.from(it, v)
@@ -132,8 +132,8 @@ class RunActionActivity : ComponentActivity() {
                 if (it == component) {
                     val value = component.range.getValueOfPercentage(percentage)
                     val sliderValue = when (value) {
-                        is DevicePropertyValue.Int -> "${value.value}"
-                        is DevicePropertyValue.Float -> "${value.value}"
+                        is DevicePropertyValue.Long -> "${value.value}"
+                        is DevicePropertyValue.Double -> "${value.value}"
                         else -> ""
                     }
                     val sliderDisplay = "$sliderValue ${it.property.unit}"

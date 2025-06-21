@@ -252,7 +252,7 @@ class ApiHelper {
                     val values = when (property.valueList) {
                         is GetDeviceInfoResponse.Props.Spec.Service.Property.Values.Uint8 -> property.valueList.values.map {
                             DeviceInfo.Property.Value(
-                                value = DevicePropertyValue.Int(it.value.toInt()),
+                                value = DevicePropertyValue.Long(it.value.toLong()),
                                 description = it.description,
                                 desc_zh_cn = it.desc_zh_cn,
                             )

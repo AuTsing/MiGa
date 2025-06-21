@@ -134,8 +134,8 @@ class DeviceViewModel : ViewModel() {
                 val newSliderComponents = uiState.sliderComponents.map {
                     if (it.property == newProperty) {
                         val v = when (newValue) {
-                            is DevicePropertyValue.Int -> "${newValue.value}"
-                            is DevicePropertyValue.Float -> "${newValue.value}"
+                            is DevicePropertyValue.Long -> "${newValue.value}"
+                            is DevicePropertyValue.Double -> "${newValue.value}"
                             else -> ""
                         }
                         it.copy(valueDisplay = "$v ${it.property.unit}")

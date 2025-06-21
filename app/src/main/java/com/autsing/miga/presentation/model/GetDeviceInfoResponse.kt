@@ -17,7 +17,6 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.float
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -162,13 +161,13 @@ data class GetDeviceInfoResponse(
                                 ?.takeIf { it.isNotEmpty() }
                                 ?.let { array ->
                                     when (format) {
-                                        "uint8" -> Ranges.Uint8(array.map { it.jsonPrimitive.int.toUByte() })
-                                        "uint16" -> Ranges.Uint16(array.map { it.jsonPrimitive.int.toUShort() })
-                                        "uint32" -> Ranges.Uint32(array.map { it.jsonPrimitive.int.toUInt() })
-                                        "int8" -> Ranges.Int8(array.map { it.jsonPrimitive.int.toByte() })
-                                        "int16" -> Ranges.Int16(array.map { it.jsonPrimitive.int.toShort() })
-                                        "int32" -> Ranges.Int32(array.map { it.jsonPrimitive.int })
-                                        "float" -> Ranges.Float(array.map { it.jsonPrimitive.float })
+                                        "uint8" -> Ranges.Uint8(array.map { it.jsonPrimitive.content.toUByte() })
+                                        "uint16" -> Ranges.Uint16(array.map { it.jsonPrimitive.content.toUShort() })
+                                        "uint32" -> Ranges.Uint32(array.map { it.jsonPrimitive.content.toUInt() })
+                                        "int8" -> Ranges.Int8(array.map { it.jsonPrimitive.content.toByte() })
+                                        "int16" -> Ranges.Int16(array.map { it.jsonPrimitive.content.toShort() })
+                                        "int32" -> Ranges.Int32(array.map { it.jsonPrimitive.content.toInt() })
+                                        "float" -> Ranges.Float(array.map { it.jsonPrimitive.content.toFloat() })
                                         else -> null
                                     }
                                 }
