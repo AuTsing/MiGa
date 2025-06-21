@@ -102,12 +102,23 @@ class DeviceViewModel : ViewModel() {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
             val value = DevicePropertyValue.Boolean(checked)
-            apiHelper.setDeviceProperty(
+            val (newProperty, _) = apiHelper.setDeviceProperty(
                 auth,
                 device,
                 component.property,
                 value,
             ).getOrThrow()
+
+            withContext(Dispatchers.Main) {
+                val newSwitchComponents = uiState.switchComponents.map {
+                    if (it.property == newProperty) {
+                        it.copy(value = checked)
+                    } else {
+                        it
+                    }
+                }
+                uiState = uiState.copy(switchComponents = newSwitchComponents)
+            }
         }.onFailure {
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(exception = it.stackTraceToString())
@@ -138,7 +149,10 @@ class DeviceViewModel : ViewModel() {
                             is DevicePropertyValue.Double -> "${newValue.value}"
                             else -> ""
                         }
-                        it.copy(valueDisplay = "$v ${it.property.unit}")
+                        it.copy(
+                            value = percentage,
+                            valueDisplay = "$v ${it.property.unit}",
+                        )
                     } else {
                         it
                     }
@@ -175,7 +189,10 @@ class DeviceViewModel : ViewModel() {
                         val selectorValue = it.property.values.find { it.value == newValue }
                             ?: it.property.values[0]
                         val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-                        it.copy(valueDisplay = selectorDisplay)
+                        it.copy(
+                            value = index,
+                            valueDisplay = selectorDisplay,
+                        )
                     } else {
                         it
                     }
