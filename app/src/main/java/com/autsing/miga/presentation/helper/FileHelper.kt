@@ -31,4 +31,14 @@ class FileHelper(
             file.writeText(json)
         }
     }
+
+    suspend fun remove(filename: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val file = context.filesDir.resolve(filename)
+            file.delete()
+            if (file.exists()) {
+                throw Exception("删除文件 ${file.absolutePath} 失败")
+            }
+        }
+    }
 }

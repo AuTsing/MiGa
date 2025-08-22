@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
@@ -39,6 +41,7 @@ import com.autsing.miga.R
 import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PrimaryButton
+import com.autsing.miga.presentation.component.SecondaryButton
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
@@ -53,7 +56,7 @@ fun MainScreen(
     val context = LocalContext.current
 
     LaunchedEffect(uiState) {
-        if (uiState.showedLogin == false && uiState.auth == null && uiState.loading == false) {
+        if (!uiState.showedLogin && uiState.auth == null && !uiState.loading) {
             mainViewModel.handleNavigateToLogin(context)
         }
     }
@@ -77,11 +80,12 @@ fun MainScreen(
                     devices = uiState.devices,
                     favoriteSceneIds = uiState.favoriteSceneIds,
                     deviceIconUrls = uiState.deviceIconUrls,
-                    onClickScene = { mainViewModel.handleRunScene(context, uiState.auth, it) },
+                    onClickScene = { mainViewModel.handleRunScene(context, it) },
                     onClickToggleSceneFavorite = {
                         mainViewModel.handleToggleSceneFavorite(context, it)
                     },
                     onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
+                    onClickLogout = { mainViewModel.handleLogout() },
                     onClickReload = { mainViewModel.handleReload(uiState.auth) },
                 )
             }
@@ -251,6 +255,7 @@ private fun MainContent(
     onClickScene: (Scene) -> Unit = {},
     onClickToggleSceneFavorite: (Scene) -> Unit = {},
     onClickDevice: (Device) -> Unit = {},
+    onClickLogout: () -> Unit = {},
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
@@ -278,10 +283,18 @@ private fun MainContent(
             )
         }
         item {
-            PrimaryButton(
-                iconId = R.drawable.ic_fluent_arrow_sync_regular_icon,
-                onClick = onClickReload,
-            )
+            Row(
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                SecondaryButton(
+                    iconId = R.drawable.ic_fluent_person_arrow_right_icon,
+                    onClick = onClickLogout,
+                )
+                PrimaryButton(
+                    iconId = R.drawable.ic_fluent_arrow_sync_regular_icon,
+                    onClick = onClickReload,
+                )
+            }
         }
     }
 }

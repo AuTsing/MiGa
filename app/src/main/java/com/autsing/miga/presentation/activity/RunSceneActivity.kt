@@ -27,6 +27,12 @@ class RunSceneActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_SCENE_ID: String = "extra_scene_id"
 
+        fun startActivity(context: Context, sceneId: String) {
+            val intent = Intent(context, RunSceneActivity::class.java)
+            intent.putExtra(EXTRA_SCENE_ID, sceneId)
+            context.startActivity(intent)
+        }
+
         fun createLaunchAction(context: Context, sceneId: String): LaunchAction {
             val extra = AndroidStringExtra.Builder()
                 .setValue(sceneId)

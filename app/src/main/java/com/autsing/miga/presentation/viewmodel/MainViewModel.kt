@@ -2,7 +2,6 @@ package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
-import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.helper.Constants.TAG
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
@@ -40,7 +39,6 @@ data class MainUiState(
 class MainViewModel : ViewModel() {
 
     private val fileHelper: FileHelper = FileHelper.instance
-    private val apiHelper: ApiHelper = ApiHelper.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
@@ -144,20 +142,8 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun handleRunScene(
-        context: Context,
-        auth: Auth,
-        scene: Scene,
-    ) = viewModelScope.launch(Dispatchers.IO) {
-        runCatching {
-            val message = apiHelper.runScene(auth, scene).getOrThrow()
-
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            }
-        }.onFailure {
-            Log.e(TAG, "handleRunScene: ${it.stackTraceToString()}")
-        }
+    fun handleRunScene(context: Context, scene: Scene) = viewModelScope.launch {
+        RunSceneActivity.startActivity(context, scene.scene_id)
     }
 
     fun handleToggleSceneFavorite(
@@ -192,5 +178,29 @@ class MainViewModel : ViewModel() {
 
     fun handleOpenDevice(context: Context, device: Device) {
         DeviceActivity.startActivity(context, device.model)
+    }
+
+    fun handleLogout() = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(loading = true)
+            }
+
+            fileHelper.remove("auth.json").getOrThrow()
+
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(
+                    auth = null,
+                    scenes = emptyList(),
+                    devices = emptyList(),
+                )
+            }
+        }.onFailure {
+            Log.e(TAG, "handleLogout: ${it.stackTraceToString()}")
+        }.also {
+            withContext(Dispatchers.Main) {
+                uiState = uiState.copy(loading = false)
+            }
+        }
     }
 }
