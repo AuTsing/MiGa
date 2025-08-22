@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.autsing.miga"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.autsing.miga"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 10001
         versionName = "1.0.1"
     }
