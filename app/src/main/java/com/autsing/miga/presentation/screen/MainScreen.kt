@@ -53,7 +53,7 @@ import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
-import kotlin.math.min
+import kotlin.math.max
 
 @Composable
 fun MainScreen(
@@ -228,15 +228,16 @@ private fun DeviceChip(
                         .image
                         .toBitmap()
                         .asImageBitmap()
-                    val scale = min(
-                        size.width / imagePainter.intrinsicSize.width,
-                        size.height / imagePainter.intrinsicSize.height
+
+                    val scale = 200F / max(
+                        imagePainter.intrinsicSize.width,
+                        imagePainter.intrinsicSize.height,
                     )
                     val width = imagePainter.intrinsicSize.width * scale
                     val height = imagePainter.intrinsicSize.height * scale
                     val offset = IntOffset(
-                        x = (size.width - width).toInt(),
-                        y = 0,
+                        x = (size.width - width - 24).toInt(),
+                        y = ((size.height - height) / 2).toInt(),
                     )
                     drawImage(
                         image = bitmap,
@@ -361,7 +362,7 @@ private fun PreviewDeviceChip() {
             isOnline = true,
             model = "",
         ),
-        iconUrl = "",
+        iconUrl = "https://cdn.cnbj1.fds.api.mi-img.com/iotweb-user-center/developer_1679040583270V7znmyVX.png?GalaxyAccessKeyId=AKVGLQWBOVIRQ3XLEW&Expires=9223372036854775807&Signature=JV+tC8MQ3QbAYiU3nC+T1U9DlZ0=",
         favorite = false,
     )
 }
