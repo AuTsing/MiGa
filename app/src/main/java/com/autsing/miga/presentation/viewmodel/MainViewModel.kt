@@ -13,6 +13,7 @@ import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.helper.Constants.TAG
 import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.helper.SerdeHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -23,8 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
 data class MainUiState(
     val loading: Boolean = true,
@@ -33,28 +32,28 @@ data class MainUiState(
     val scenes: List<Scene> = emptyList(),
     val devices: List<Device> = emptyList(),
     val favoriteSceneIds: List<String> = emptyList(),
+    val favoriteDeviceIds: List<String> = emptyList(),
     val deviceIconUrls: Map<String, String> = emptyMap(),
 )
 
 class MainViewModel : ViewModel() {
 
     private val fileHelper: FileHelper = FileHelper.instance
+    private val serdeHelper: SerdeHelper = SerdeHelper.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
     var uiState: MainUiState by mutableStateOf(MainUiState())
         private set
 
-    fun handleLoad() = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLoad() = viewModelScope.launch {
         val minDelay = launch(Dispatchers.IO) { delay(500) }
 
         runCatching {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = true)
-            }
+            uiState = uiState.copy(loading = true)
 
             val authJson = fileHelper.readJson("auth.json").getOrThrow()
-            val auth = Json.decodeFromString<Auth>(authJson)
+            val auth = serdeHelper.decode<Auth>(authJson).getOrThrow()
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds().getOrNull()
@@ -77,22 +76,18 @@ class MainViewModel : ViewModel() {
             val (favoriteScenes, scenes) = scenesJob.await()
             val (devices, deviceIconUrls) = devicesJob.await()
 
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
-                    auth = auth,
-                    scenes = scenes,
-                    devices = devices,
-                    favoriteSceneIds = favoriteScenes,
-                    deviceIconUrls = deviceIconUrls,
-                )
-            }
+            uiState = uiState.copy(
+                auth = auth,
+                scenes = scenes,
+                devices = devices,
+                favoriteSceneIds = favoriteScenes,
+                deviceIconUrls = deviceIconUrls,
+            )
         }.onFailure {
             Log.e(TAG, "handleLoad: ${it.stackTraceToString()}")
         }.also {
             minDelay.join()
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = false)
-            }
+            uiState = uiState.copy(loading = false)
         }
     }
 
@@ -101,11 +96,9 @@ class MainViewModel : ViewModel() {
         uiState = uiState.copy(showedLogin = true)
     }
 
-    fun handleReload(auth: Auth) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleReload(auth: Auth) = viewModelScope.launch {
         runCatching {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = true)
-            }
+            uiState = uiState.copy(loading = true)
 
             val scenesJob = async(Dispatchers.IO) {
                 val favoriteSceneIds = sceneRepository.loadFavoriteSceneIds().getOrNull()
@@ -125,20 +118,16 @@ class MainViewModel : ViewModel() {
             val (favoriteScenes, scenes) = scenesJob.await()
             val (devices, deviceIconUrls) = devicesJob.await()
 
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
-                    scenes = scenes,
-                    devices = devices,
-                    favoriteSceneIds = favoriteScenes,
-                    deviceIconUrls = deviceIconUrls,
-                )
-            }
+            uiState = uiState.copy(
+                scenes = scenes,
+                devices = devices,
+                favoriteSceneIds = favoriteScenes,
+                deviceIconUrls = deviceIconUrls,
+            )
         }.onFailure {
             Log.e(TAG, "handleReload: ${it.stackTraceToString()}")
         }.also {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = false)
-            }
+            uiState = uiState.copy(loading = false)
         }
     }
 
@@ -146,10 +135,7 @@ class MainViewModel : ViewModel() {
         RunSceneActivity.startActivity(context, scene.scene_id)
     }
 
-    fun handleToggleSceneFavorite(
-        context: Context,
-        scene: Scene,
-    ) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleToggleSceneFavorite(context: Context, scene: Scene) = viewModelScope.launch {
         runCatching {
             val favoriteSceneIds = uiState.favoriteSceneIds
                 .toMutableList()
@@ -159,14 +145,12 @@ class MainViewModel : ViewModel() {
             val scenes = uiState.scenes
                 .sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
 
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
-                    scenes = scenes,
-                    favoriteSceneIds = favoriteSceneIds,
-                )
-            }
+            uiState = uiState.copy(
+                scenes = scenes,
+                favoriteSceneIds = favoriteSceneIds,
+            )
 
-            val favoriteScenesJson = Json.encodeToString(favoriteSceneIds)
+            val favoriteScenesJson = serdeHelper.encode(favoriteSceneIds).getOrThrow()
             fileHelper.writeJson("favorite_scene_ids.json", favoriteScenesJson).getOrThrow()
 
             MainTileService.requestUpdate(context)
@@ -180,27 +164,21 @@ class MainViewModel : ViewModel() {
         DeviceActivity.startActivity(context, device.model)
     }
 
-    fun handleLogout() = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLogout() = viewModelScope.launch {
         runCatching {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = true)
-            }
+            uiState = uiState.copy(loading = true)
 
             fileHelper.remove("auth.json").getOrThrow()
 
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
-                    auth = null,
-                    scenes = emptyList(),
-                    devices = emptyList(),
-                )
-            }
+            uiState = uiState.copy(
+                auth = null,
+                scenes = emptyList(),
+                devices = emptyList(),
+            )
         }.onFailure {
             Log.e(TAG, "handleLogout: ${it.stackTraceToString()}")
         }.also {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = false)
-            }
+            uiState = uiState.copy(loading = false)
         }
     }
 }
