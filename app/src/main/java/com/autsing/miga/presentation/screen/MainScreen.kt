@@ -40,7 +40,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedCard
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TitleCard
-import coil3.compose.AsyncImage
+import androidx.wear.tooling.preview.devices.WearDevices
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
@@ -105,12 +105,12 @@ private fun LoginContent(
     onClickLogin: () -> Unit = {},
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "未登录",
             style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(24.dp),
         )
         Button(
             onClick = onClickLogin,
@@ -119,10 +119,11 @@ private fun LoginContent(
             Text(
                 text = "登录",
                 style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
-
 }
 
 @Composable
@@ -144,17 +145,6 @@ private fun EmptyChip(label: String) {
 private fun ChipIcon(iconId: Int) {
     Icon(
         painter = painterResource(iconId),
-        contentDescription = null,
-        modifier = Modifier
-            .size(CardDefaults.AppImageSize)
-            .wrapContentSize(align = Alignment.Center),
-    )
-}
-
-@Composable
-private fun AsyncChipIcon(iconUrl: String) {
-    AsyncImage(
-        model = iconUrl,
         contentDescription = null,
         modifier = Modifier
             .size(CardDefaults.AppImageSize)
@@ -365,4 +355,19 @@ private fun PreviewDeviceChip() {
         iconUrl = "https://cdn.cnbj1.fds.api.mi-img.com/iotweb-user-center/developer_1679040583270V7znmyVX.png?GalaxyAccessKeyId=AKVGLQWBOVIRQ3XLEW&Expires=9223372036854775807&Signature=JV+tC8MQ3QbAYiU3nC+T1U9DlZ0=",
         favorite = false,
     )
+}
+
+@Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
+@Composable
+private fun PreviewLoginContent() {
+    MiGaTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            LoginContent()
+        }
+    }
 }

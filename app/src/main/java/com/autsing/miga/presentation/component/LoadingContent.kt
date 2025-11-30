@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.CircularProgressIndicator
-import androidx.wear.compose.material.Text
+import androidx.wear.compose.material3.CircularProgressIndicator
+import androidx.wear.compose.material3.Text
 
 @Composable
 fun LoadingContent(text: String? = null) {
