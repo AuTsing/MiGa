@@ -1,5 +1,6 @@
 package com.autsing.miga.presentation.screen
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,31 +13,37 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.ExperimentalWearFoundationApi
-import androidx.wear.compose.foundation.RevealValue
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.foundation.rememberRevealState
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.ExperimentalWearMaterialApi
-import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.OutlinedChip
-import androidx.wear.compose.material.SwipeToRevealChip
-import androidx.wear.compose.material.SwipeToRevealDefaults
-import androidx.wear.compose.material.SwipeToRevealPrimaryAction
-import androidx.wear.compose.material.Text
+import androidx.wear.compose.material3.Button
+import androidx.wear.compose.material3.CardDefaults
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.OutlinedCard
+import androidx.wear.compose.material3.Text
+import androidx.wear.compose.material3.TitleCard
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import coil3.toBitmap
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
@@ -46,7 +53,7 @@ import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @Composable
 fun MainScreen(
@@ -65,8 +72,8 @@ fun MainScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
         ) {
             if (uiState.loading) {
                 LoadingContent("加载中...")
@@ -103,7 +110,7 @@ private fun LoginContent(
     ) {
         Text(
             text = "未登录",
-            style = MaterialTheme.typography.title1,
+            style = MaterialTheme.typography.titleMedium,
         )
         Button(
             onClick = onClickLogin,
@@ -111,7 +118,7 @@ private fun LoginContent(
         ) {
             Text(
                 text = "登录",
-                style = MaterialTheme.typography.button,
+                style = MaterialTheme.typography.titleSmall,
             )
         }
     }
@@ -120,18 +127,17 @@ private fun LoginContent(
 
 @Composable
 private fun EmptyChip(label: String) {
-    OutlinedChip(
+    OutlinedCard(
         onClick = {},
-        label = {
-            Text(
-                text = label,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
         enabled = false,
         modifier = Modifier.fillMaxWidth(),
-    )
+    ) {
+        Text(
+            text = label,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
@@ -140,7 +146,7 @@ private fun ChipIcon(iconId: Int) {
         painter = painterResource(iconId),
         contentDescription = null,
         modifier = Modifier
-            .size(ChipDefaults.LargeIconSize)
+            .size(CardDefaults.AppImageSize)
             .wrapContentSize(align = Alignment.Center),
     )
 }
@@ -151,13 +157,27 @@ private fun AsyncChipIcon(iconUrl: String) {
         model = iconUrl,
         contentDescription = null,
         modifier = Modifier
-            .size(ChipDefaults.LargeIconSize)
+            .size(CardDefaults.AppImageSize)
             .wrapContentSize(align = Alignment.Center),
     )
 }
 
 @Composable
-private fun ChipText(label: String) {
+private fun CardTitle(@DrawableRes iconId: Int, label: String) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ChipIcon(iconId)
+        Text(
+            text = label,
+            modifier = Modifier.padding(4.dp),
+        )
+    }
+}
+
+@Composable
+private fun CardText(label: String) {
     Text(
         text = label,
         maxLines = 1,
@@ -165,7 +185,6 @@ private fun ChipText(label: String) {
     )
 }
 
-@OptIn(ExperimentalWearFoundationApi::class, ExperimentalWearMaterialApi::class)
 @Composable
 private fun SceneChip(
     scene: Scene,
@@ -173,76 +192,95 @@ private fun SceneChip(
     onClick: (Scene) -> Unit = {},
     onClickFavorite: (Scene) -> Unit = {},
 ) {
-    val revealState = rememberRevealState(
-        confirmValueChange = { it != RevealValue.Revealed },
-    )
-    val scope = rememberCoroutineScope()
-
-    SwipeToRevealChip(
-        revealState = revealState,
-        primaryAction = {
-            SwipeToRevealPrimaryAction(
-                revealState = revealState,
-                icon = {
-                    if (favorite) {
-                        Icon(painterResource(R.drawable.ic_fluent_star_off_regular_icon), null)
-                    } else {
-                        Icon(painterResource(R.drawable.ic_fluent_star_regular_icon), null)
-                    }
-                },
-                label = { Text(if (favorite) "取消收藏" else "收藏") },
-                onClick = {
-                    onClickFavorite(scene)
-                    scope.launch { revealState.animateTo(RevealValue.Covered) }
-                }
-            )
+    TitleCard(
+        onClick = { onClick(scene) },
+        onLongClick = { onClickFavorite(scene) },
+        border = if (favorite) {
+            CardDefaults.outlinedCardBorder()
+        } else {
+            null
         },
-        onFullSwipe = {},
-        colors = SwipeToRevealDefaults.actionColors(
-            primaryActionBackgroundColor = MaterialTheme.colors.primary,
-            primaryActionContentColor = MaterialTheme.colors.onPrimary,
-        ),
-    ) {
-        Chip(
-            onClick = { onClick(scene) },
-            icon = {
-                if (scene.icon_url.isBlank()) {
-                    ChipIcon(R.drawable.ic_fluent_layer_regular_icon)
-                } else {
-                    AsyncChipIcon(scene.icon_url)
-                }
-            },
-            label = { ChipText(scene.name) },
-            colors = ChipDefaults.gradientBackgroundChipColors(),
-            border = if (favorite) {
-                ChipDefaults.outlinedChipBorder()
-            } else {
-                ChipDefaults.chipBorder()
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
+        title = { CardTitle(R.drawable.ic_fluent_layer_regular_icon, "执行") },
+        content = { CardText(scene.name) },
+    )
 }
 
 @Composable
 private fun DeviceChip(
     device: Device,
     iconUrl: String,
+    favorite: Boolean,
     onClick: () -> Unit = {},
+    onClickFavorite: () -> Unit = {},
 ) {
-    Chip(
+    val bgPainter = ColorPainter(CardDefaults.cardColors().containerColor)
+    val imagePainter = rememberAsyncImagePainter(iconUrl)
+    val containerPainter = remember(imagePainter) {
+        object : Painter() {
+            override val intrinsicSize = Size.Unspecified
+
+            override fun DrawScope.onDraw() {
+                with(bgPainter) { draw(size) }
+
+                if (imagePainter.state.value is AsyncImagePainter.State.Success) {
+                    val bitmap = (imagePainter.state.value as AsyncImagePainter.State.Success)
+                        .result
+                        .image
+                        .toBitmap()
+                        .asImageBitmap()
+                    val scale = min(
+                        size.width / imagePainter.intrinsicSize.width,
+                        size.height / imagePainter.intrinsicSize.height
+                    )
+                    val width = imagePainter.intrinsicSize.width * scale
+                    val height = imagePainter.intrinsicSize.height * scale
+                    val offset = IntOffset(
+                        x = (size.width - width).toInt(),
+                        y = 0,
+                    )
+                    drawImage(
+                        image = bitmap,
+                        dstOffset = offset,
+                        dstSize = IntSize(width.toInt(), height.toInt()),
+                    )
+                }
+
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.3F)
+                        )
+                    ),
+                    size = size,
+                )
+            }
+        }
+    }
+
+    TitleCard(
         onClick = onClick,
-        icon = {
-            if (iconUrl.isBlank()) {
-                ChipIcon(R.drawable.ic_fluent_device_meeting_room_icon)
+        onLongClick = {},
+        border = if (favorite) {
+            CardDefaults.outlinedCardBorder()
+        } else {
+            null
+        },
+        enabled = device.isOnline,
+        title = {
+            CardTitle(
+                iconId = R.drawable.ic_fluent_device_meeting_room_icon,
+                label = device.name,
+            )
+        },
+        subtitle = {
+            if (device.isOnline) {
+                Text("设备在线")
             } else {
-                AsyncChipIcon(iconUrl)
+                Text("离线")
             }
         },
-        label = { ChipText(device.name) },
-        colors = ChipDefaults.gradientBackgroundChipColors(),
-        enabled = device.isOnline,
-        modifier = Modifier.fillMaxWidth(),
+        containerPainter = containerPainter,
     )
 }
 
@@ -279,6 +317,7 @@ private fun MainContent(
             DeviceChip(
                 device = it,
                 iconUrl = deviceIconUrls.getOrDefault(it.model, ""),
+                favorite = false,
                 onClick = { onClickDevice(it) }
             )
         }
@@ -297,4 +336,32 @@ private fun MainContent(
             }
         }
     }
+}
+
+@Composable
+@Preview
+private fun PreviewSceneChip() {
+    SceneChip(
+        scene = Scene(
+            scene_id = "1",
+            name = "电视机饮料",
+            icon_url = "",
+        ),
+        favorite = false,
+    )
+}
+
+@Composable
+@Preview
+private fun PreviewDeviceChip() {
+    DeviceChip(
+        device = Device(
+            did = "",
+            name = "米家台灯",
+            isOnline = true,
+            model = "",
+        ),
+        iconUrl = "",
+        favorite = false,
+    )
 }

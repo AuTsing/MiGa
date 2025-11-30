@@ -2,12 +2,12 @@
 agp = "8.13.1"
 kotlin = "2.0.21"
 playServicesWearable = "19.0.0"
-composeBom = "2025.05.01"
-composeMaterial = "1.4.1"
-composeFoundation = "1.4.1"
+composeBom = "2025.11.01"
+composeMaterial = "1.5.5"
+composeFoundation = "1.5.5"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.10.1"
-coreSplashscreen = "1.0.1"
+coreSplashscreen = "1.2.0"
 tiles = "1.4.1"
 tilesMaterial = "1.4.1"
 tilesTooling = "1.4.1"
@@ -18,18 +18,18 @@ watchfaceComplicationsDataSourceKtx = "1.2.1"
 
 [libraries]
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2025.11.01" }
 ui = { group = "androidx.compose.ui", name = "ui" }
 ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
+compose-material = { group = "androidx.wear.compose", name = "compose-material3", version = "1.5.5" }
+compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version = "1.5.5" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.2.0" }
 tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "tiles" }
 tiles-material = { group = "androidx.wear.tiles", name = "tiles-material", version.ref = "tilesMaterial" }
 tiles-tooling = { group = "androidx.wear.tiles", name = "tiles-tooling", version.ref = "tilesTooling" }
