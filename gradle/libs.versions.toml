@@ -10,6 +10,7 @@ tilesTooling = "1.4.1"
 tilesToolingPreview = "1.4.1"
 horologist = "0.7.15"
 watchfaceComplicationsDataSourceKtx = "1.2.1"
+coil = "3.3.0"
 
 [libraries]
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
@@ -34,10 +35,10 @@ horologistTiles = { group = "com.google.android.horologist", name = "horologist-
 horologistComposeLayout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
 watchface-complications-data-source-ktx = { group = "androidx.wear.watchface", name = "watchface-complications-data-source-ktx", version.ref = "watchfaceComplicationsDataSourceKtx" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.1" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
-qrcodeKotlin = { group = "io.github.g0dkar", name = "qrcode-kotlin", version = "4.4.1" }
-coilCompose = { group = "io.coil-kt.coil3", name = "coil-compose", version = "3.3.0" }
-coilNetworkOkhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version = "3.3.0" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "5.3.2" }
+qrcodeKotlin = { group = "io.github.g0dkar", name = "qrcode-kotlin", version = "4.5.0" }
+coilCompose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coilNetworkOkhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
