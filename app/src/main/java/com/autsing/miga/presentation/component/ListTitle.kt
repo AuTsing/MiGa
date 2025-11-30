@@ -1,9 +1,6 @@
 package com.autsing.miga.presentation.component
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 
@@ -12,6 +9,5 @@ fun ListTitle(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.displaySmall,
-        modifier = Modifier.padding(12.dp),
     )
 }

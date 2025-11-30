@@ -2,6 +2,7 @@ package com.autsing.miga.presentation.screen
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
@@ -33,11 +37,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.material3.AlertDialog
+import androidx.wear.compose.material3.AlertDialogDefaults
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.CardDefaults
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.OutlinedCard
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TitleCard
 import androidx.wear.tooling.preview.devices.WearDevices
@@ -45,7 +50,6 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
 import com.autsing.miga.R
-import com.autsing.miga.presentation.component.ListTitle
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PrimaryButton
 import com.autsing.miga.presentation.component.SecondaryButton
@@ -126,20 +130,6 @@ private fun LoginContent(
     }
 }
 
-@Composable
-private fun EmptyChip(label: String) {
-    OutlinedCard(
-        onClick = {},
-        enabled = false,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = label,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
 
 @Composable
 private fun ChipIcon(iconId: Int) {
@@ -276,6 +266,54 @@ private fun DeviceChip(
 }
 
 @Composable
+private fun TitleDialog(
+    showDialog: Boolean,
+    title: String,
+    tip: String,
+    onDismiss: () -> Unit = {},
+) {
+    AlertDialog(
+        visible = showDialog,
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(tip) },
+        edgeButton = { AlertDialogDefaults.EdgeButton(onClick = onDismiss) },
+    )
+}
+
+@Composable
+private fun TitleContent(
+    title: String,
+    tip: String,
+) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    TitleDialog(
+        showDialog = showDialog,
+        title = title,
+        tip = tip,
+        onDismiss = { showDialog = false },
+    )
+
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.displaySmall,
+            modifier = Modifier.padding(8.dp),
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_fluent_info_regular_icon),
+            contentDescription = null,
+            modifier = Modifier.clickable { showDialog = true },
+        )
+    }
+}
+
+
+@Composable
 private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
@@ -288,9 +326,13 @@ private fun MainContent(
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
-        item { ListTitle("智能") }
-        if (scenes.isEmpty()) {
-            item { EmptyChip("无智能") }
+        if (scenes.isNotEmpty()) {
+            item {
+                TitleContent(
+                    title = "智能",
+                    tip = "在手机米家APP添加智能，点击最下方刷新；点击智能可执行；长按智能可收藏",
+                )
+            }
         }
         items(scenes) {
             SceneChip(
@@ -300,9 +342,13 @@ private fun MainContent(
                 onClickFavorite = onClickToggleSceneFavorite,
             )
         }
-        item { ListTitle("设备") }
-        if (devices.isEmpty()) {
-            item { EmptyChip("无设备") }
+        if (devices.isNotEmpty()) {
+            item {
+                TitleContent(
+                    title = "设备",
+                    tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可执行；长按设备可收藏",
+                )
+            }
         }
         items(devices) {
             DeviceChip(
@@ -311,6 +357,14 @@ private fun MainContent(
                 favorite = false,
                 onClick = { onClickDevice(it) }
             )
+        }
+        if (scenes.isEmpty() && devices.isEmpty()) {
+            item {
+                TitleContent(
+                    title = "无内容",
+                    tip = "请先在手机米家APP添加智能或设备，点击最下方刷新",
+                )
+            }
         }
         item {
             Row(
@@ -355,6 +409,26 @@ private fun PreviewDeviceChip() {
         iconUrl = "https://cdn.cnbj1.fds.api.mi-img.com/iotweb-user-center/developer_1679040583270V7znmyVX.png?GalaxyAccessKeyId=AKVGLQWBOVIRQ3XLEW&Expires=9223372036854775807&Signature=JV+tC8MQ3QbAYiU3nC+T1U9DlZ0=",
         favorite = false,
     )
+}
+
+@Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
+@Composable
+private fun PreviewEmptyContent() {
+    MiGaTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            MainContent(
+                scenes = emptyList(),
+                devices = emptyList(),
+                favoriteSceneIds = emptyList(),
+                deviceIconUrls = emptyMap(),
+            )
+        }
+    }
 }
 
 @Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
