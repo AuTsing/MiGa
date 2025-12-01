@@ -26,7 +26,6 @@ import com.autsing.miga.presentation.model.SetDevicePropertiesData
 import com.autsing.miga.presentation.model.SetDevicePropertiesResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,7 +35,9 @@ import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-class ApiHelper {
+class ApiHelper(
+    val serdeHelper: SerdeHelper,
+) {
 
     companion object {
         lateinit var instance: ApiHelper
@@ -123,10 +124,10 @@ class ApiHelper {
                 limit = 300,
                 app_ver = 7,
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val getHomesJson = post(auth, uri, dataJson).getOrThrow()
-            val getHomesResponse = Json.decodeFromString<GetHomesResponse>(getHomesJson)
+            val getHomesResponse = serdeHelper.decode<GetHomesResponse>(getHomesJson).getOrThrow()
 
             return@runCatching getHomesResponse.result.homelist
         }.onFailure {
@@ -143,9 +144,10 @@ class ApiHelper {
             val data = GetScenesData(
                 home_id = homeId,
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
             val getScenesJson = post(auth, uri, dataJson).getOrThrow()
-            val getScenesResponse = Json.decodeFromString<GetScenesResponse>(getScenesJson)
+            val getScenesResponse = serdeHelper.decode<GetScenesResponse>(getScenesJson)
+                .getOrThrow()
 
             return@runCatching getScenesResponse.result.scene_info_list
         }.onFailure {
@@ -160,10 +162,11 @@ class ApiHelper {
                 getVirtualModel = false,
                 getHuamiDevices = 0,
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val getDevicesJson = post(auth, uri, dataJson).getOrThrow()
-            val getDevicesResponse = Json.decodeFromString<GetDevicesResponse>(getDevicesJson)
+            val getDevicesResponse = serdeHelper.decode<GetDevicesResponse>(getDevicesJson)
+                .getOrThrow()
 
             return@runCatching getDevicesResponse.result.list
         }.onFailure {
@@ -181,10 +184,11 @@ class ApiHelper {
                 scene_id = scene.scene_id,
                 trigger_key = "user.click",
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val runSceneJson = post(auth, uri, dataJson).getOrThrow()
-            val runSceneResponse = Json.decodeFromString<RunSceneResponse>(runSceneJson)
+            val runSceneResponse = serdeHelper.decode<RunSceneResponse>(runSceneJson)
+                .getOrThrow()
 
             return@runCatching runSceneResponse.message
         }.onFailure {
@@ -199,7 +203,8 @@ class ApiHelper {
             val request = Request.Builder().url("${Constants.PRODUCT_URL}?model=$model").build()
             val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
             val json = response.body?.string() ?: ""
-            val getDeviceBaikeResponse = Json.decodeFromString<GetDeviceBaikeResponse>(json)
+            val getDeviceBaikeResponse = serdeHelper.decode<GetDeviceBaikeResponse>(json)
+                .getOrThrow()
 
             return@runCatching getDeviceBaikeResponse.data.realIcon
         }.onFailure {
@@ -222,8 +227,8 @@ class ApiHelper {
                 ?.value
                 ?: throw Exception("获取设备信息失败")
             val getDeviceInfoJson = getDeviceInfoContent.replace("&quot;", "\"")
-            val getDeviceInfoResponse = Json
-                .decodeFromString<GetDeviceInfoResponse>(getDeviceInfoJson)
+            val getDeviceInfoResponse = serdeHelper.decode<GetDeviceInfoResponse>(getDeviceInfoJson)
+                .getOrThrow()
 
             val (deviceInfoName, deviceInfoModel) = if (getDeviceInfoResponse.props.product != null) {
                 Pair(
@@ -334,11 +339,12 @@ class ApiHelper {
                     )
                 }
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val getDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
-            val getDevicePropertiesResponse = Json
-                .decodeFromString<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+            val getDevicePropertiesResponse = serdeHelper
+                .decode<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+                .getOrThrow()
             val deviceProperties = deviceInfo.properties.mapIndexed { i, it ->
                 Pair(it, getDevicePropertiesResponse.result[i].value)
             }
@@ -365,11 +371,12 @@ class ApiHelper {
                     )
                 )
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val getDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
-            val getDevicePropertiesResponse = Json
-                .decodeFromString<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+            val getDevicePropertiesResponse = serdeHelper
+                .decode<GetDevicePropertiesResponse>(getDevicePropertiesJson)
+                .getOrThrow()
             val deviceProperty = Pair(deviceProperty, getDevicePropertiesResponse.result[0].value)
 
             return@runCatching deviceProperty
@@ -398,11 +405,12 @@ class ApiHelper {
                     )
                 )
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val setDevicePropertiesJson = post(auth, uri, dataJson).getOrThrow()
-            val setDevicePropertiesResponse = Json
-                .decodeFromString<SetDevicePropertiesResponse>(setDevicePropertiesJson)
+            val setDevicePropertiesResponse = serdeHelper
+                .decode<SetDevicePropertiesResponse>(setDevicePropertiesJson)
+                .getOrThrow()
 
             val deviceProperty = if (setDevicePropertiesResponse.result[0].code == 0) {
                 Pair(deviceProperty, value)
@@ -432,10 +440,11 @@ class ApiHelper {
                     _in = inValues,
                 ),
             )
-            val dataJson = Json.encodeToString(data)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
 
             val runActionJson = post(auth, uri, dataJson).getOrThrow()
-            val runActionResponse = Json.decodeFromString<RunActionResponse>(runActionJson)
+            val runActionResponse = serdeHelper.decode<RunActionResponse>(runActionJson)
+                .getOrThrow()
 
             return@runCatching runActionResponse.result.code
         }.onFailure {

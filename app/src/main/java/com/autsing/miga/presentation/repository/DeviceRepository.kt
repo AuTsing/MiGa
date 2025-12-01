@@ -17,9 +17,19 @@ class DeviceRepository(
     companion object {
         lateinit var instance: DeviceRepository
 
+        private const val FAVORITE_DEVICE_IDS_FILENAME = "favorite_device_ids.json"
         private const val DEVICES_FILENAME = "devices.json"
         private const val DEVICE_ICON_URLS_FILENAME = "device_icon_urls.json"
         private const val DEVICE_INFOS_FILENAME = "device_infos.json"
+    }
+
+    suspend fun loadFavoriteDeviceIds(): Result<List<String>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val favoriteDeviceIdsJson = fileHelper.readJson(FAVORITE_DEVICE_IDS_FILENAME)
+                .getOrThrow()
+            val favoriteDeviceIds = Json.decodeFromString<List<String>>(favoriteDeviceIdsJson)
+            return@runCatching favoriteDeviceIds
+        }
     }
 
     suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {

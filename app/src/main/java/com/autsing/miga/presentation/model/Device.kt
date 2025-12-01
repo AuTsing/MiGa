@@ -9,3 +9,9 @@ data class Device(
     val isOnline: Boolean,
     val model: String,
 )
+
+fun List<Device>.sort(favoriteDeviceIds: List<String>): List<Device> {
+    val favoriteDeviceIdsMap = favoriteDeviceIds.withIndex()
+        .associate { it.value to it.index }
+    return this.sortedBy { favoriteDeviceIdsMap[it.did] ?: Int.MAX_VALUE }
+}

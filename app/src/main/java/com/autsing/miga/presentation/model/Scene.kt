@@ -8,3 +8,9 @@ data class Scene(
     val name: String,
     val icon_url: String,
 )
+
+fun List<Scene>.sort(favoriteSceneIds: List<String>): List<Scene> {
+    val favoriteSceneIdsMap = favoriteSceneIds.withIndex()
+        .associate { it.value to it.index }
+    return this.sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
+}

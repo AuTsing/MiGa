@@ -97,7 +97,7 @@ fun MainScreen(
                     },
                     onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
                     onClickLogout = { mainViewModel.handleLogout() },
-                    onClickReload = { mainViewModel.handleReload(uiState.auth) },
+                    onClickReload = { mainViewModel.handleLoad() },
                 )
             }
         }
@@ -213,10 +213,10 @@ private fun DeviceChip(
                         imagePainter.intrinsicSize.width,
                         imagePainter.intrinsicSize.height,
                     )
-                    val width = imagePainter.intrinsicSize.width * scale
-                    val height = imagePainter.intrinsicSize.height * scale
+                    val width = imagePainter.intrinsicSize.width * scale * 0.8F
+                    val height = imagePainter.intrinsicSize.height * scale * 0.8F
                     val offset = IntOffset(
-                        x = (size.width - width - 24).toInt(),
+                        x = (size.width - width).toInt(),
                         y = ((size.height - height) / 2).toInt(),
                     )
                     drawImage(
@@ -302,7 +302,7 @@ private fun TitleContent(
         Text(
             text = title,
             style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(6.dp),
         )
         Icon(
             painter = painterResource(R.drawable.ic_fluent_info_regular_icon),
@@ -346,7 +346,7 @@ private fun MainContent(
             item {
                 TitleContent(
                     title = "设备",
-                    tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可执行；长按设备可收藏",
+                    tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可进入设备页面；长按设备可收藏",
                 )
             }
         }
@@ -362,7 +362,7 @@ private fun MainContent(
             item {
                 TitleContent(
                     title = "无内容",
-                    tip = "请先在手机米家APP添加智能或设备，点击最下方刷新",
+                    tip = "请先在手机米家APP添加智能或设备，然后点击最下方刷新",
                 )
             }
         }
