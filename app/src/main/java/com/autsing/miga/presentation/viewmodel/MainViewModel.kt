@@ -120,8 +120,6 @@ class MainViewModel : ViewModel() {
 
             val deviceIconUrls = deviceIconUrlsJob.await()
 
-            Log.d(TAG, "handleLoadRemote: $scenes,$devices")
-
             uiState = uiState.copy(
                 scenes = scenes,
                 devices = devices,
@@ -168,24 +166,36 @@ class MainViewModel : ViewModel() {
         runCatching {
             val favoriteSceneIds = uiState.favoriteSceneIds
                 .toMutableList()
-                .apply { if (scene.scene_id in this) remove(scene.scene_id) else add(scene.scene_id) }
-            val favoriteSceneIdsMap = favoriteSceneIds.withIndex()
-                .associate { it.value to it.index }
-            val scenes = uiState.scenes
-                .sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
+                .apply {
+                    if (scene.scene_id in this) remove(scene.scene_id)
+                    else add(scene.scene_id)
+                }
 
-            uiState = uiState.copy(
-                scenes = scenes,
-                favoriteSceneIds = favoriteSceneIds,
-            )
+            uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)
 
-            val favoriteScenesJson = serdeHelper.encode(favoriteSceneIds).getOrThrow()
-            fileHelper.writeJson("favorite_scene_ids.json", favoriteScenesJson).getOrThrow()
+            sceneRepository.saveFavoriteSceneIds(favoriteSceneIds).getOrThrow()
 
             MainTileService.requestUpdate(context)
             FavoriteSceneComplicationService.requestUpdate(context)
         }.onFailure {
             Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
+        }
+    }
+
+    fun handleToggleDeviceFavorite(device: Device) = viewModelScope.launch {
+        runCatching {
+            val favoriteDeviceIds = uiState.favoriteDeviceIds
+                .toMutableList()
+                .apply {
+                    if (device.did in this) remove(device.did)
+                    else add(device.did)
+                }
+
+            uiState = uiState.copy(favoriteDeviceIds = favoriteDeviceIds)
+
+            deviceRepository.saveFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
+        }.onFailure {
+            Log.e(TAG, "handleToggleDeviceFavorite: ${it.stackTraceToString()}")
         }
     }
 

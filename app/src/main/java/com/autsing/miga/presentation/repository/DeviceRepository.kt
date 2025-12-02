@@ -2,14 +2,15 @@ package com.autsing.miga.presentation.repository
 
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.helper.SerdeHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
 class DeviceRepository(
+    private val serdeHelper: SerdeHelper,
     private val fileHelper: FileHelper,
     private val apiHelper: ApiHelper,
 ) {
@@ -27,7 +28,8 @@ class DeviceRepository(
         runCatching {
             val favoriteDeviceIdsJson = fileHelper.readJson(FAVORITE_DEVICE_IDS_FILENAME)
                 .getOrThrow()
-            val favoriteDeviceIds = Json.decodeFromString<List<String>>(favoriteDeviceIdsJson)
+            val favoriteDeviceIds = serdeHelper.decode<List<String>>(favoriteDeviceIdsJson)
+                .getOrThrow()
             return@runCatching favoriteDeviceIds
         }
     }
@@ -35,7 +37,8 @@ class DeviceRepository(
     suspend fun loadDevicesLocal(): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
             val devicesJson = fileHelper.readJson(DEVICES_FILENAME).getOrThrow()
-            val devices = Json.decodeFromString<List<Device>>(devicesJson)
+            val devices = serdeHelper.decode<List<Device>>(devicesJson)
+                .getOrThrow()
                 .sortedByDescending { it.isOnline }
             return@runCatching devices
         }
@@ -46,7 +49,7 @@ class DeviceRepository(
     ): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
             val devices = apiHelper.getDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
-            val devicesJson = Json.encodeToString(devices)
+            val devicesJson = serdeHelper.encode(devices).getOrThrow()
             fileHelper.writeJson(DEVICES_FILENAME, devicesJson).getOrThrow()
             return@runCatching devices
         }
@@ -56,7 +59,7 @@ class DeviceRepository(
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
         runCatching {
             val deviceIconsJson = fileHelper.readJson(DEVICE_ICON_URLS_FILENAME).getOrThrow()
-            val deviceIcons = Json.decodeFromString<Map<String, String>>(deviceIconsJson)
+            val deviceIcons = serdeHelper.decode<Map<String, String>>(deviceIconsJson).getOrThrow()
             return@runCatching deviceIcons
         }
     }
@@ -68,7 +71,7 @@ class DeviceRepository(
             val deviceIconUrls = devices.associate {
                 Pair(it.model, apiHelper.getDeviceIconUrl(it.model).getOrDefault(""))
             }
-            val deviceIconUrlsJson = Json.encodeToString(deviceIconUrls)
+            val deviceIconUrlsJson = serdeHelper.encode(deviceIconUrls).getOrThrow()
             fileHelper.writeJson(DEVICE_ICON_URLS_FILENAME, deviceIconUrlsJson).getOrThrow()
             return@runCatching deviceIconUrls
         }
@@ -78,7 +81,8 @@ class DeviceRepository(
     ): Result<Map<String, DeviceInfo>> = withContext(Dispatchers.IO) {
         runCatching {
             val deviceInfosJson = fileHelper.readJson(DEVICE_INFOS_FILENAME).getOrThrow()
-            val deviceInfos = Json.decodeFromString<Map<String, DeviceInfo>>(deviceInfosJson)
+            val deviceInfos = serdeHelper.decode<Map<String, DeviceInfo>>(deviceInfosJson)
+                .getOrThrow()
             return@runCatching deviceInfos
         }
     }
@@ -91,9 +95,18 @@ class DeviceRepository(
             val deviceInfos = loadDeviceInfosLocal().getOrDefault(emptyMap())
                 .toMutableMap()
                 .apply { set(device.model, deviceInfo) }
-            val deviceInfosJson = Json.encodeToString(deviceInfos)
+            val deviceInfosJson = serdeHelper.encode(deviceInfos).getOrThrow()
             fileHelper.writeJson(DEVICE_INFOS_FILENAME, deviceInfosJson).getOrThrow()
             return@runCatching deviceInfos
+        }
+    }
+
+    suspend fun saveFavoriteDeviceIds(
+        favoriteDeviceIds: List<String>,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val favoriteDeviceIdsJson = serdeHelper.encode(favoriteDeviceIds).getOrThrow()
+            fileHelper.writeJson(FAVORITE_DEVICE_IDS_FILENAME, favoriteDeviceIdsJson).getOrThrow()
         }
     }
 }

@@ -20,10 +20,12 @@ class MainApplication : Application() {
             serdeHelper = SerdeHelper.instance,
         )
         SceneRepository.instance = SceneRepository(
+            serdeHelper = SerdeHelper.instance,
             fileHelper = FileHelper.instance,
             apiHelper = ApiHelper.instance,
         )
         DeviceRepository.instance = DeviceRepository(
+            serdeHelper = SerdeHelper.instance,
             fileHelper = FileHelper.instance,
             apiHelper = ApiHelper.instance,
         )

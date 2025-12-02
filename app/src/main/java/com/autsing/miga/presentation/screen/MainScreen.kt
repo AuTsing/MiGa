@@ -55,6 +55,7 @@ import com.autsing.miga.presentation.component.PrimaryButton
 import com.autsing.miga.presentation.component.SecondaryButton
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.model.sort
 import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
 import kotlin.math.max
@@ -90,12 +91,14 @@ fun MainScreen(
                     scenes = uiState.scenes,
                     devices = uiState.devices,
                     favoriteSceneIds = uiState.favoriteSceneIds,
+                    favoriteDeviceIds = uiState.favoriteDeviceIds,
                     deviceIconUrls = uiState.deviceIconUrls,
                     onClickScene = { mainViewModel.handleRunScene(context, it) },
                     onClickToggleSceneFavorite = {
                         mainViewModel.handleToggleSceneFavorite(context, it)
                     },
                     onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
+                    onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
                     onClickLogout = { mainViewModel.handleLogout() },
                     onClickReload = { mainViewModel.handleLoad() },
                 )
@@ -190,8 +193,8 @@ private fun DeviceChip(
     device: Device,
     iconUrl: String,
     favorite: Boolean,
-    onClick: () -> Unit = {},
-    onClickFavorite: () -> Unit = {},
+    onClick: (Device) -> Unit = {},
+    onClickFavorite: (Device) -> Unit = {},
 ) {
     val bgPainter = ColorPainter(CardDefaults.cardColors().containerColor)
     val imagePainter = rememberAsyncImagePainter(iconUrl)
@@ -240,8 +243,8 @@ private fun DeviceChip(
     }
 
     TitleCard(
-        onClick = onClick,
-        onLongClick = {},
+        onClick = { onClick(device) },
+        onLongClick = { onClickFavorite(device) },
         border = if (favorite) {
             CardDefaults.outlinedCardBorder()
         } else {
@@ -318,10 +321,12 @@ private fun MainContent(
     scenes: List<Scene>,
     devices: List<Device>,
     favoriteSceneIds: List<String>,
+    favoriteDeviceIds: List<String>,
     deviceIconUrls: Map<String, String>,
     onClickScene: (Scene) -> Unit = {},
     onClickToggleSceneFavorite: (Scene) -> Unit = {},
     onClickDevice: (Device) -> Unit = {},
+    onClickToggleDeviceFavorite: (Device) -> Unit = {},
     onClickLogout: () -> Unit = {},
     onClickReload: () -> Unit = {},
 ) {
@@ -334,7 +339,7 @@ private fun MainContent(
                 )
             }
         }
-        items(scenes) {
+        items(scenes.sort(favoriteSceneIds)) {
             SceneChip(
                 scene = it,
                 favorite = it.scene_id in favoriteSceneIds,
@@ -350,12 +355,13 @@ private fun MainContent(
                 )
             }
         }
-        items(devices) {
+        items(devices.sort(favoriteDeviceIds)) {
             DeviceChip(
                 device = it,
                 iconUrl = deviceIconUrls.getOrDefault(it.model, ""),
-                favorite = false,
-                onClick = { onClickDevice(it) }
+                favorite = it.did in favoriteDeviceIds,
+                onClick = onClickDevice,
+                onClickFavorite = onClickToggleDeviceFavorite,
             )
         }
         if (scenes.isEmpty() && devices.isEmpty()) {
@@ -425,6 +431,7 @@ private fun PreviewEmptyContent() {
                 scenes = emptyList(),
                 devices = emptyList(),
                 favoriteSceneIds = emptyList(),
+                favoriteDeviceIds = emptyList(),
                 deviceIconUrls = emptyMap(),
             )
         }

@@ -202,7 +202,7 @@ class ApiHelper(
         runCatching {
             val request = Request.Builder().url("${Constants.PRODUCT_URL}?model=$model").build()
             val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
-            val json = response.body?.string() ?: ""
+            val json = response.body.string()
             val getDeviceBaikeResponse = serdeHelper.decode<GetDeviceBaikeResponse>(json)
                 .getOrThrow()
 
