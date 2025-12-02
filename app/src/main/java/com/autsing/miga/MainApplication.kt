@@ -15,7 +15,9 @@ class MainApplication : Application() {
 
         FileHelper.instance = FileHelper(this)
         SerdeHelper.instance = SerdeHelper()
-        LoginHelper.instance = LoginHelper()
+        LoginHelper.instance = LoginHelper(
+            serdeHelper = SerdeHelper.instance,
+        )
         ApiHelper.instance = ApiHelper(
             serdeHelper = SerdeHelper.instance,
         )

@@ -70,16 +70,18 @@ class RunSceneActivity : ComponentActivity() {
     private val sceneRepository: SceneRepository = SceneRepository.instance
 
     private val loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
-    private val message: MutableStateFlow<String> = MutableStateFlow("")
+    private val success: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val exception: MutableStateFlow<String> = MutableStateFlow("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             val loading = loading.collectAsState()
-            val message = message.collectAsState()
+            val success = success.collectAsState()
+            val exception = exception.collectAsState()
 
-            RunSceneScreen(loading.value, message.value)
+            RunSceneScreen(loading.value, success.value, exception.value)
         }
 
         handleRunScene()
@@ -97,15 +99,18 @@ class RunSceneActivity : ComponentActivity() {
                 scenes.first { it.scene_id == sceneId }
             }.getOrElse { throw Exception("场景信息无效") }
 
-            message.value = apiHelper.runScene(auth, scene).getOrThrow()
-            loading.value = false
+            val result = apiHelper.runScene(auth, scene).getOrThrow()
 
-            if (message.value == "ok") {
-                delay(1000)
+            throw Exception("场景信息无效")
+            if (result == "ok") {
+                success.value = true
+                loading.value = false
+                delay(1500)
                 finish()
             }
         }.onFailure {
-            message.value = it.message ?: it.stackTraceToString()
+            success.value = false
+            exception.value = it.message ?: it.stackTraceToString()
             loading.value = false
         }
     }
