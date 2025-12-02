@@ -19,6 +19,7 @@ import kotlinx.serialization.json.Json
 class LoginActivity : ComponentActivity() {
 
     companion object {
+
         fun startActivity(context: Context) {
             val intent = Intent(context, LoginActivity::class.java)
             context.startActivity(intent)
@@ -40,7 +41,9 @@ class LoginActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             runCatching {
-                val loginIndexResponse = LoginHelper.instance.getLoginIndex().getOrThrow()
+                val loginIndexResponse = LoginHelper.instance
+                    .getLoginIndex()
+                    .getOrThrow()
                 val loginUrlResponse = LoginHelper.instance
                     .getLoginUrl(loginIndexResponse)
                     .getOrThrow()

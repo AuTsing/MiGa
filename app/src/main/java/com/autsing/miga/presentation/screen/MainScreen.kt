@@ -1,13 +1,11 @@
 package com.autsing.miga.presentation.screen
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -52,13 +50,13 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
 import com.autsing.miga.R
+import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PrimaryButton
 import com.autsing.miga.presentation.component.SecondaryButton
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.model.sort
-import com.autsing.miga.presentation.theme.MiGaTheme
 import com.autsing.miga.presentation.viewmodel.MainViewModel
 import kotlin.math.max
 
@@ -75,36 +73,29 @@ fun MainScreen(
         }
     }
 
-    MiGaTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (uiState.loading) {
-                LoadingContent("加载中...")
-            } else if (uiState.auth == null) {
-                LoginContent(
-                    onClickLogin = { mainViewModel.handleNavigateToLogin(context) }
-                )
-            } else {
-                MainContent(
-                    scenes = uiState.scenes,
-                    devices = uiState.devices,
-                    favoriteSceneIds = uiState.favoriteSceneIds,
-                    favoriteDeviceIds = uiState.favoriteDeviceIds,
-                    deviceIconUrls = uiState.deviceIconUrls,
-                    onClickScene = { mainViewModel.handleRunScene(context, it) },
-                    onClickToggleSceneFavorite = {
-                        mainViewModel.handleToggleSceneFavorite(context, it)
-                    },
-                    onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
-                    onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
-                    onClickLogout = { mainViewModel.handleLogout() },
-                    onClickReload = { mainViewModel.handleLoad() },
-                )
-            }
+    FullScreenBox {
+        if (uiState.loading) {
+            LoadingContent("加载中...")
+        } else if (uiState.auth == null) {
+            LoginContent(
+                onClickLogin = { mainViewModel.handleNavigateToLogin(context) }
+            )
+        } else {
+            MainContent(
+                scenes = uiState.scenes,
+                devices = uiState.devices,
+                favoriteSceneIds = uiState.favoriteSceneIds,
+                favoriteDeviceIds = uiState.favoriteDeviceIds,
+                deviceIconUrls = uiState.deviceIconUrls,
+                onClickScene = { mainViewModel.handleRunScene(context, it) },
+                onClickToggleSceneFavorite = {
+                    mainViewModel.handleToggleSceneFavorite(context, it)
+                },
+                onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
+                onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
+                onClickLogout = { mainViewModel.handleLogout() },
+                onClickReload = { mainViewModel.handleLoad() },
+            )
         }
     }
 }
@@ -429,35 +420,21 @@ private fun PreviewDeviceChip() {
 @Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
 @Composable
 private fun PreviewEmptyContent() {
-    MiGaTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
-            MainContent(
-                scenes = emptyList(),
-                devices = emptyList(),
-                favoriteSceneIds = emptyList(),
-                favoriteDeviceIds = emptyList(),
-                deviceIconUrls = emptyMap(),
-            )
-        }
+    FullScreenBox {
+        MainContent(
+            scenes = emptyList(),
+            devices = emptyList(),
+            favoriteSceneIds = emptyList(),
+            favoriteDeviceIds = emptyList(),
+            deviceIconUrls = emptyMap(),
+        )
     }
 }
 
 @Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
 @Composable
 private fun PreviewLoginContent() {
-    MiGaTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
-            LoginContent()
-        }
+    FullScreenBox {
+        LoginContent()
     }
 }

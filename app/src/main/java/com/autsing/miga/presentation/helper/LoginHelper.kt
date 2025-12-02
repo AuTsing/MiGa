@@ -5,7 +5,6 @@ import com.autsing.miga.presentation.model.LoginLpResponse
 import com.autsing.miga.presentation.model.LoginUrlResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import okhttp3.Cookie
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -17,7 +16,9 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
-class LoginHelper() {
+class LoginHelper(
+    val serdeHelper: SerdeHelper,
+) {
 
     companion object {
         lateinit var instance: LoginHelper
@@ -37,6 +38,8 @@ class LoginHelper() {
         }
         .connectTimeout(Duration.ofSeconds(60L))
         .callTimeout(Duration.ofSeconds(60L))
+        .readTimeout(Duration.ofSeconds(60L))
+        .writeTimeout(Duration.ofSeconds(60L))
         .build()
 
     fun getDeviceId(): String {
@@ -53,8 +56,9 @@ class LoginHelper() {
             val response = okHttpClient.newCall(loginIndexRequest)
                 .execute()
                 .also { maybeResponse = it }
-            val loginIndexJson = response.body?.string()?.substring(11) ?: ""
-            val loginIndexResponse = Json.decodeFromString<LoginIndexResponse>(loginIndexJson)
+            val loginIndexJson = response.body.string().substring(11)
+            val loginIndexResponse = serdeHelper.decode<LoginIndexResponse>(loginIndexJson)
+                .getOrThrow()
 
             return@runCatching loginIndexResponse
         }.also {
@@ -97,8 +101,8 @@ class LoginHelper() {
             val response = okHttpClient.newCall(qrRequest)
                 .execute()
                 .also { maybeResponse = it }
-            val loginUrlJson = response.body?.string()?.substring(11) ?: ""
-            val loginUrlResponse = Json.decodeFromString<LoginUrlResponse>(loginUrlJson)
+            val loginUrlJson = response.body.string().substring(11)
+            val loginUrlResponse = serdeHelper.decode<LoginUrlResponse>(loginUrlJson).getOrThrow()
 
             return@runCatching loginUrlResponse
         }.also {
@@ -119,8 +123,8 @@ class LoginHelper() {
             val response = okHttpClient.newCall(lpRequest)
                 .execute()
                 .also { maybeResponse = it }
-            val loginLpJson = response.body?.string()?.substring(11) ?: ""
-            val loginLpResponse = Json.decodeFromString<LoginLpResponse>(loginLpJson)
+            val loginLpJson = response.body.string().substring(11)
+            val loginLpResponse = serdeHelper.decode<LoginLpResponse>(loginLpJson).getOrThrow()
 
             return@runCatching loginLpResponse
         }.also {
