@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -43,6 +44,7 @@ import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.CardDefaults
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.OutlinedCard
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TitleCard
 import androidx.wear.tooling.preview.devices.WearDevices
@@ -269,6 +271,20 @@ private fun DeviceChip(
 }
 
 @Composable
+private fun EmptyCard(text: String) {
+    OutlinedCard(onClick = {}) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .height(48.dp)
+                .fillMaxWidth(),
+        ) {
+            Text(text)
+        }
+    }
+}
+
+@Composable
 private fun TitleDialog(
     showDialog: Boolean,
     title: String,
@@ -315,7 +331,6 @@ private fun TitleContent(
     }
 }
 
-
 @Composable
 private fun MainContent(
     scenes: List<Scene>,
@@ -331,13 +346,11 @@ private fun MainContent(
     onClickReload: () -> Unit = {},
 ) {
     ScalingLazyColumn {
-        if (scenes.isNotEmpty()) {
-            item {
-                TitleContent(
-                    title = "智能",
-                    tip = "在手机米家APP添加智能，点击最下方刷新；点击智能可执行；长按智能可收藏",
-                )
-            }
+        item {
+            TitleContent(
+                title = "智能",
+                tip = "在手机米家APP添加智能，点击最下方刷新；点击智能可执行；长按智能可收藏",
+            )
         }
         items(scenes.sort(favoriteSceneIds)) {
             SceneChip(
@@ -347,13 +360,14 @@ private fun MainContent(
                 onClickFavorite = onClickToggleSceneFavorite,
             )
         }
-        if (devices.isNotEmpty()) {
-            item {
-                TitleContent(
-                    title = "设备",
-                    tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可进入设备页面；长按设备可收藏",
-                )
-            }
+        if (devices.isEmpty()) {
+            item { EmptyCard("无智能") }
+        }
+        item {
+            TitleContent(
+                title = "设备",
+                tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可进入设备页面；长按设备可收藏",
+            )
         }
         items(devices.sort(favoriteDeviceIds)) {
             DeviceChip(
@@ -364,13 +378,8 @@ private fun MainContent(
                 onClickFavorite = onClickToggleDeviceFavorite,
             )
         }
-        if (scenes.isEmpty() && devices.isEmpty()) {
-            item {
-                TitleContent(
-                    title = "无内容",
-                    tip = "请先在手机米家APP添加智能或设备，然后点击最下方刷新",
-                )
-            }
+        if (devices.isEmpty()) {
+            item { EmptyCard("无设备") }
         }
         item {
             Row(
