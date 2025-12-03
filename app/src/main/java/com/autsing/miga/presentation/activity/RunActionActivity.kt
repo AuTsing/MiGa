@@ -16,7 +16,6 @@ import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -78,7 +77,7 @@ class RunActionActivity : ComponentActivity() {
         handleLoad()
     }
 
-    private fun handleLoad() = lifecycleScope.launch(Dispatchers.IO) {
+    private fun handleLoad() = lifecycleScope.launch {
         runCatching {
             val deviceModel = intent.getStringExtra(EXTRA_DEVICE_MODEL)
                 ?: throw Exception("读取设备型号失败")
@@ -97,7 +96,7 @@ class RunActionActivity : ComponentActivity() {
                 .mapNotNull { inPiid -> deviceInfo.properties.find { it.method.siid == siid && it.method.piid == inPiid } }
 
             val sliders = properties
-                .filter { it.range is DevicePropertyRange.None == false }
+                .filter { it.range !is DevicePropertyRange.None }
                 .map {
                     val v = when (it.range) {
                         is DevicePropertyRange.Long -> DevicePropertyValue.Long(it.range.from)
@@ -126,7 +125,7 @@ class RunActionActivity : ComponentActivity() {
     private fun handleChangeSlider(
         component: Component.Slider,
         percentage: Float,
-    ) = lifecycleScope.launch(Dispatchers.IO) {
+    ) = lifecycleScope.launch {
         runCatching {
             sliders.value = sliders.value.map {
                 if (it == component) {
@@ -153,7 +152,7 @@ class RunActionActivity : ComponentActivity() {
     private fun handleChangeSelector(
         component: Component.Selector,
         index: Int,
-    ) = lifecycleScope.launch(Dispatchers.IO) {
+    ) = lifecycleScope.launch {
         runCatching {
             selectors.value = selectors.value.map {
                 if (it == component) {
@@ -172,7 +171,7 @@ class RunActionActivity : ComponentActivity() {
         }
     }
 
-    private fun handleRunAction() = lifecycleScope.launch(Dispatchers.IO) {
+    private fun handleRunAction() = lifecycleScope.launch {
         runCatching {
             loading.value = true
 

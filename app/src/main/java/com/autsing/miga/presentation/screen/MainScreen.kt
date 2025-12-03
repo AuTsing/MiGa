@@ -289,6 +289,7 @@ private fun MainContent(
             Title(
                 title = "智能",
                 tip = "在手机米家APP添加智能，点击最下方刷新；点击智能可执行；长按智能可收藏",
+                style = MaterialTheme.typography.displaySmall,
             )
         }
         items(scenes.sort(favoriteSceneIds)) {
@@ -306,6 +307,7 @@ private fun MainContent(
             Title(
                 title = "设备",
                 tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可进入设备页面；长按设备可收藏",
+                style = MaterialTheme.typography.displaySmall,
             )
         }
         items(devices.sort(favoriteDeviceIds)) {

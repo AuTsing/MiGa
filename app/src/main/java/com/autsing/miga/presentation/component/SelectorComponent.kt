@@ -26,14 +26,14 @@ fun SelectorComponent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        ComponentTitle("${component.headline}: ${component.valueDisplay}")
+        Title("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
             onValueChange = {
                 value = it
                 onClick(it)
             },
-            valueProgression = 0..component.values.size - 1,
+            valueProgression = 0..<component.values.size,
             segmented = true,
             enabled = !component.readOnly,
             increaseIcon = {

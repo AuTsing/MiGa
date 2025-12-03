@@ -1,21 +1,32 @@
 package com.autsing.miga.presentation.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.material.Text
-import com.google.android.horologist.compose.layout.fillMaxRectangle
+import androidx.wear.compose.material3.AlertDialogContent
+import androidx.wear.compose.material3.Text
+import com.autsing.miga.R
 
 @Composable
-fun MessageContent(message: String) {
-    ScalingLazyColumn {
-        item {
-            Text(
-                text = message,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxRectangle(),
-            )
-        }
-    }
+fun MessageContent(
+    message: String,
+    title: String? = null,
+    onClose: (() -> Unit)? = null,
+) {
+    AlertDialogContent(
+        title = {
+            if (title != null) {
+                Title(title)
+            }
+        },
+        content = {
+            item { Text(message) }
+            if (onClose != null) {
+                item {
+                    PrimaryButton(
+                        iconId = R.drawable.ic_fluent_dismiss_regular_icon,
+                        onClick = onClose,
+                    )
+                }
+            }
+        },
+    )
 }

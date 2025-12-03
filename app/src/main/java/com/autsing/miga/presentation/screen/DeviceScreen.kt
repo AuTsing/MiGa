@@ -10,14 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-import com.autsing.miga.presentation.component.ListTitle
+import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.Text
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.component.SelectorComponent
 import com.autsing.miga.presentation.component.SliderComponent
 import com.autsing.miga.presentation.component.SwitchComponent
+import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.component.TriggerComponent
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.theme.MiGaTheme
@@ -34,7 +34,7 @@ fun DeviceScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colors.background),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.loading) {
@@ -72,15 +72,15 @@ private fun DeviceInfoContent(
     onClickTrigger: (Component.Trigger) -> Unit = {},
 ) {
     ScalingLazyColumn {
-        item { ListTitle("开关") }
+        item { Title("开关") }
         items(switches) { switch -> SwitchComponent(switch) { onClickSwitch(switch, it) } }
-        item { ListTitle("调整") }
+        item { Title("调整") }
         items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
-        item { ListTitle("模式") }
+        item { Title("模式") }
         items(selectors) { selector ->
             SelectorComponent(selector) { onClickSelector(selector, it) }
         }
-        item { ListTitle("动作") }
+        item { Title("动作") }
         items(triggers) { trigger -> TriggerComponent(trigger) { onClickTrigger(trigger) } }
     }
 }

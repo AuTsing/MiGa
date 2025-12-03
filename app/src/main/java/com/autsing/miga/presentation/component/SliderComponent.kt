@@ -26,7 +26,7 @@ fun SliderComponent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        ComponentTitle("${component.headline}: ${component.valueDisplay}")
+        Title("${component.headline}: ${component.valueDisplay}")
         InlineSlider(
             value = value,
             onValueChange = {

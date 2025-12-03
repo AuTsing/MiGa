@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.AlertDialog
 import androidx.wear.compose.material3.AlertDialogDefaults
@@ -25,6 +26,7 @@ import com.autsing.miga.R
 fun Title(
     title: String,
     tip: String? = null,
+    style: TextStyle = MaterialTheme.typography.titleLarge,
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -41,7 +43,7 @@ fun Title(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.displaySmall,
+            style = style,
             modifier = Modifier.padding(4.dp),
         )
         if (tip != null) {
