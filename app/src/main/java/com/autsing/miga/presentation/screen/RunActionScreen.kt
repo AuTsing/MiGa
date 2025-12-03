@@ -1,8 +1,8 @@
 package com.autsing.miga.presentation.screen
 
 import androidx.compose.runtime.Composable
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.material3.AlertDialogContent
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
@@ -51,17 +51,19 @@ private fun RunActionContent(
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
     onClickRun: () -> Unit = {},
 ) {
-    ScalingLazyColumn {
-        item { Title(title) }
-        items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
-        items(selectors) { selector ->
-            SelectorComponent(selector) { onClickSelector(selector, it) }
-        }
-        item {
-            PrimaryButton(
-                iconId = R.drawable.ic_fluent_play_regular_icon,
-                onClick = onClickRun,
-            )
-        }
-    }
+    AlertDialogContent(
+        title = { Title(title) },
+        content = {
+            items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
+            items(selectors) { selector ->
+                SelectorComponent(selector) { onClickSelector(selector, it) }
+            }
+            item {
+                PrimaryButton(
+                    iconId = R.drawable.ic_fluent_play_regular_icon,
+                    onClick = onClickRun,
+                )
+            }
+        },
+    )
 }
