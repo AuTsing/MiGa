@@ -1,14 +1,19 @@
 package com.autsing.miga.presentation.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.material3.ConfirmationDialogDefaults
-import androidx.wear.compose.material3.FailureConfirmationDialog
-import androidx.wear.compose.material3.SuccessConfirmationDialog
-import androidx.wear.compose.material3.confirmationDialogCurvedText
+import androidx.wear.compose.material3.AlertDialogContent
+import androidx.wear.compose.material3.SuccessConfirmationDialogContent
+import androidx.wear.compose.material3.Text
 import androidx.wear.tooling.preview.devices.WearDevices
+import com.autsing.miga.R
+import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
+import com.autsing.miga.presentation.component.PrimaryButton
+import com.autsing.miga.presentation.component.Title
+import com.google.android.horologist.annotations.ExperimentalHorologistApi
 
 @Composable
 fun RunSceneScreen(
@@ -29,20 +34,25 @@ fun RunSceneScreen(
 
 @Composable
 private fun SuccessContent() {
-    SuccessConfirmationDialog(
-        visible = true,
-        onDismissRequest = {},
-        curvedText = null,
-    )
+    SuccessConfirmationDialogContent(curvedText = null)
 }
 
+@OptIn(ExperimentalHorologistApi::class)
 @Composable
 private fun FailureContent(exception: String) {
-    val style = ConfirmationDialogDefaults.curvedTextStyle
-    FailureConfirmationDialog(
-        visible = true,
-        onDismissRequest = {},
-        curvedText = { confirmationDialogCurvedText(exception, style) },
+    val context = LocalContext.current
+
+    AlertDialogContent(
+        title = { Title("执行失败") },
+        content = {
+            item { Text(exception) }
+            item {
+                PrimaryButton(
+                    iconId = R.drawable.ic_fluent_dismiss_regular_icon,
+                    onClick = { (context as RunSceneActivity).finish() },
+                )
+            }
+        },
     )
 }
 

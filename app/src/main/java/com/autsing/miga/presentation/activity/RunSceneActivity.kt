@@ -110,7 +110,7 @@ class RunSceneActivity : ComponentActivity() {
             }
         }.onFailure {
             success.value = false
-            exception.value = it.message ?: it.stackTraceToString()
+            exception.value = it.stackTraceToString()
             loading.value = false
         }
     }
