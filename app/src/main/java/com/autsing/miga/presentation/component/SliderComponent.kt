@@ -10,8 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.InlineSlider
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.Slider
 import com.autsing.miga.R
 import com.autsing.miga.presentation.model.Component
 
@@ -26,8 +27,11 @@ fun SliderComponent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Title("${component.headline}: ${component.valueDisplay}")
-        InlineSlider(
+        Title(
+            title = "${component.headline}: ${component.valueDisplay}",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Slider(
             value = value,
             onValueChange = {
                 value = it
@@ -38,10 +42,16 @@ fun SliderComponent(
             segmented = false,
             enabled = !component.readOnly,
             increaseIcon = {
-                Icon(painterResource(R.drawable.ic_fluent_add_regular_icon), "Increase")
+                Icon(
+                    painter = painterResource(R.drawable.ic_fluent_add_regular_icon),
+                    contentDescription = "Increase",
+                )
             },
             decreaseIcon = {
-                Icon(painterResource(R.drawable.ic_fluent_subtract_regular_icon), "Decrease")
+                Icon(
+                    painter = painterResource(R.drawable.ic_fluent_subtract_regular_icon),
+                    contentDescription = "Decrease",
+                )
             },
         )
     }

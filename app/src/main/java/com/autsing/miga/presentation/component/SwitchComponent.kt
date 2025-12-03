@@ -7,9 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.wear.compose.material.Switch
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.ToggleChip
+import androidx.wear.compose.material3.SwitchButton
+import androidx.wear.compose.material3.Text
 import com.autsing.miga.presentation.model.Component
 
 @Composable
@@ -19,15 +18,15 @@ fun SwitchComponent(
 ) {
     var value by remember { mutableStateOf(component.value) }
 
-    ToggleChip(
+    SwitchButton(
         checked = value,
         onCheckedChange = {
             value = it
             onClick(it)
         },
-        label = { Text(component.headline) },
-        toggleControl = { Switch(value) },
         enabled = !component.readOnly,
         modifier = Modifier.fillMaxWidth(),
-    )
+    ) {
+        Text(component.headline)
+    }
 }
