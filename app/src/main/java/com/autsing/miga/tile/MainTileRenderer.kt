@@ -11,6 +11,7 @@ import androidx.wear.protolayout.material3.ButtonDefaults.filledTonalButtonColor
 import androidx.wear.protolayout.material3.ButtonDefaults.filledVariantButtonColors
 import androidx.wear.protolayout.material3.ButtonGroupDefaults.DEFAULT_SPACER_BETWEEN_BUTTON_GROUPS
 import androidx.wear.protolayout.material3.MaterialScope
+import androidx.wear.protolayout.material3.Typography
 import androidx.wear.protolayout.material3.button
 import androidx.wear.protolayout.material3.buttonGroup
 import androidx.wear.protolayout.material3.icon
@@ -27,6 +28,7 @@ import androidx.wear.tiles.tooling.preview.TilePreviewData
 import androidx.wear.tiles.tooling.preview.TilePreviewHelper
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
+import com.autsing.miga.presentation.activity.MainActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
@@ -100,13 +102,7 @@ private fun tileLayout(
                     }
                 }
             },
-            bottomSlot = {
-                textEdgeButton(
-                    onClick = Clickable.Builder().build(),
-                    labelContent = { text("更多".layoutString) },
-                    colors = filledVariantButtonColors(),
-                )
-            },
+            bottomSlot = { moreButton(context) },
         )
     }
 }
@@ -132,7 +128,7 @@ internal fun MaterialScope.sceneButton(context: Context, scene: Scene): LayoutEl
                 addContent(
                     text(
                         text = scene.name.layoutString,
-                        maxLines = 2,
+                        typography = Typography.BODY_SMALL,
                     )
                 )
             }
@@ -141,6 +137,19 @@ internal fun MaterialScope.sceneButton(context: Context, scene: Scene): LayoutEl
         height = expand(),
         contentPadding = padding(horizontal = 2F, vertical = 2F),
         colors = filledTonalButtonColors(),
+    )
+}
+
+internal fun MaterialScope.moreButton(context: Context): LayoutElement {
+    val action = MainActivity.createLaunchAction(context)
+    val clickable = Clickable.Builder()
+        .setOnClick(action)
+        .build()
+
+    return textEdgeButton(
+        onClick = clickable,
+        labelContent = { text("更多".layoutString) },
+        colors = filledVariantButtonColors(),
     )
 }
 

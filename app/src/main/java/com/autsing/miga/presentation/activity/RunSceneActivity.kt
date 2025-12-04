@@ -101,7 +101,6 @@ class RunSceneActivity : ComponentActivity() {
 
             val result = apiHelper.runScene(auth, scene).getOrThrow()
 
-            throw Exception("场景信息无效")
             if (result == "ok") {
                 success.value = true
                 loading.value = false
