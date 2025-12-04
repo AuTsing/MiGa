@@ -1,10 +1,19 @@
 # MiGa 米咖
 
+<p align="center"><img width="128" alt="" src="assets/logo.png"/></p>
+
 MiGa (米咖) 是基于米家 API 开发的第三方应用，为手表开发，旨在手表实现米家 APP 的功能。
 
 ## 截图
 
-<img width="160" alt="" src="assets/Screenshot_20250520_122648.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122733.png"/> <img width="160" alt="" src="assets/Screenshot_20250520_122706.png"/> <img width="160" alt="" src="assets/Screenshot_20250523_031623.png"/> <img width="160" alt="" src="assets/Screenshot_20250525_004517.png"/> <img width="160" alt="" src="assets/Screenshot_20250618_134417.png"/> <img width="160" alt="" src="assets/Screenshot_20250618_134527.png"/> <img width="160" alt="" src="assets/Screenshot_20250618_134549.png"/> <img width="160" alt="" src="assets/Screenshot_20250618_134605.png"/> <img width="160" alt="" src="assets/Screenshot_20250618_135042.png"/>
+<img width="160" alt="" src="assets/Screenshot_20250525_004517.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251204_210637.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251204_210707.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251204_210935.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_021752.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_021834.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_021847.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_021856.png"/>
 
 ## 功能
 
@@ -18,6 +27,7 @@ MiGa (米咖) 是基于米家 API 开发的第三方应用，为手表开发，�
 
 ## 第二阶段 TODO
 
+-   [x] 使用 Material Design 3 Expressive 更新应用
 -   [ ] 优化部分显示文本没有本地化的问题
 -   [ ] 优化运行场景的结果提示信息
 -   [ ] 优化运行动作的结果提示信息
