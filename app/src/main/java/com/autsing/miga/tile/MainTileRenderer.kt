@@ -5,23 +5,30 @@ import androidx.wear.protolayout.ColorBuilders.ColorProp
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
 import androidx.wear.protolayout.DimensionBuilders
 import androidx.wear.protolayout.DimensionBuilders.dp
-import androidx.wear.protolayout.LayoutElementBuilders.Box
+import androidx.wear.protolayout.DimensionBuilders.expand
 import androidx.wear.protolayout.LayoutElementBuilders.ColorFilter
 import androidx.wear.protolayout.LayoutElementBuilders.Column
 import androidx.wear.protolayout.LayoutElementBuilders.Image
 import androidx.wear.protolayout.LayoutElementBuilders.LayoutElement
-import androidx.wear.protolayout.LayoutElementBuilders.Row
 import androidx.wear.protolayout.ModifiersBuilders.Clickable
-import androidx.wear.protolayout.ModifiersBuilders.Modifiers
-import androidx.wear.protolayout.ModifiersBuilders.Padding
 import androidx.wear.protolayout.ResourceBuilders
-import androidx.wear.protolayout.material.Button
-import androidx.wear.protolayout.material.ButtonDefaults
-import androidx.wear.protolayout.material.Colors
 import androidx.wear.protolayout.material.Text
 import androidx.wear.protolayout.material.Typography
+import androidx.wear.protolayout.material3.ButtonDefaults.filledTonalButtonColors
+import androidx.wear.protolayout.material3.MaterialScope
+import androidx.wear.protolayout.material3.button
+import androidx.wear.protolayout.material3.buttonGroup
+import androidx.wear.protolayout.material3.materialScope
+import androidx.wear.protolayout.material3.primaryLayout
+import androidx.wear.protolayout.material3.text
+import androidx.wear.protolayout.material3.textEdgeButton
+import androidx.wear.protolayout.types.layoutString
+import androidx.wear.tiles.RequestBuilders
+import androidx.wear.tiles.tooling.preview.Preview
+import androidx.wear.tiles.tooling.preview.TilePreviewData
+import androidx.wear.tiles.tooling.preview.TilePreviewHelper
+import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
-import com.autsing.miga.presentation.activity.MainActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
@@ -56,63 +63,66 @@ class MainTileRenderer(context: Context) : SingleTileLayoutRenderer<MainTileStat
         state: MainTileState,
         deviceParameters: DeviceParameters,
     ): LayoutElement {
-        return tileLayout(context, state)
+        return tileLayout(context, state, deviceParameters)
     }
 }
 
-private fun tileLayout(context: Context, state: MainTileState): LayoutElement {
-    val buttons = state.scenes.map { triggerButton(context, it) }
-        .toMutableList()
-        .apply {
-            if (size < 4) {
-                repeat(4 - size) { add(addButton(context)) }
+private fun tileLayout(
+    context: Context,
+    state: MainTileState,
+    deviceParameters: DeviceParameters,
+): LayoutElement {
+    return materialScope(
+        context = context,
+        deviceConfiguration = deviceParameters,
+    ) {
+        val visibleScenes = state.scenes.take(6)
+        val (row1, row2) = visibleScenes.chunked(if (visibleScenes.size > 4) 3 else 2)
+            .let { chunkedList ->
+                Pair(
+                    chunkedList.getOrElse(0) { emptyList() },
+                    chunkedList.getOrElse(1) { emptyList() }
+                )
             }
-        }
 
-    val row = Row.Builder()
-        .addContent(buttons[0])
-        .addContent(buttons[1])
-        .build()
-    val row2 = Row.Builder()
-        .addContent(buttons[2])
-        .addContent(buttons[3])
-        .build()
-    val column = Column.Builder()
-        .addContent(row)
-        .addContent(row2)
-        .build()
-
-    return Box.Builder()
-        .setWidth(DimensionBuilders.expand())
-        .setHeight(DimensionBuilders.expand())
-        .addContent(column)
-        .build()
+        primaryLayout(
+            titleSlot = null,
+            mainSlot = {
+                column {
+                    setWidth(expand())
+                    setHeight(expand())
+                    addContent(buttonGroup {
+                        row1.forEach {
+                            this@materialScope.sceneButton(context, it)
+                        }
+                    })
+                }
+            },
+            bottomSlot = {
+                textEdgeButton(
+                    onClick = Clickable.Builder().build(),
+                    labelContent = { text("More".layoutString) },
+                    colors = filledTonalButtonColors(),
+                )
+            },
+        )
+    }
 }
 
-private fun button(
-    context: Context,
-    clickable: Clickable,
-    iconId: String,
-    iconColor: Int,
-    text: String,
-    textColor: Int,
-): LayoutElement {
-    val padding = Padding.Builder()
-        .setAll(dp(2F))
-        .build()
-    val modifiers = Modifiers.Builder()
-        .setPadding(padding)
-        .build()
-    val button = Button.Builder(context, clickable)
-        .setCustomContent(buttonContent(context, iconId, iconColor, text, textColor))
-        .setSize(ButtonDefaults.EXTRA_LARGE_SIZE)
-        .setButtonColors(ButtonDefaults.SECONDARY_COLORS)
+internal fun MaterialScope.sceneButton(context: Context, scene: Scene): LayoutElement {
+    val action = RunSceneActivity.createLaunchAction(context, scene.scene_id)
+    val clickable = Clickable.Builder()
+        .setOnClick(action)
         .build()
 
-    return Box.Builder()
-        .setModifiers(modifiers)
-        .addContent(button)
-        .build()
+    return button(
+        onClick = clickable,
+        labelContent = {
+            text(
+                text = scene.name.layoutString,
+            )
+        },
+    )
 }
 
 private fun buttonContent(
@@ -147,34 +157,31 @@ private fun buttonContent(
         .build()
 }
 
-private fun triggerButton(context: Context, scene: Scene): LayoutElement {
-    val action = RunSceneActivity.createLaunchAction(context, scene.scene_id)
-    val clickable = Clickable.Builder()
-        .setOnClick(action)
-        .build()
-
-    return button(
-        context = context,
-        clickable = clickable,
-        iconId = RES_IC_SCENE,
-        iconColor = 0xFFFFC107.toInt(),
-        text = scene.name,
-        textColor = Colors.DEFAULT.onSurface,
-    )
+@Preview(device = WearDevices.LARGE_ROUND, name = "Large Round")
+internal fun previewTile(context: Context): TilePreviewData {
+    val state = getMockMainTileState()
+    return TilePreviewData(
+        resources {
+            addIdToImageMapping(
+                RES_IC_SCENE,
+                drawableResToImageResource(R.drawable.ic_fluent_star_regular_icon),
+            )
+            addIdToImageMapping(
+                RES_IC_ADD,
+                drawableResToImageResource(R.drawable.ic_fluent_add_regular_icon),
+            )
+        }
+    ) {
+        TilePreviewHelper
+            .singleTimelineEntryTileBuilder(
+                tileLayout(context, state, it.deviceConfiguration)
+            )
+            .build()
+    }
 }
 
-private fun addButton(context: Context): LayoutElement {
-    val action = MainActivity.createLaunchAction(context)
-    val clickable = Clickable.Builder()
-        .setOnClick(action)
-        .build()
-
-    return button(
-        context = context,
-        clickable = clickable,
-        iconId = RES_IC_ADD,
-        iconColor = 0xFF4CAF50.toInt(),
-        text = "添加收藏",
-        textColor = Colors.DEFAULT.onSurface,
-    )
+internal fun resources(
+    fn: ResourceBuilders.Resources.Builder.() -> Unit
+): (RequestBuilders.ResourcesRequest) -> ResourceBuilders.Resources = {
+    ResourceBuilders.Resources.Builder().setVersion(it.version).apply(fn).build()
 }

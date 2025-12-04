@@ -84,6 +84,8 @@ dependencies {
     implementation(libs.tiles)
     implementation(libs.tiles.material)
     implementation(libs.tiles.tooling.preview)
+    implementation(libs.protolayout)
+    implementation(libs.protolayoutMaterial3)
     implementation(libs.horologistComposeTools)
     implementation(libs.horologistTiles)
     implementation(libs.horologistComposeLayout)

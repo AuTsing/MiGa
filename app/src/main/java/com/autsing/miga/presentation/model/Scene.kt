@@ -14,3 +14,11 @@ fun List<Scene>.sort(favoriteSceneIds: List<String>): List<Scene> {
         .associate { it.value to it.index }
     return this.sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
 }
+
+fun getMockScene(index: Int? = 0): Scene {
+    return Scene(
+        scene_id = "abcde$index",
+        name = "开灯$index",
+        icon_url = "http://localhost",
+    )
+}

@@ -4,10 +4,8 @@ kotlin = "2.2.21"
 playServicesWearable = "19.0.0"
 wearCompose = "1.5.5"
 wearToolingPreview = "1.0.0"
-tiles = "1.4.1"
-tilesMaterial = "1.4.1"
-tilesTooling = "1.4.1"
-tilesToolingPreview = "1.4.1"
+tiles = "1.5.0"
+protolayout = "1.3.0"
 horologist = "0.7.15"
 watchfaceComplicationsDataSourceKtx = "1.2.1"
 coil = "3.3.0"
@@ -27,9 +25,11 @@ wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview",
 activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.12.0" }
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.2.0" }
 tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "tiles" }
-tiles-material = { group = "androidx.wear.tiles", name = "tiles-material", version.ref = "tilesMaterial" }
-tiles-tooling = { group = "androidx.wear.tiles", name = "tiles-tooling", version.ref = "tilesTooling" }
-tiles-tooling-preview = { group = "androidx.wear.tiles", name = "tiles-tooling-preview", version.ref = "tilesToolingPreview" }
+tiles-material = { group = "androidx.wear.tiles", name = "tiles-material", version.ref = "tiles" }
+tiles-tooling = { group = "androidx.wear.tiles", name = "tiles-tooling", version.ref = "tiles" }
+tiles-tooling-preview = { group = "androidx.wear.tiles", name = "tiles-tooling-preview", version.ref = "tiles" }
+protolayout = { module = "androidx.wear.protolayout:protolayout", version.ref = "protolayout" }
+protolayoutMaterial3 = { module = "androidx.wear.protolayout:protolayout-material3", version.ref = "protolayout" }
 horologistComposeTools = { group = "com.google.android.horologist", name = "horologist-compose-tools", version.ref = "horologist" }
 horologistTiles = { group = "com.google.android.horologist", name = "horologist-tiles", version.ref = "horologist" }
 horologistComposeLayout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
