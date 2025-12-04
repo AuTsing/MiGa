@@ -15,6 +15,8 @@ MiGa (米咖) 是基于米家 API 开发的第三方应用，为手表开发，�
 <img width="160" alt="" src="assets/Screenshot_20251205_021834.png"/>
 <img width="160" alt="" src="assets/Screenshot_20251205_021847.png"/>
 <img width="160" alt="" src="assets/Screenshot_20251205_021856.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_024048.png"/>
+<img width="160" alt="" src="assets/Screenshot_20251205_024135.png"/>
 </p>
 
 ## 功能
