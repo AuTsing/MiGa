@@ -1,27 +1,25 @@
 package com.autsing.miga.tile
 
 import android.content.Context
-import androidx.wear.protolayout.ColorBuilders.ColorProp
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
-import androidx.wear.protolayout.DimensionBuilders
 import androidx.wear.protolayout.DimensionBuilders.dp
 import androidx.wear.protolayout.DimensionBuilders.expand
-import androidx.wear.protolayout.LayoutElementBuilders.ColorFilter
-import androidx.wear.protolayout.LayoutElementBuilders.Column
-import androidx.wear.protolayout.LayoutElementBuilders.Image
 import androidx.wear.protolayout.LayoutElementBuilders.LayoutElement
 import androidx.wear.protolayout.ModifiersBuilders.Clickable
 import androidx.wear.protolayout.ResourceBuilders
-import androidx.wear.protolayout.material.Text
-import androidx.wear.protolayout.material.Typography
 import androidx.wear.protolayout.material3.ButtonDefaults.filledTonalButtonColors
+import androidx.wear.protolayout.material3.ButtonDefaults.filledVariantButtonColors
+import androidx.wear.protolayout.material3.ButtonGroupDefaults.DEFAULT_SPACER_BETWEEN_BUTTON_GROUPS
 import androidx.wear.protolayout.material3.MaterialScope
 import androidx.wear.protolayout.material3.button
 import androidx.wear.protolayout.material3.buttonGroup
+import androidx.wear.protolayout.material3.icon
 import androidx.wear.protolayout.material3.materialScope
 import androidx.wear.protolayout.material3.primaryLayout
 import androidx.wear.protolayout.material3.text
 import androidx.wear.protolayout.material3.textEdgeButton
+import androidx.wear.protolayout.modifiers.padding
+import androidx.wear.protolayout.types.LayoutColor
 import androidx.wear.protolayout.types.layoutString
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.tooling.preview.Preview
@@ -92,17 +90,21 @@ private fun tileLayout(
                     setWidth(expand())
                     setHeight(expand())
                     addContent(buttonGroup {
-                        row1.forEach {
-                            this@materialScope.sceneButton(context, it)
-                        }
+                        row1.forEach { buttonGroupItem { sceneButton(context, it) } }
                     })
+                    if (row2.isNotEmpty()) {
+                        addContent(DEFAULT_SPACER_BETWEEN_BUTTON_GROUPS)
+                        addContent(buttonGroup {
+                            row2.forEach { buttonGroupItem { sceneButton(context, it) } }
+                        })
+                    }
                 }
             },
             bottomSlot = {
                 textEdgeButton(
                     onClick = Clickable.Builder().build(),
-                    labelContent = { text("More".layoutString) },
-                    colors = filledTonalButtonColors(),
+                    labelContent = { text("更多".layoutString) },
+                    colors = filledVariantButtonColors(),
                 )
             },
         )
@@ -118,43 +120,28 @@ internal fun MaterialScope.sceneButton(context: Context, scene: Scene): LayoutEl
     return button(
         onClick = clickable,
         labelContent = {
-            text(
-                text = scene.name.layoutString,
-            )
+            column {
+                addContent(
+                    icon(
+                        protoLayoutResourceId = RES_IC_SCENE,
+                        width = dp(28F),
+                        height = dp(28F),
+                        tintColor = LayoutColor(0xFFFFC107.toInt()),
+                    )
+                )
+                addContent(
+                    text(
+                        text = scene.name.layoutString,
+                        maxLines = 2,
+                    )
+                )
+            }
         },
+        width = expand(),
+        height = expand(),
+        contentPadding = padding(horizontal = 2F, vertical = 2F),
+        colors = filledTonalButtonColors(),
     )
-}
-
-private fun buttonContent(
-    context: Context,
-    iconId: String,
-    iconColor: Int,
-    text: String,
-    textColor: Int,
-): LayoutElement {
-    val iconColorProp = ColorProp.Builder(iconColor)
-        .build()
-    val iconColorFilter = ColorFilter.Builder()
-        .setTint(iconColorProp)
-        .build()
-    val iconContent = Image.Builder()
-        .setWidth(dp(36F))
-        .setHeight(dp(36F))
-        .setResourceId(iconId)
-        .setColorFilter(iconColorFilter)
-        .build()
-    val textColorProp = ColorProp.Builder(textColor)
-        .build()
-    val labelContent = Text.Builder(context, text)
-        .setTypography(Typography.TYPOGRAPHY_CAPTION1)
-        .setColor(textColorProp)
-        .build()
-
-    return Column.Builder()
-        .setWidth(DimensionBuilders.expand())
-        .addContent(iconContent)
-        .addContent(labelContent)
-        .build()
 }
 
 @Preview(device = WearDevices.LARGE_ROUND, name = "Large Round")
