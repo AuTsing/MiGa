@@ -11,7 +11,6 @@ import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.helper.LoginHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.screen.LoginScreen
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -36,40 +35,46 @@ class LoginActivity : ComponentActivity() {
             val loginUrl = loginUrl.collectAsState()
             val exception = exception.collectAsState()
 
-            LoginScreen(loginUrl.value, exception.value)
+            LoginScreen(
+                loginUrl = loginUrl.value,
+                exception = exception.value,
+                onRefresh = this::handleRefresh,
+            )
         }
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            runCatching {
-                val loginIndexResponse = LoginHelper.instance
-                    .getLoginIndex()
-                    .getOrThrow()
-                val loginUrlResponse = LoginHelper.instance
-                    .getLoginUrl(loginIndexResponse)
-                    .getOrThrow()
-                loginUrl.value = loginUrlResponse.loginUrl
-                val loginLpResponse = LoginHelper.instance
-                    .getLoginLpResponse(loginUrlResponse)
-                    .getOrThrow()
-                val serviceToken = LoginHelper.instance
-                    .getLoginServiceToken(loginLpResponse)
-                    .getOrThrow()
-                val deviceId = LoginHelper.instance.getDeviceId()
+        handleRefresh()
+    }
 
-                val auth = Auth(
-                    userId = loginLpResponse.userId,
-                    ssecurity = loginLpResponse.ssecurity,
-                    deviceId = deviceId,
-                    serviceToken = serviceToken,
-                )
-                val authJson = Json.encodeToString(auth)
+    private fun handleRefresh() = lifecycleScope.launch {
+        runCatching {
+            val loginIndexResponse = LoginHelper.instance
+                .getLoginIndex()
+                .getOrThrow()
+            val loginUrlResponse = LoginHelper.instance
+                .getLoginUrl(loginIndexResponse)
+                .getOrThrow()
+            loginUrl.value = loginUrlResponse.loginUrl
+            val loginLpResponse = LoginHelper.instance
+                .getLoginLpResponse(loginUrlResponse)
+                .getOrThrow()
+            val serviceToken = LoginHelper.instance
+                .getLoginServiceToken(loginLpResponse)
+                .getOrThrow()
+            val deviceId = LoginHelper.instance.getDeviceId()
 
-                FileHelper.instance.writeJson("auth.json", authJson).getOrThrow()
+            val auth = Auth(
+                userId = loginLpResponse.userId,
+                ssecurity = loginLpResponse.ssecurity,
+                deviceId = deviceId,
+                serviceToken = serviceToken,
+            )
+            val authJson = Json.encodeToString(auth)
 
-                finish()
-            }.onFailure {
-                exception.value = "登录失败: ${it.message}"
-            }
+            FileHelper.instance.writeJson("auth.json", authJson).getOrThrow()
+
+            finish()
+        }.onFailure {
+            exception.value = "登录失败: ${it.message}"
         }
     }
 }

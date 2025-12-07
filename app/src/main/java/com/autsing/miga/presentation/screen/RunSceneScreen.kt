@@ -41,7 +41,7 @@ private fun FailureContent(exception: String) {
     MessageContent(
         message = exception,
         title = "执行失败",
-        onClose = { (context as RunSceneActivity).finish() },
+        action = { (context as RunSceneActivity).finish() },
     )
 }
 

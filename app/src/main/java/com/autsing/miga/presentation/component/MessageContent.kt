@@ -9,7 +9,8 @@ import com.autsing.miga.R
 fun MessageContent(
     message: String,
     title: String? = null,
-    onClose: (() -> Unit)? = null,
+    action: (() -> Unit)? = null,
+    actionIconId: Int = R.drawable.ic_fluent_dismiss_regular_icon,
 ) {
     AlertDialogContent(
         title = {
@@ -19,11 +20,11 @@ fun MessageContent(
         },
         content = {
             item { Text(message) }
-            if (onClose != null) {
+            if (action != null) {
                 item {
                     PrimaryButton(
-                        iconId = R.drawable.ic_fluent_dismiss_regular_icon,
-                        onClick = onClose,
+                        iconId = actionIconId,
+                        onClick = action,
                     )
                 }
             }
