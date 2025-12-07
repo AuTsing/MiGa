@@ -71,6 +71,7 @@ class RunActionActivity : ComponentActivity() {
                 onClickSlider = this::handleChangeSlider,
                 onClickSelector = this::handleChangeSelector,
                 onClickRun = this::handleRunAction,
+                onClickBack = this::handleClickBack,
             )
         }
 
@@ -209,5 +210,9 @@ class RunActionActivity : ComponentActivity() {
             message.value = it.stackTraceToString()
             loading.value = false
         }
+    }
+
+    private fun handleClickBack() = lifecycleScope.launch {
+        finish()
     }
 }

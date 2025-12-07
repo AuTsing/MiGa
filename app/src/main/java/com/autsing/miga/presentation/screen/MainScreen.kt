@@ -46,8 +46,7 @@ import coil3.toBitmap
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
-import com.autsing.miga.presentation.component.PrimaryButton
-import com.autsing.miga.presentation.component.SecondaryButton
+import com.autsing.miga.presentation.component.PairButtons
 import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -323,18 +322,12 @@ private fun MainContent(
             item { EmptyCard("无设备") }
         }
         item {
-            Row(
-                modifier = Modifier.padding(top = 16.dp),
-            ) {
-                SecondaryButton(
-                    iconId = R.drawable.ic_fluent_person_arrow_right_icon,
-                    onClick = onClickLogout,
-                )
-                PrimaryButton(
-                    iconId = R.drawable.ic_fluent_arrow_sync_regular_icon,
-                    onClick = onClickReload,
-                )
-            }
+            PairButtons(
+                primaryButtonIconId = R.drawable.ic_fluent_arrow_sync_regular_icon,
+                secondaryButtonIconId = R.drawable.ic_fluent_person_arrow_right_icon,
+                onClickPrimaryButton = onClickReload,
+                onClickSecondaryButton = onClickLogout,
+            )
         }
     }
 }
