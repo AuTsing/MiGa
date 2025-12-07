@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.RunActionActivity
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.FileHelper
@@ -16,9 +17,7 @@ import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.DeviceRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 data class DeviceUiState(
@@ -42,11 +41,9 @@ class DeviceViewModel : ViewModel() {
     var uiState: DeviceUiState by mutableStateOf(DeviceUiState())
         private set
 
-    fun handleLoad(deviceModel: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun handleLoad(deviceModel: String) = viewModelScope.launch {
         runCatching {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = true)
-            }
+            uiState = uiState.copy(loading = true)
 
             val devices = deviceRepository.loadDevicesLocal().getOrThrow()
             val device = devices.find { it.model == deviceModel }
@@ -63,7 +60,7 @@ class DeviceViewModel : ViewModel() {
                 .filter { (property, _) -> property.type == "bool" }
                 .map { (property, value) -> Component.Switch.from(property, value) }
             val sliders = deviceProperties
-                .filter { (property, _) -> property.range is DevicePropertyRange.None == false }
+                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
                 .map { (property, value) -> Component.Slider.from(property, value) }
             val selectors = deviceProperties
                 .filter { (property, _) -> property.values.size > 1 }
@@ -71,33 +68,27 @@ class DeviceViewModel : ViewModel() {
             val actions = deviceInfo.actions
                 .map { Component.Trigger.from(it) }
 
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
-                    exception = "",
-                    auth = auth,
-                    device = device,
-                    deviceInfo = deviceInfo,
-                    switchComponents = switches,
-                    sliderComponents = sliders,
-                    selectorComponents = selectors,
-                    triggerComponents = actions,
-                )
-            }
+            uiState = uiState.copy(
+                exception = "",
+                auth = auth,
+                device = device,
+                deviceInfo = deviceInfo,
+                switchComponents = switches,
+                sliderComponents = sliders,
+                selectorComponents = selectors,
+                triggerComponents = actions,
+            )
         }.onFailure {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(exception = it.stackTraceToString())
-            }
+            uiState = uiState.copy(exception = it.stackTraceToString())
         }.also {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(loading = false)
-            }
+            uiState = uiState.copy(loading = false)
         }
     }
 
     fun handleChangeSwitch(
         component: Component.Switch,
         checked: Boolean,
-    ) = viewModelScope.launch(Dispatchers.IO) {
+    ) = viewModelScope.launch {
         runCatching {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
@@ -109,27 +100,23 @@ class DeviceViewModel : ViewModel() {
                 value,
             ).getOrThrow()
 
-            withContext(Dispatchers.Main) {
-                val newSwitchComponents = uiState.switchComponents.map {
-                    if (it.property == newProperty) {
-                        it.copy(value = checked)
-                    } else {
-                        it
-                    }
+            val newSwitchComponents = uiState.switchComponents.map {
+                if (it.property == newProperty) {
+                    it.copy(value = checked)
+                } else {
+                    it
                 }
-                uiState = uiState.copy(switchComponents = newSwitchComponents)
             }
+            uiState = uiState.copy(switchComponents = newSwitchComponents)
         }.onFailure {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(exception = it.stackTraceToString())
-            }
+            uiState = uiState.copy(exception = it.stackTraceToString())
         }
     }
 
     fun handleChangeSlider(
         component: Component.Slider,
         percentage: Float,
-    ) = viewModelScope.launch(Dispatchers.IO) {
+    ) = viewModelScope.launch {
         runCatching {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
@@ -141,37 +128,31 @@ class DeviceViewModel : ViewModel() {
                 value,
             ).getOrThrow()
 
-            withContext(Dispatchers.Main) {
-                val newSliderComponents = uiState.sliderComponents.map {
-                    if (it.property == newProperty) {
-                        val v = when (newValue) {
-                            is DevicePropertyValue.Long -> "${newValue.value}"
-                            is DevicePropertyValue.Double -> "${newValue.value}"
-                            else -> ""
-                        }
-                        it.copy(
-                            value = percentage,
-                            valueDisplay = "$v ${it.property.unit}",
-                        )
-                    } else {
-                        it
+            val newSliderComponents = uiState.sliderComponents.map {
+                if (it.property == newProperty) {
+                    val v = when (newValue) {
+                        is DevicePropertyValue.Long -> "${newValue.value}"
+                        is DevicePropertyValue.Double -> "${newValue.value}"
+                        else -> ""
                     }
+                    it.copy(
+                        value = percentage,
+                        valueDisplay = "$v ${it.property.unit}",
+                    )
+                } else {
+                    it
                 }
-                uiState = uiState.copy(
-                    sliderComponents = newSliderComponents,
-                )
             }
+            uiState = uiState.copy(sliderComponents = newSliderComponents)
         }.onFailure {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(exception = it.stackTraceToString())
-            }
+            uiState = uiState.copy(exception = it.stackTraceToString())
         }
     }
 
     fun handleChangeSelector(
         component: Component.Selector,
         index: Int,
-    ) = viewModelScope.launch(Dispatchers.IO) {
+    ) = viewModelScope.launch {
         runCatching {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
@@ -183,35 +164,29 @@ class DeviceViewModel : ViewModel() {
                 value,
             ).getOrThrow()
 
-            withContext(Dispatchers.Main) {
-                val newSelectorComponents = uiState.selectorComponents.map {
-                    if (it.property == newProperty) {
-                        val selectorValue = it.property.values.find { it.value == newValue }
-                            ?: it.property.values[0]
-                        val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-                        it.copy(
-                            value = index,
-                            valueDisplay = selectorDisplay,
-                        )
-                    } else {
-                        it
-                    }
+            val newSelectorComponents = uiState.selectorComponents.map { component ->
+                if (component.property == newProperty) {
+                    val selectorValue = component.property.values.find { it.value == newValue }
+                        ?: component.property.values[0]
+                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
+                    component.copy(
+                        value = index,
+                        valueDisplay = selectorDisplay,
+                    )
+                } else {
+                    component
                 }
-                uiState = uiState.copy(
-                    selectorComponents = newSelectorComponents,
-                )
             }
+            uiState = uiState.copy(selectorComponents = newSelectorComponents)
         }.onFailure {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(exception = it.stackTraceToString())
-            }
+            uiState = uiState.copy(exception = it.stackTraceToString())
         }
     }
 
     fun handleClickTrigger(
         context: Context,
         component: Component.Trigger,
-    ) = viewModelScope.launch(Dispatchers.IO) {
+    ) = viewModelScope.launch {
         runCatching {
             val device = uiState.device ?: throw Exception("读取设备失败")
             RunActionActivity.startActivity(
@@ -221,9 +196,11 @@ class DeviceViewModel : ViewModel() {
                 aiid = component.action.method.aiid,
             )
         }.onFailure {
-            withContext(Dispatchers.Main) {
-                uiState = uiState.copy(exception = it.stackTraceToString())
-            }
+            uiState = uiState.copy(exception = it.stackTraceToString())
         }
+    }
+
+    fun handleClickBack(context: Context) = viewModelScope.launch {
+        (context as DeviceActivity).finish()
     }
 }
