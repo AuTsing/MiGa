@@ -1,5 +1,10 @@
 package com.autsing.miga.presentation.helper
 
+import com.autsing.miga.presentation.helper.Constants.MSG_URL
+import com.autsing.miga.presentation.helper.Constants.QR_URL
+import com.autsing.miga.presentation.helper.Constants.USER_AGENT
+import com.autsing.miga.presentation.model.Auth
+import com.autsing.miga.presentation.model.GetLocationResponse
 import com.autsing.miga.presentation.model.LoginIndexResponse
 import com.autsing.miga.presentation.model.LoginLpResponse
 import com.autsing.miga.presentation.model.LoginUrlResponse
@@ -31,7 +36,7 @@ class LoginHelper(
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("User-Agent", Constants.USER_AGENT)
+                .addHeader("User-Agent", USER_AGENT)
                 .addHeader("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
                 .build()
             chain.proceed(request)
@@ -51,7 +56,7 @@ class LoginHelper(
 
         runCatching {
             val loginIndexRequest = Request.Builder()
-                .url(Constants.MSG_URL)
+                .url(MSG_URL)
                 .build()
             val response = okHttpClient.newCall(loginIndexRequest)
                 .execute()
@@ -94,7 +99,7 @@ class LoginHelper(
             val paramsString = params.map { (k, v) ->
                 "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
             }.joinToString("&")
-            val qrUrl = Constants.QR_URL + "?" + paramsString
+            val qrUrl = "$QR_URL?$paramsString"
             val qrRequest = Request.Builder()
                 .url(qrUrl)
                 .build()
@@ -132,24 +137,45 @@ class LoginHelper(
         }
     }
 
-    suspend fun getLoginServiceToken(
-        loginLpResponse: LoginLpResponse,
-    ): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun getServiceToken(location: String): Result<String> = withContext(Dispatchers.IO) {
         var maybeResponse: Response? = null
 
         runCatching {
-            val lpRequest = Request.Builder()
-                .url(loginLpResponse.location)
+            val request = Request.Builder()
+                .url(location)
                 .build()
-            val response = okHttpClient.newCall(lpRequest)
+            val response = okHttpClient.newCall(request)
                 .execute()
                 .also { maybeResponse = it }
             val headers = response.headers("Set-Cookie")
-            val cookies = headers.mapNotNull { Cookie.parse(lpRequest.url, it) }
+            val cookies = headers.mapNotNull { Cookie.parse(request.url, it) }
             val serviceToken = cookies.find { it.name == "serviceToken" }?.value
                 ?: throw Exception("无法获取serviceToken")
 
             return@runCatching serviceToken
+        }.also {
+            maybeResponse?.close()
+        }
+    }
+
+    suspend fun getLocation(auth: Auth): Result<GetLocationResponse> = withContext(Dispatchers.IO) {
+        var maybeResponse: Response? = null
+
+        runCatching {
+            val cookie = auth.toCookie()
+            val request = Request.Builder()
+                .url(MSG_URL)
+                .addHeader("Cookie", cookie)
+                .build()
+            val response = okHttpClient.newCall(request)
+                .execute()
+                .also { maybeResponse = it }
+            val getLocationResponseJson = response.body.string().substring(11)
+            val getLocationResponse = serdeHelper
+                .decode<GetLocationResponse>(getLocationResponseJson)
+                .getOrThrow()
+
+            return@runCatching getLocationResponse
         }.also {
             maybeResponse?.close()
         }

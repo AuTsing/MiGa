@@ -58,16 +58,22 @@ class LoginActivity : ComponentActivity() {
                 .getLoginLpResponse(loginUrlResponse)
                 .getOrThrow()
             val serviceToken = LoginHelper.instance
-                .getLoginServiceToken(loginLpResponse)
+                .getServiceToken(loginLpResponse.location)
                 .getOrThrow()
             val deviceId = LoginHelper.instance.getDeviceId()
 
-            val auth = Auth(
-                userId = loginLpResponse.userId,
-                ssecurity = loginLpResponse.ssecurity,
-                deviceId = deviceId,
-                serviceToken = serviceToken,
-            )
+            val auth = with(loginLpResponse) {
+                Auth(
+                    deviceId = deviceId,
+                    serviceToken = serviceToken,
+                    userId = userId,
+                    cUserId = cUserId,
+                    nonce = nonce,
+                    ssecurity = ssecurity,
+                    psecurity = psecurity,
+                    passToken = passToken,
+                )
+            }
             val authJson = Json.encodeToString(auth)
 
             FileHelper.instance.writeJson("auth.json", authJson).getOrThrow()

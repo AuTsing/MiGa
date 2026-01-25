@@ -14,6 +14,8 @@ import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
 import com.autsing.miga.presentation.model.GetHomesData
 import com.autsing.miga.presentation.model.GetHomesResponse
+import com.autsing.miga.presentation.model.GetProfileData
+import com.autsing.miga.presentation.model.GetProfileResponse
 import com.autsing.miga.presentation.model.GetScenesData
 import com.autsing.miga.presentation.model.GetScenesResponse
 import com.autsing.miga.presentation.model.Home
@@ -207,8 +209,6 @@ class ApiHelper(
                 .getOrThrow()
 
             return@runCatching getDeviceBaikeResponse.data.realIcon
-        }.onFailure {
-            Log.e(Constants.TAG, "getDeviceIconUrl: ${it.stackTraceToString()}")
         }.also {
             maybeResponse?.close()
         }
@@ -449,6 +449,24 @@ class ApiHelper(
             return@runCatching runActionResponse.result.code
         }.onFailure {
             Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
+        }
+    }
+
+    suspend fun getProfile(
+        auth: Auth,
+    ): Result<GetProfileResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = "/home/profile"
+            val data = GetProfileData(id = auth.userId)
+            val dataJson = serdeHelper.encode(data).getOrThrow()
+
+            val getProfileJson = post(auth, uri, dataJson).getOrThrow()
+            val getProfileResponse = serdeHelper.decode<GetProfileResponse>(getProfileJson)
+                .getOrThrow()
+
+            return@runCatching getProfileResponse
+        }.onFailure {
+            Log.e(Constants.TAG, "getUserInfo: ${it.stackTraceToString()}")
         }
     }
 }

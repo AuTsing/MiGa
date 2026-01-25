@@ -11,8 +11,10 @@ import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
+import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.Constants.TAG
 import com.autsing.miga.presentation.helper.FileHelper
+import com.autsing.miga.presentation.helper.LoginHelper
 import com.autsing.miga.presentation.helper.SerdeHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
@@ -24,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 data class MainUiState(
     val loading: Boolean = true,
@@ -40,6 +43,8 @@ class MainViewModel : ViewModel() {
 
     private val fileHelper: FileHelper = FileHelper.instance
     private val serdeHelper: SerdeHelper = SerdeHelper.instance
+    private val apiHelper: ApiHelper = ApiHelper.instance
+    private val loginHelper: LoginHelper = LoginHelper.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
@@ -49,7 +54,17 @@ class MainViewModel : ViewModel() {
     private fun handleLoadAuth() = viewModelScope.async {
         runCatching {
             val authJson = fileHelper.readJson("auth.json").getOrThrow()
-            val auth = serdeHelper.decode<Auth>(authJson).getOrThrow()
+            var auth = serdeHelper.decode<Auth>(authJson).getOrThrow()
+            val profile = apiHelper.getProfile(auth).getOrThrow()
+
+            if (profile.code != 0) {
+                val location = loginHelper.getLocation(auth).getOrThrow()
+                val serviceToken = loginHelper.getServiceToken(location.location).getOrThrow()
+                auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
+
+                val authJson = Json.encodeToString(auth)
+                fileHelper.writeJson("auth.json", authJson).getOrThrow()
+            }
 
             uiState = uiState.copy(auth = auth)
         }
