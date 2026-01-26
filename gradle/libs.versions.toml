@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 kotlin = "2.2.21"
 playServicesWearable = "19.0.0"
 wearCompose = "1.5.6"
@@ -12,7 +12,7 @@ coil = "3.3.0"
 
 [libraries]
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2025.12.00" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2026.01.00" }
 ui = { group = "androidx.compose.ui", name = "ui" }
 ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -22,7 +22,7 @@ ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-material = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "wearCompose" }
 compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wearCompose" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.12.1" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.12.2" }
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.2.0" }
 tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "tiles" }
 tiles-material = { group = "androidx.wear.tiles", name = "tiles-material", version.ref = "tiles" }
@@ -34,7 +34,7 @@ horologistComposeTools = { group = "com.google.android.horologist", name = "horo
 horologistTiles = { group = "com.google.android.horologist", name = "horologist-tiles", version.ref = "horologist" }
 horologistComposeLayout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
 watchface-complications-data-source-ktx = { group = "androidx.wear.watchface", name = "watchface-complications-data-source-ktx", version.ref = "watchfaceComplicationsDataSourceKtx" }
-kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.1" }
+kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.10.0" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "5.3.2" }
 qrcodeKotlin = { group = "io.github.g0dkar", name = "qrcode-kotlin", version = "4.5.0" }
 coilCompose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
