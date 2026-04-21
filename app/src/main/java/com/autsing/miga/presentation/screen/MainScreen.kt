@@ -291,7 +291,10 @@ private fun MainContent(
                 style = MaterialTheme.typography.displaySmall,
             )
         }
-        items(scenes.sort(favoriteSceneIds)) {
+        items(
+            items = scenes.sort(favoriteSceneIds),
+            key = { it.scene_id },
+        ) {
             SceneChip(
                 scene = it,
                 favorite = it.scene_id in favoriteSceneIds,
@@ -309,7 +312,10 @@ private fun MainContent(
                 style = MaterialTheme.typography.displaySmall,
             )
         }
-        items(devices.sort(favoriteDeviceIds)) {
+        items(
+            items = devices.sort(favoriteDeviceIds),
+            key = { it.did },
+        ) {
             DeviceChip(
                 device = it,
                 iconUrl = deviceIconUrls.getOrDefault(it.model, ""),

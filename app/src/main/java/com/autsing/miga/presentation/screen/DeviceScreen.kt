@@ -65,15 +65,27 @@ private fun DeviceInfoContent(
 ) {
     ScalingLazyColumn {
         item { Title("开关") }
-        items(switches) { switch -> SwitchComponent(switch) { onClickSwitch(switch, it) } }
+        items(
+            items = switches,
+            key = { it.headline },
+        ) { switch -> SwitchComponent(switch) { onClickSwitch(switch, it) } }
         item { Title("调整") }
-        items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
+        items(
+            items = sliders,
+            key = { it.headline },
+        ) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
         item { Title("模式") }
-        items(selectors) { selector ->
+        items(
+            items = selectors,
+            key = { it.headline },
+        ) { selector ->
             SelectorComponent(selector) { onClickSelector(selector, it) }
         }
         item { Title("动作") }
-        items(triggers) { trigger -> TriggerComponent(trigger) { onClickTrigger(trigger) } }
+        items(
+            items = triggers,
+            key = { it.headline },
+        ) { trigger -> TriggerComponent(trigger) { onClickTrigger(trigger) } }
         item {
             PrimaryButton(
                 iconId = R.drawable.ic_fluent_ios_arrow_ltr_icon,
