@@ -11,166 +11,149 @@ import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
-import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.helper.Constants.TAG
-import com.autsing.miga.presentation.helper.FileHelper
-import com.autsing.miga.presentation.helper.LoginHelper
-import com.autsing.miga.presentation.helper.SerdeHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.tile.MainTileService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 data class MainUiState(
-    val loading: Boolean = true,
+    val authLoading: Boolean = true,
+    val sceneLoading: Boolean = true,
+    val deviceLoading: Boolean = true,
+    val message: String = "",
     val auth: Auth? = null,
-    val showedLogin: Boolean = false,
     val scenes: List<Scene> = emptyList(),
-    val devices: List<Device> = emptyList(),
     val favoriteSceneIds: List<String> = emptyList(),
+    val devices: List<Device> = emptyList(),
     val favoriteDeviceIds: List<String> = emptyList(),
     val deviceIconUrls: Map<String, String> = emptyMap(),
 )
 
 class MainViewModel : ViewModel() {
 
-    private val fileHelper: FileHelper = FileHelper.instance
-    private val serdeHelper: SerdeHelper = SerdeHelper.instance
-    private val apiHelper: ApiHelper = ApiHelper.instance
-    private val loginHelper: LoginHelper = LoginHelper.instance
-    private val sceneRepository: SceneRepository = SceneRepository.instance
+    private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
+    private val sceneRepository: SceneRepository = SceneRepository.instance
 
     var uiState: MainUiState by mutableStateOf(MainUiState())
         private set
 
-    private fun handleLoadAuth() = viewModelScope.async {
+    init {
+        handleLoadAuth()
+        handleLoadScenes()
+        handleLoadDevices()
+    }
+
+    fun handleLoadAuth() = viewModelScope.launch {
         runCatching {
-            val authJson = fileHelper.readJson("auth.json").getOrThrow()
-            var auth = serdeHelper.decode<Auth>(authJson).getOrThrow()
-            val profile = apiHelper.getProfile(auth).getOrThrow()
+            uiState = uiState.copy(authLoading = true)
 
-            if (profile.code != 0) {
-                val location = loginHelper.getLocation(auth).getOrThrow()
-                val serviceToken = loginHelper.getServiceToken(location.location).getOrThrow()
-                auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
+            authRepository.loadLocalAuth().getOrNull()
+            var auth = authRepository.getAuth().getOrNull()
 
-                val authJson = Json.encodeToString(auth)
-                fileHelper.writeJson("auth.json", authJson).getOrThrow()
+            uiState = uiState.copy(
+                authLoading = false,
+                auth = auth,
+            )
+
+            if (auth != null) {
+                return@runCatching
             }
 
-            uiState = uiState.copy(auth = auth)
+            auth = authRepository.waitAuth().getOrThrow()
+
+            uiState = uiState.copy(
+                authLoading = false,
+                auth = auth,
+            )
+        }.onFailure { e ->
+            uiState = uiState.copy(
+                authLoading = false,
+                message = e.message ?: e.stackTraceToString(),
+            )
         }
     }
 
-    private fun handleLoadFavorite() = viewModelScope.async {
+    private fun handleLoadScenes() = viewModelScope.launch {
         runCatching {
-            val favoriteSceneIdsJob = async(Dispatchers.IO) {
-                sceneRepository.loadFavoriteSceneIds().getOrNull() ?: emptyList()
-            }
-            val favoriteDeviceIdsJob = async(Dispatchers.IO) {
-                deviceRepository.loadFavoriteDeviceIds().getOrNull() ?: emptyList()
-            }
+            uiState = uiState.copy(sceneLoading = true)
 
-            val favoriteSceneIds = favoriteSceneIdsJob.await()
-            val favoriteDeviceIds = favoriteDeviceIdsJob.await()
+            val locals = Pair(
+                async { sceneRepository.getLocalScenes().getOrThrow() },
+                async { sceneRepository.getFavoriteSceneIds().getOrThrow() },
+            )
+            val localScenes = locals.first.await()
+            val favoriteSceneIds = locals.second.await()
 
             uiState = uiState.copy(
+                scenes = localScenes,
                 favoriteSceneIds = favoriteSceneIds,
+            )
+
+            val auth = authRepository.waitAuth().getOrThrow()
+            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrDefault()
+
+            uiState = uiState.copy(
+                sceneLoading = false,
+                scenes = remoteScenes,
+            )
+        }.onFailure { e ->
+            uiState = uiState.copy(
+                sceneLoading = false,
+                message = e.message ?: e.stackTraceToString(),
+            )
+        }
+    }
+
+    private fun handleLoadDevices() = viewModelScope.launch {
+        runCatching {
+            uiState = uiState.copy(deviceLoading = true)
+
+            val locals = Triple(
+                async { deviceRepository.getLocalDevices().getOrThrow() },
+                async { deviceRepository.getFavoriteDeviceIds().getOrThrow() },
+                async { deviceRepository.getLocalDeviceIconUrls().getOrThrow() },
+            )
+            val localDevices = locals.first.await()
+            val favoriteDeviceIds = locals.second.await()
+            val localDeviceIconUrls = locals.third.await()
+
+            uiState = uiState.copy(
+                devices = localDevices,
                 favoriteDeviceIds = favoriteDeviceIds,
+                deviceIconUrls = localDeviceIconUrls,
             )
-        }
-    }
 
-    private fun handleLoadLocal() = viewModelScope.async {
-        runCatching {
-            val scenesJob = async(Dispatchers.IO) {
-                sceneRepository.loadScenesLocal().getOrNull() ?: emptyList()
-            }
-            val devicesJob = async(Dispatchers.IO) {
-                deviceRepository.loadDevicesLocal().getOrNull() ?: emptyList()
-            }
-
-            val scenes = scenesJob.await()
-            val devices = devicesJob.await()
-
-            val deviceIconUrlsJob = async(Dispatchers.IO) {
-                deviceRepository.loadDeviceIconUrlsLocal().getOrNull() ?: emptyMap()
-            }
-
-            val deviceIconUrls = deviceIconUrlsJob.await()
+            val auth = authRepository.waitAuth().getOrThrow()
+            val remotes = Pair(
+                async { deviceRepository.getRemoteDevices(auth).getOrDefault() },
+                async { deviceRepository.getRemoteDeviceIconUrls(auth).getOrDefault() },
+            )
+            val remoteDevices = remotes.first.await()
+            val remoteDeviceIconUrls = remotes.second.await()
 
             uiState = uiState.copy(
-                scenes = scenes,
-                devices = devices,
-                deviceIconUrls = deviceIconUrls,
+                deviceLoading = false,
+                devices = remoteDevices,
+                deviceIconUrls = remoteDeviceIconUrls,
             )
-        }
-    }
-
-    private fun handleLoadRemote() = viewModelScope.async {
-        runCatching {
-            val auth = uiState.auth ?: throw Exception("未登录")
-
-            val scenesJob = async(Dispatchers.IO) {
-                sceneRepository.loadScenesRemote(auth).getOrNull() ?: emptyList()
-            }
-            val devicesJob = async(Dispatchers.IO) {
-                deviceRepository.loadDevicesRemote(auth).getOrNull() ?: emptyList()
-            }
-
-            val scenes = scenesJob.await()
-            val devices = devicesJob.await()
-
-            val deviceIconUrlsJob = async(Dispatchers.IO) {
-                deviceRepository.loadDeviceIconsRemote(devices).getOrNull() ?: emptyMap()
-            }
-
-            val deviceIconUrls = deviceIconUrlsJob.await()
-
+        }.onFailure { e ->
             uiState = uiState.copy(
-                scenes = scenes,
-                devices = devices,
-                deviceIconUrls = deviceIconUrls,
+                deviceLoading = false,
+                message = e.message ?: e.stackTraceToString(),
             )
-        }
-    }
-
-    fun handleLoad() = viewModelScope.launch {
-        val minDelay = launch(Dispatchers.IO) { delay(500) }
-
-        runCatching {
-            uiState = uiState.copy(loading = true)
-
-            handleLoadAuth().await().getOrThrow()
-
-            val handleLoadFavoriteJob = handleLoadFavorite()
-            val handleLoadLocalJob = handleLoadLocal()
-
-            handleLoadFavoriteJob.await().getOrThrow()
-            handleLoadLocalJob.await().getOrThrow()
-
-            uiState = uiState.copy(loading = false)
-
-            handleLoadRemote().await().getOrThrow()
-        }.onFailure {
-            Log.e(TAG, "handleLoad: ${it.stackTraceToString()}")
-        }.also {
-            minDelay.join()
-            uiState = uiState.copy(loading = false)
         }
     }
 
     fun handleNavigateToLogin(context: Context) = viewModelScope.launch {
         LoginActivity.startActivity(context)
-        uiState = uiState.copy(showedLogin = true)
     }
 
     fun handleRunScene(context: Context, scene: Scene) = viewModelScope.launch {
@@ -218,21 +201,7 @@ class MainViewModel : ViewModel() {
         DeviceActivity.startActivity(context, device.model)
     }
 
-    fun handleLogout() = viewModelScope.launch {
-        runCatching {
-            uiState = uiState.copy(loading = true)
-
-            fileHelper.remove("auth.json").getOrThrow()
-
-            uiState = uiState.copy(
-                auth = null,
-                scenes = emptyList(),
-                devices = emptyList(),
-            )
-        }.onFailure {
-            Log.e(TAG, "handleLogout: ${it.stackTraceToString()}")
-        }.also {
-            uiState = uiState.copy(loading = false)
-        }
+    fun handleLogout() {
+        TODO()
     }
 }

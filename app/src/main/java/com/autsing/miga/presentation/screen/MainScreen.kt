@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,14 +60,8 @@ fun MainScreen(
     val uiState = mainViewModel.uiState
     val context = LocalContext.current
 
-    LaunchedEffect(uiState) {
-        if (!uiState.showedLogin && uiState.auth == null && !uiState.loading) {
-            mainViewModel.handleNavigateToLogin(context)
-        }
-    }
-
     FullScreenBox {
-        if (uiState.loading) {
+        if (uiState.authLoading) {
             LoadingContent("加载中...")
         } else if (uiState.auth == null) {
             LoginContent(
@@ -76,6 +69,8 @@ fun MainScreen(
             )
         } else {
             MainContent(
+                deviceLoading = uiState.deviceLoading,
+                message = uiState.message,
                 scenes = uiState.scenes,
                 devices = uiState.devices,
                 favoriteSceneIds = uiState.favoriteSceneIds,
@@ -88,7 +83,7 @@ fun MainScreen(
                 onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
                 onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
                 onClickLogout = { mainViewModel.handleLogout() },
-                onClickReload = { mainViewModel.handleLoad() },
+                onClickReload = {},
             )
         }
     }
@@ -271,19 +266,24 @@ private fun EmptyCard(text: String) {
 
 @Composable
 private fun MainContent(
+    deviceLoading: Boolean,
+    message: String,
     scenes: List<Scene>,
     devices: List<Device>,
     favoriteSceneIds: List<String>,
     favoriteDeviceIds: List<String>,
     deviceIconUrls: Map<String, String>,
-    onClickScene: (Scene) -> Unit = {},
-    onClickToggleSceneFavorite: (Scene) -> Unit = {},
-    onClickDevice: (Device) -> Unit = {},
-    onClickToggleDeviceFavorite: (Device) -> Unit = {},
-    onClickLogout: () -> Unit = {},
-    onClickReload: () -> Unit = {},
+    onClickScene: (Scene) -> Unit,
+    onClickToggleSceneFavorite: (Scene) -> Unit,
+    onClickDevice: (Device) -> Unit,
+    onClickToggleDeviceFavorite: (Device) -> Unit,
+    onClickLogout: () -> Unit,
+    onClickReload: () -> Unit,
 ) {
     ScalingLazyColumn {
+        if (message.isNotEmpty()) {
+            item { Text(message) }
+        }
         item {
             Title(
                 title = "智能",
@@ -308,6 +308,7 @@ private fun MainContent(
         item {
             Title(
                 title = "设备",
+                loading = deviceLoading,
                 tip = "在手机米家APP添加设备，点击最下方刷新；点击设备可进入设备页面；长按设备可收藏",
                 style = MaterialTheme.typography.displaySmall,
             )
@@ -371,11 +372,19 @@ private fun PreviewDeviceChip() {
 private fun PreviewEmptyContent() {
     FullScreenBox {
         MainContent(
+            deviceLoading = true,
+            message = "",
             scenes = emptyList(),
             devices = emptyList(),
             favoriteSceneIds = emptyList(),
             favoriteDeviceIds = emptyList(),
             deviceIconUrls = emptyMap(),
+            onClickScene = {},
+            onClickToggleSceneFavorite = {},
+            onClickDevice = {},
+            onClickToggleDeviceFavorite = {},
+            onClickLogout = {},
+            onClickReload = {},
         )
     }
 }

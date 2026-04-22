@@ -1,5 +1,11 @@
 package com.autsing.miga.presentation.repository
 
+import android.annotation.SuppressLint
+import android.content.Context
+import com.autsing.miga.presentation.data.getDeviceIconUrls
+import com.autsing.miga.presentation.data.getDevices
+import com.autsing.miga.presentation.data.getFavoriteDeviceIds
+import com.autsing.miga.presentation.data.setFavoriteDeviceIds
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.helper.SerdeHelper
@@ -10,18 +16,47 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class DeviceRepository(
+    private val context: Context,
     private val serdeHelper: SerdeHelper,
     private val fileHelper: FileHelper,
     private val apiHelper: ApiHelper,
 ) {
 
     companion object {
+        @SuppressLint("StaticFieldLeak")
         lateinit var instance: DeviceRepository
 
         private const val FAVORITE_DEVICE_IDS_FILENAME = "favorite_device_ids.json"
         private const val DEVICES_FILENAME = "devices.json"
         private const val DEVICE_ICON_URLS_FILENAME = "device_icon_urls.json"
         private const val DEVICE_INFOS_FILENAME = "device_infos.json"
+    }
+
+    suspend fun getLocalDevices(): Result<List<Device>> = withContext(Dispatchers.IO) {
+        runCatching { context.getDevices().getOrThrow().sortedByDescending { it.isOnline } }
+    }
+
+    suspend fun getFavoriteDeviceIds(): Result<List<String>> = withContext(Dispatchers.IO) {
+        runCatching { context.getFavoriteDeviceIds().getOrThrow() }
+    }
+
+    suspend fun setFavoriteDeviceIds(ids: List<String>) = withContext(Dispatchers.IO) {
+        runCatching { context.setFavoriteDeviceIds(ids).getOrThrow() }
+    }
+
+    suspend fun getLocalDeviceIconUrls(): Result<Map<String, String>> =
+        withContext(Dispatchers.IO) {
+            runCatching { context.getDeviceIconUrls().getOrThrow() }
+        }
+
+    suspend fun getRemoteDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
+        runCatching { TODO() }
+    }
+
+    suspend fun getRemoteDeviceIconUrls(
+        auth: Auth,
+    ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
+        runCatching { TODO() }
     }
 
     suspend fun loadFavoriteDeviceIds(): Result<List<String>> = withContext(Dispatchers.IO) {

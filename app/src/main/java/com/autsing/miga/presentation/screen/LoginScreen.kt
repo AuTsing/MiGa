@@ -29,7 +29,7 @@ import qrcode.QRCode
 fun LoginScreen(
     loginUrl: String,
     exception: String,
-    onRefresh: () -> Unit = {},
+    onRefresh: () -> Unit,
 ) {
     FullRectBox {
         if (exception.isNotBlank()) {
@@ -80,6 +80,7 @@ private fun PreviewMessageScreen() {
     LoginScreen(
         loginUrl = "https://c3.account.xiaomi.com/longPolling/login?ticket=lp_51726C606941cc-c21f-45ef-9ab0-1f993b103078&dc=c3&sid=xiaomiio&ts=1764689335760",
         exception = "登录失败: timeout",
+        onRefresh = {},
     )
 }
 
@@ -89,5 +90,6 @@ private fun PreviewLoginScreen() {
     LoginScreen(
         loginUrl = "https://c3.account.xiaomi.com/longPolling/login?ticket=lp_51726C606941cc-c21f-45ef-9ab0-1f993b103078&dc=c3&sid=xiaomiio&ts=1764689335760",
         exception = "",
+        onRefresh = {},
     )
 }

@@ -1,5 +1,9 @@
 package com.autsing.miga.presentation.repository
 
+import android.annotation.SuppressLint
+import android.content.Context
+import com.autsing.miga.presentation.data.getFavoriteSceneIds
+import com.autsing.miga.presentation.data.getScenes
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.helper.SerdeHelper
@@ -10,16 +14,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class SceneRepository(
+    private val context: Context,
     private val serdeHelper: SerdeHelper,
     private val fileHelper: FileHelper,
     private val apiHelper: ApiHelper,
 ) {
 
     companion object {
+        @SuppressLint("StaticFieldLeak")
         lateinit var instance: SceneRepository
 
         private const val FAVORITE_SCENE_IDS_FILENAME = "favorite_scene_ids.json"
         private const val SCENES_FILENAME = "scenes.json"
+    }
+
+    suspend fun getLocalScenes(): Result<List<Scene>> = withContext(Dispatchers.IO) {
+        runCatching { context.getScenes().getOrThrow() }
+    }
+
+    suspend fun getFavoriteSceneIds(): Result<List<String>> = withContext(Dispatchers.IO) {
+        runCatching { context.getFavoriteSceneIds().getOrThrow() }
+    }
+
+    suspend fun getRemoteScenes(auth: Auth): Result<List<Scene>> = withContext(Dispatchers.IO) {
+        runCatching { TODO() }
     }
 
     suspend fun loadFavoriteSceneIds(): Result<List<String>> = withContext(Dispatchers.IO) {

@@ -16,6 +16,7 @@ import com.autsing.miga.presentation.viewmodel.MainViewModel
 class MainActivity : ComponentActivity() {
 
     companion object {
+
         fun createLaunchAction(context: Context): LaunchAction {
             val activity = AndroidActivity.Builder()
                 .setPackageName(context.packageName)
@@ -42,18 +43,8 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
+        installSplashScreen()
         setContent { MainScreen(mainViewModel) }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        if (mainViewModel.uiState.auth == null) {
-            mainViewModel.handleLoad()
-        }
     }
 }

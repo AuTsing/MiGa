@@ -25,6 +25,7 @@ import com.autsing.miga.R
 @Composable
 fun Title(
     title: String,
+    loading: Boolean = false,
     tip: String? = null,
     style: TextStyle = MaterialTheme.typography.titleLarge,
 ) {
@@ -41,6 +42,9 @@ fun Title(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (loading) {
+            LoadingContent()
+        }
         Text(
             text = title,
             style = style,
