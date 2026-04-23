@@ -1,5 +1,3 @@
-import com.android.build.gradle.internal.api.BaseVariantOutputImpl
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -11,41 +9,26 @@ plugins {
 
 android {
     namespace = "com.autsing.miga"
-    compileSdk = 36
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
         applicationId = "com.autsing.miga"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20003
-        versionName = "2.0.3"
-    }
-
-    signingConfigs {
-        getByName("debug") {
-            val properties = gradleLocalProperties(rootDir, providers)
-            storeFile = file(properties.getProperty("STORE_FILE"))
-            storePassword = properties.getProperty("STORE_PASSWORD")
-            keyAlias = properties.getProperty("KEY_ALIAS")
-            keyPassword = properties.getProperty("KEY_PASSWORD")
-        }
-        create("release") {
-            val properties = gradleLocalProperties(rootDir, providers)
-            storeFile = file(properties.getProperty("STORE_FILE"))
-            storePassword = properties.getProperty("STORE_PASSWORD")
-            keyAlias = properties.getProperty("KEY_ALIAS")
-            keyPassword = properties.getProperty("KEY_PASSWORD")
-        }
+        versionCode = 20100
+        versionName = "2.1.0"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
-            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -56,13 +39,6 @@ android {
 
     buildFeatures {
         compose = true
-    }
-
-    applicationVariants.all {
-        outputs.map { it as BaseVariantOutputImpl }
-            .forEach {
-                it.outputFileName = "${rootProject.name}_v${versionName}_${buildType.name}.apk"
-            }
     }
 }
 
@@ -103,9 +79,4 @@ dependencies {
     implementation(libs.ktor.client.negotiation)
     implementation(libs.ktor.client.json)
     implementation(libs.ktor.client.logging)
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.ui.test.junit4)
-    debugImplementation(libs.ui.tooling)
-    debugImplementation(libs.ui.test.manifest)
-    debugImplementation(libs.tiles.tooling)
 }
