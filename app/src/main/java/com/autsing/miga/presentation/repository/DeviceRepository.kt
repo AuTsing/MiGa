@@ -6,11 +6,13 @@ import com.autsing.miga.presentation.data.getDeviceIconUrls
 import com.autsing.miga.presentation.data.getDeviceInfo
 import com.autsing.miga.presentation.data.getDevices
 import com.autsing.miga.presentation.data.getFavoriteDeviceIds
+import com.autsing.miga.presentation.data.requestGetDeviceIconUrl
+import com.autsing.miga.presentation.data.requestGetDeviceInfo
+import com.autsing.miga.presentation.data.requestGetDevices
 import com.autsing.miga.presentation.data.setDeviceIconUrls
 import com.autsing.miga.presentation.data.setDeviceInfo
 import com.autsing.miga.presentation.data.setDevices
 import com.autsing.miga.presentation.data.setFavoriteDeviceIds
-import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
@@ -21,7 +23,6 @@ import kotlinx.coroutines.withContext
 
 class DeviceRepository(
     private val context: Context,
-    private val apiHelper: ApiHelper,
 ) {
 
     companion object {
@@ -48,7 +49,7 @@ class DeviceRepository(
 
     suspend fun getRemoteDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devices = apiHelper.getDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
+            val devices = requestGetDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
             context.setDevices(devices).getOrThrow()
 
             devices
@@ -60,7 +61,7 @@ class DeviceRepository(
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
         runCatching {
             val urls = devices
-                .map { async { apiHelper.getDeviceIconUrl(it.model).getOrDefault("") } }
+                .map { async { requestGetDeviceIconUrl(it.model).getOrDefault("") } }
                 .awaitAll()
             val deviceIconUrls = devices.map { it.model }.zip(urls).toMap()
             context.setDeviceIconUrls(deviceIconUrls).getOrThrow()
@@ -81,7 +82,7 @@ class DeviceRepository(
         model: String,
     ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
         runCatching {
-            val info = apiHelper.getDeviceInfo(model).getOrThrow()
+            val info = requestGetDeviceInfo(model).getOrThrow()
             context.setDeviceInfo(model, info).getOrThrow()
 
             info

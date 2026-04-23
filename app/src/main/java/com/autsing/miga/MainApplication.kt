@@ -27,11 +27,9 @@ class MainApplication : Application() {
         )
         SceneRepository.instance = SceneRepository(
             context = this,
-            apiHelper = ApiHelper.instance,
         )
         DeviceRepository.instance = DeviceRepository(
             context = this,
-            apiHelper = ApiHelper.instance,
         )
     }
 }
