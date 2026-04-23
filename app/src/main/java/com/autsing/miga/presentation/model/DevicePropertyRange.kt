@@ -75,7 +75,7 @@ sealed class DevicePropertyRange {
 
             is Double -> {
                 val length = to - from
-                val point = (length * percentage).toDouble()
+                val point = length * percentage
                 val at = point + from
                 DevicePropertyValue.Double(at)
             }

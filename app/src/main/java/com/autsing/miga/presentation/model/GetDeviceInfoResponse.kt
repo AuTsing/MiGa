@@ -98,22 +98,22 @@ data class GetDeviceInfoResponse(
                             element<String>("desc_zh_cn")
                         }
 
-                        override fun serialize(encoder: Encoder, property: Property) {
+                        override fun serialize(encoder: Encoder, value: Property) {
                             require(encoder is JsonEncoder)
 
                             val jsonObject = buildJsonObject {
-                                put("iid", JsonPrimitive(property.iid))
-                                put("urn", JsonPrimitive(property.urn))
-                                put("format", JsonPrimitive(property.format))
-                                put("name", JsonPrimitive(property.name))
-                                put("description", JsonPrimitive(property.description))
+                                put("iid", JsonPrimitive(value.iid))
+                                put("urn", JsonPrimitive(value.urn))
+                                put("format", JsonPrimitive(value.format))
+                                put("name", JsonPrimitive(value.name))
+                                put("description", JsonPrimitive(value.description))
                                 put(
                                     "access",
-                                    JsonArray(property.access.map { JsonPrimitive(it) }),
+                                    JsonArray(value.access.map { JsonPrimitive(it) }),
                                 )
 
-                                property.unit?.let { put("unit", JsonPrimitive(it)) }
-                                property.valueRange?.let {
+                                value.unit?.let { put("unit", JsonPrimitive(it)) }
+                                value.valueRange?.let {
                                     val array = when (it) {
                                         is Ranges.Uint8 -> it.values.map { JsonPrimitive(it) }
                                         is Ranges.Uint16 -> it.values.map { JsonPrimitive(it) }
@@ -125,7 +125,7 @@ data class GetDeviceInfoResponse(
                                     }
                                     put("value-range", JsonArray(array))
                                 }
-                                property.valueList?.let {
+                                value.valueList?.let {
                                     val array = when (it) {
                                         is Values.Uint8 -> it.values.map { v ->
                                             Json.encodeToJsonElement(
@@ -143,7 +143,7 @@ data class GetDeviceInfoResponse(
                                     }
                                     put("value-list", JsonArray(array))
                                 }
-                                property.desc_zh_cn?.let { put("desc_zh_cn", JsonPrimitive(it)) }
+                                value.desc_zh_cn?.let { put("desc_zh_cn", JsonPrimitive(it)) }
                             }
 
                             encoder.encodeJsonElement(jsonObject)
