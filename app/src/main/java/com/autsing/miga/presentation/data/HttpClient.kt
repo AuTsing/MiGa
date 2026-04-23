@@ -1,6 +1,9 @@
 package com.autsing.miga.presentation.data
 
 import com.autsing.miga.presentation.helper.Constants
+import com.autsing.miga.presentation.helper.Constants.MSG_URL
+import com.autsing.miga.presentation.helper.Constants.QR_URL
+import com.autsing.miga.presentation.helper.Constants.USER_AGENT
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
@@ -13,11 +16,15 @@ import com.autsing.miga.presentation.model.GetDevicesData
 import com.autsing.miga.presentation.model.GetDevicesResponse
 import com.autsing.miga.presentation.model.GetHomesData
 import com.autsing.miga.presentation.model.GetHomesResponse
+import com.autsing.miga.presentation.model.GetLocationResponse
 import com.autsing.miga.presentation.model.GetProfileData
 import com.autsing.miga.presentation.model.GetProfileResponse
 import com.autsing.miga.presentation.model.GetScenesData
 import com.autsing.miga.presentation.model.GetScenesResponse
 import com.autsing.miga.presentation.model.Home
+import com.autsing.miga.presentation.model.LoginIndexResponse
+import com.autsing.miga.presentation.model.LoginLpResponse
+import com.autsing.miga.presentation.model.LoginUrlResponse
 import com.autsing.miga.presentation.model.RunActionData
 import com.autsing.miga.presentation.model.RunActionResponse
 import com.autsing.miga.presentation.model.RunSceneData
@@ -28,6 +35,7 @@ import com.autsing.miga.presentation.model.SetDevicePropertiesResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.forms.submitForm
@@ -37,11 +45,17 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.parameters
+import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
+import java.net.URI
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.security.MessageDigest
+import java.time.Instant
 import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlin.random.Random
 
 private val defaultHttpClient: HttpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -51,10 +65,31 @@ private val defaultHttpClient: HttpClient = HttpClient(CIO) {
         )
     }
     defaultRequest {
-        header("User-Agent", Constants.USER_AGENT)
+        header("User-Agent", USER_AGENT)
         header("x-xiaomi-protocal-flag-cli", "PROTOCAL-HTTP2")
     }
 }
+private val loginHttpClient: HttpClient = HttpClient(CIO) {
+    install(ContentNegotiation) {
+        json(
+            json = defaultJson,
+            contentType = ContentType.Any,
+        )
+    }
+    install(HttpTimeout) {
+        requestTimeoutMillis = 60000L
+        connectTimeoutMillis = 60000L
+        socketTimeoutMillis = 60000L
+    }
+    defaultRequest {
+        header("User-Agent", USER_AGENT)
+        header("Cookie", "deviceId=${deviceId}; sdkVersion=3.4.1")
+    }
+}
+private val deviceId: String = (('0'..'9') + ('a'..'z') + ('A'..'Z'))
+    .shuffled(Random)
+    .take(16)
+    .joinToString("")
 
 private fun generateNonce(length: Int = 16): String {
     val chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -304,4 +339,74 @@ suspend fun requestGetProfile(auth: Auth): Result<GetProfileResponse> = runCatch
     val getProfileResp = resp.body<GetProfileResponse>()
 
     getProfileResp
+}
+
+fun getDeviceId(): String = deviceId
+
+suspend fun requestGetLoginIndex(): Result<LoginIndexResponse> = runCatching {
+    val resp = loginHttpClient.get(MSG_URL)
+    val loginIndexResp = resp.body<LoginIndexResponse>()
+
+    loginIndexResp
+}
+
+suspend fun requestGetLoginUrl(resp: LoginIndexResponse): Result<LoginUrlResponse> = runCatching {
+    val queryMap = URI(resp.location).query
+        .split("&")
+        .map { it.split("=") }
+        .associate { (k, v) -> k to URLDecoder.decode(v, "UTF-8") }
+    val params = mapOf(
+        "_qrsize" to "240",
+        "qs" to resp.qs,
+        "bizDeviceType" to "",
+        "callback" to resp.callback,
+        "_json" to "true",
+        "theme" to "",
+        "sid" to "xiaomiio",
+        "needTheme" to "false",
+        "showActiveX" to "false",
+        "serviceParam" to queryMap.getValue("serviceParam"),
+        "_local" to "zh_CN",
+        "_sign" to resp._sign,
+        "_dc" to (Instant.now().toEpochMilli()).toString(),
+    )
+    val paramsString = params.map { (k, v) ->
+        "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
+    }.joinToString("&")
+    val qrUrl = "$QR_URL?$paramsString"
+    val resp = loginHttpClient.get(qrUrl)
+    val loginUrlResp = resp.body<LoginUrlResponse>()
+
+    loginUrlResp
+}
+
+suspend fun requestGetLoginLpResponse(
+    resp: LoginUrlResponse,
+): Result<LoginLpResponse> = runCatching {
+    val newResp = loginHttpClient.get(resp.lp) {
+        header("Connection", "keep-alive")
+    }
+    val loginLpJson = newResp.bodyAsText().substring(11)
+    val loginLpResp = loginLpJson.decode<LoginLpResponse>().getOrThrow()
+
+    loginLpResp
+}
+
+suspend fun requestGetServiceToken(location: String): Result<String> = runCatching {
+    val resp = loginHttpClient.get(location)
+    val cookies = resp.setCookie()
+    val serviceToken = cookies.find { it.name == "serviceToken" }?.value
+        ?: throw Exception("无法获取serviceToken")
+
+    serviceToken
+}
+
+suspend fun requestGetLocation(auth: Auth): Result<GetLocationResponse> = runCatching {
+    val resp = loginHttpClient.get(MSG_URL) {
+        header("Cookie", auth.toCookie())
+    }
+    val getLocationJson = resp.bodyAsText().substring(11)
+    val getLocationResp = getLocationJson.decode<GetLocationResponse>().getOrThrow()
+
+    getLocationResp
 }

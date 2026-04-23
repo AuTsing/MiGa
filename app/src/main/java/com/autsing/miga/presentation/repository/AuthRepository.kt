@@ -3,9 +3,14 @@ package com.autsing.miga.presentation.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.data.getAuth
+import com.autsing.miga.presentation.data.getDeviceId
+import com.autsing.miga.presentation.data.requestGetLocation
+import com.autsing.miga.presentation.data.requestGetLoginIndex
+import com.autsing.miga.presentation.data.requestGetLoginLpResponse
+import com.autsing.miga.presentation.data.requestGetLoginUrl
+import com.autsing.miga.presentation.data.requestGetProfile
+import com.autsing.miga.presentation.data.requestGetServiceToken
 import com.autsing.miga.presentation.data.setAuth
-import com.autsing.miga.presentation.helper.ApiHelper
-import com.autsing.miga.presentation.helper.LoginHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.LoginUrlResponse
 import kotlinx.coroutines.Dispatchers
@@ -16,8 +21,6 @@ import kotlinx.coroutines.withContext
 
 class AuthRepository(
     private val context: Context,
-    private val apiHelper: ApiHelper,
-    private val loginHelper: LoginHelper,
 ) {
 
     companion object {
@@ -30,11 +33,11 @@ class AuthRepository(
     suspend fun loadLocalAuth(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             var auth = context.getAuth().getOrThrow() ?: throw NullPointerException("Auth is null")
-            val profile = apiHelper.getProfile(auth).getOrThrow()
+            val profile = requestGetProfile(auth).getOrThrow()
 
             if (profile.code != 0) {
-                val location = loginHelper.getLocation(auth).getOrThrow()
-                val serviceToken = loginHelper.getServiceToken(location.location).getOrThrow()
+                val location = requestGetLocation(auth).getOrThrow()
+                val serviceToken = requestGetServiceToken(location.location).getOrThrow()
                 auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
                 context.setAuth(auth).getOrThrow()
             }
@@ -45,8 +48,8 @@ class AuthRepository(
 
     suspend fun getLoginUrl(): Result<LoginUrlResponse> = withContext(Dispatchers.IO) {
         runCatching {
-            val loginIndexResponse = loginHelper.getLoginIndex().getOrThrow()
-            val loginUrlResponse = loginHelper.getLoginUrl(loginIndexResponse).getOrThrow()
+            val loginIndexResponse = requestGetLoginIndex().getOrThrow()
+            val loginUrlResponse = requestGetLoginUrl(loginIndexResponse).getOrThrow()
 
             loginUrlResponse
         }
@@ -54,13 +57,9 @@ class AuthRepository(
 
     suspend fun loadRemoteAuth(resp: LoginUrlResponse): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val loginLpResponse = LoginHelper.instance
-                .getLoginLpResponse(resp)
-                .getOrThrow()
-            val serviceToken = LoginHelper.instance
-                .getServiceToken(loginLpResponse.location)
-                .getOrThrow()
-            val deviceId = LoginHelper.instance.getDeviceId()
+            val loginLpResponse = requestGetLoginLpResponse(resp).getOrThrow()
+            val serviceToken = requestGetServiceToken(loginLpResponse.location).getOrThrow()
+            val deviceId = getDeviceId()
 
             val auth = with(loginLpResponse) {
                 Auth(
