@@ -1,0 +1,59 @@
+name: release
+
+on:
+    push:
+        tags:
+            - 'v*'
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup java
+              uses: actions/setup-java@v5
+              with:
+                  distribution: 'jetbrains'
+                  java-version: '21'
+
+            - name: Build
+              run: |
+                  chmod +x ./gradlew
+                  ./gradlew assembleRelease
+
+            - name: Sign
+              id: sign
+              uses: ilharp/sign-android-release@v2
+              with:
+                  signingKey: ${{ secrets.STORE_FILE_BASE64 }}
+                  keyAlias: ${{ secrets.KEY_ALIAS }}
+                  keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+                  keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+            - name: Read version
+              id: read_version
+              run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+            - name: Rename
+              id: rename
+              run: |
+                  mv ${{steps.sign.outputs.signedFile}} MiGa_${{ github.ref_name }}.apk
+                  echo "renamed=MiGa_${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
+
+            - name: Read changelog
+              id: read_changelog
+              uses: mindsers/changelog-reader-action@v2
+              with:
+                  version: ${{ steps.read_version.outputs.version }}
+
+            - name: Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  draft: false
+                  files: ${{steps.rename.outputs.renamed}}
+                  body: |
+                      ## ${{ steps.read_changelog.outputs.version }} - ${{ steps.read_changelog.outputs.date }}  
+
+                      ${{ steps.read_changelog.outputs.changes }}
