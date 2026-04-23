@@ -134,7 +134,7 @@ suspend fun Context.getDeviceInfo(model: String): Result<DeviceInfo?> = runCatch
 }
 
 suspend fun Context.setDeviceInfo(model: String, info: DeviceInfo): Result<Unit> = runCatching {
-    deviceDataStore.updateData {
+    deviceInfoDataStore.updateData {
         it.toMutablePreferences().also { preferences ->
             preferences[stringPreferencesKey(model)] = info.encode().getOrThrow()
         }
