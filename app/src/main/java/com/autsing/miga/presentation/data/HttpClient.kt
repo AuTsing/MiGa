@@ -1,9 +1,9 @@
 package com.autsing.miga.presentation.data
 
-import com.autsing.miga.presentation.helper.Constants
-import com.autsing.miga.presentation.helper.Constants.MSG_URL
-import com.autsing.miga.presentation.helper.Constants.QR_URL
-import com.autsing.miga.presentation.helper.Constants.USER_AGENT
+import com.autsing.miga.presentation.data.Constants
+import com.autsing.miga.presentation.data.Constants.MSG_URL
+import com.autsing.miga.presentation.data.Constants.QR_URL
+import com.autsing.miga.presentation.data.Constants.USER_AGENT
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo

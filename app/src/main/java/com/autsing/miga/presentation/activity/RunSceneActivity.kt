@@ -86,16 +86,23 @@ class RunSceneActivity : ComponentActivity() {
 
     private fun handleRunScene() = lifecycleScope.launch(Dispatchers.IO) {
         runCatching {
-            val auth = authRepository.getAuth().getOrThrow()
+            var auth = authRepository.getAuth().getOrThrow()
             val scene = runCatching {
                 val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
                 val scenes = sceneRepository.getLocalScenes().getOrThrow()
                 scenes.first { it.scene_id == sceneId }
             }.getOrElse { throw Exception("场景信息无效") }
 
-            val result = requestRunScene(auth, scene).getOrThrow()
+            var result = requestRunScene(auth, scene)
 
-            if (result == "ok") {
+            if (result.isFailure) {
+                authRepository.removeAuthSoft().getOrThrow()
+                authRepository.loadLocalAuth().getOrThrow()
+                auth = authRepository.waitAuth().getOrThrow()
+                result = requestRunScene(auth, scene)
+            }
+
+            if (result.isSuccess && result.getOrNull() == "ok") {
                 success.value = true
                 loading.value = false
                 delay(1500)

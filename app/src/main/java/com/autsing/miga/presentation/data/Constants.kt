@@ -1,4 +1,4 @@
-package com.autsing.miga.presentation.helper
+package com.autsing.miga.presentation.data
 
 object Constants {
     const val TAG = "MiGa"
