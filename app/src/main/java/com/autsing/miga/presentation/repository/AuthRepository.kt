@@ -84,4 +84,13 @@ class AuthRepository(
     }
 
     suspend fun waitAuth(): Result<Auth> = runCatching { auth.filterNotNull().first() }
+
+    fun removeAuthSoft(): Result<Unit> = runCatching {
+        auth.value = null
+    }
+
+    suspend fun removeAuthHard(): Result<Unit> = runCatching {
+        context.setAuth(null).getOrThrow()
+        auth.value = null
+    }
 }

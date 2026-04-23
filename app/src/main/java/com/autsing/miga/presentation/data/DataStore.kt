@@ -33,10 +33,14 @@ suspend fun Context.getAuth(): Result<Auth?> = runCatching {
         .getOrNull()
 }
 
-suspend fun Context.setAuth(auth: Auth): Result<Unit> = runCatching {
+suspend fun Context.setAuth(auth: Auth?): Result<Unit> = runCatching {
     authDataStore.updateData {
         it.toMutablePreferences().also { preferences ->
-            preferences[AUTH] = auth.encode().getOrThrow()
+            if (auth == null) {
+                preferences.remove(AUTH)
+            } else {
+                preferences[AUTH] = auth.encode().getOrThrow()
+            }
         }
     }
 }

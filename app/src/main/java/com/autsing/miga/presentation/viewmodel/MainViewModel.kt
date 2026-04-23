@@ -202,7 +202,20 @@ class MainViewModel : ViewModel() {
         DeviceActivity.startActivity(context, device.model)
     }
 
-    fun handleLogout() {
-        TODO()
+    fun handleLogout() = viewModelScope.launch {
+        runCatching {
+            uiState = uiState.copy(authLoading = true)
+
+            authRepository.removeAuthHard().getOrThrow()
+
+            uiState = uiState.copy(
+                authLoading = false,
+                auth = null,
+                scenes = emptyList(),
+                devices = emptyList(),
+            )
+        }.onFailure { e ->
+            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
+        }
     }
 }
