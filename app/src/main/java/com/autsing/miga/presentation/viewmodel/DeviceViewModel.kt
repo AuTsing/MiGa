@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.RunActionActivity
-import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.Device
@@ -35,7 +34,6 @@ class DeviceViewModel : ViewModel() {
 
     private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
-    private val apiHelper: ApiHelper = ApiHelper.instance
 
     var uiState: DeviceUiState by mutableStateOf(DeviceUiState())
         private set
@@ -51,7 +49,7 @@ class DeviceViewModel : ViewModel() {
                 ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
                 ?: throw Exception("读取设备信息失败")
             val auth = authRepository.getAuth().getOrThrow()
-            val deviceProperties = apiHelper.getDeviceProperties(auth, device, deviceInfo)
+            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
                 .getOrThrow()
 
             val switches = deviceProperties
@@ -91,7 +89,7 @@ class DeviceViewModel : ViewModel() {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
             val value = DevicePropertyValue.Boolean(checked)
-            val (newProperty, _) = apiHelper.setDeviceProperty(
+            val (newProperty, _) = deviceRepository.setDeviceProperty(
                 auth,
                 device,
                 component.property,
@@ -119,7 +117,7 @@ class DeviceViewModel : ViewModel() {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
             val value = component.range.getValueOfPercentage(percentage)
-            val (newProperty, newValue) = apiHelper.setDeviceProperty(
+            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
                 auth,
                 device,
                 component.property,
@@ -155,7 +153,7 @@ class DeviceViewModel : ViewModel() {
             val auth = uiState.auth ?: throw Exception("读取权限失败")
             val device = uiState.device ?: throw Exception("读取设备失败")
             val value = component.values[index].value
-            val (newProperty, newValue) = apiHelper.setDeviceProperty(
+            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
                 auth,
                 device,
                 component.property,

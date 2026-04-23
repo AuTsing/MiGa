@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
-import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.data.requestRunScene
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
@@ -63,7 +63,6 @@ class RunSceneActivity : ComponentActivity() {
         }
     }
 
-    private val apiHelper: ApiHelper = ApiHelper.instance
     private val authRepository: AuthRepository = AuthRepository.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
 
@@ -94,7 +93,7 @@ class RunSceneActivity : ComponentActivity() {
                 scenes.first { it.scene_id == sceneId }
             }.getOrElse { throw Exception("场景信息无效") }
 
-            val result = apiHelper.runScene(auth, scene).getOrThrow()
+            val result = requestRunScene(auth, scene).getOrThrow()
 
             if (result == "ok") {
                 success.value = true

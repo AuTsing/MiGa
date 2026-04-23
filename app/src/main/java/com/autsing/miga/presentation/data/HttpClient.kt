@@ -1,6 +1,5 @@
 package com.autsing.miga.presentation.data
 
-import android.util.Log
 import com.autsing.miga.presentation.helper.Constants
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
@@ -39,8 +38,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.util.Base64
 import javax.crypto.Mac
@@ -112,168 +109,138 @@ private suspend fun post(
     resp
 }
 
-suspend fun requestGetHomes(auth: Auth): Result<List<Home>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/v2/homeroom/gethome"
-        val data = GetHomesData(
-            fg = false,
-            fetch_share = true,
-            fetch_share_dev = true,
-            limit = 300,
-            app_ver = 7,
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getHomesResp = resp.body<GetHomesResponse>()
-        val homes = getHomesResp.result.homelist
+suspend fun requestGetHomes(auth: Auth): Result<List<Home>> = runCatching {
+    val uri = "/v2/homeroom/gethome"
+    val data = GetHomesData(
+        fg = false,
+        fetch_share = true,
+        fetch_share_dev = true,
+        limit = 300,
+        app_ver = 7,
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getHomesResp = resp.body<GetHomesResponse>()
+    val homes = getHomesResp.result.homelist
 
-        homes
-    }.onFailure {
-        Log.e(Constants.TAG, "getHomes: ${it.stackTraceToString()}")
-    }
+    homes
 }
 
-suspend fun requestGetScenes(auth: Auth): Result<List<Scene>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val homes = requestGetHomes(auth).getOrThrow()
-        val homeId = homes.first().id
-        val uri = "/appgateway/miot/appsceneservice/AppSceneService/GetSceneList"
-        val data = GetScenesData(
-            home_id = homeId,
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getScenesResp = resp.body<GetScenesResponse>()
-        val scenes = getScenesResp.result.scene_info_list
+suspend fun requestGetScenes(auth: Auth): Result<List<Scene>> = runCatching {
+    val homes = requestGetHomes(auth).getOrThrow()
+    val homeId = homes.first().id
+    val uri = "/appgateway/miot/appsceneservice/AppSceneService/GetSceneList"
+    val data = GetScenesData(
+        home_id = homeId,
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getScenesResp = resp.body<GetScenesResponse>()
+    val scenes = getScenesResp.result.scene_info_list
 
-        scenes
-    }.onFailure {
-        Log.e(Constants.TAG, "getScenes: ${it.stackTraceToString()}")
-    }
+    scenes
 }
 
-suspend fun requestGetDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/home/device_list"
-        val data = GetDevicesData(
-            getVirtualModel = false,
-            getHuamiDevices = 0,
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getDevicesResp = resp.body<GetDevicesResponse>()
-        val devices = getDevicesResp.result.list
+suspend fun requestGetDevices(auth: Auth): Result<List<Device>> = runCatching {
+    val uri = "/home/device_list"
+    val data = GetDevicesData(
+        getVirtualModel = false,
+        getHuamiDevices = 0,
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getDevicesResp = resp.body<GetDevicesResponse>()
+    val devices = getDevicesResp.result.list
 
-        devices
-    }.onFailure {
-        Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
-    }
+    devices
 }
 
 suspend fun requestRunScene(
     auth: Auth,
     scene: Scene,
-): Result<String> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
-        val data = RunSceneData(
-            scene_id = scene.scene_id,
-            trigger_key = "user.click",
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val runSceneResp = resp.body<RunSceneResponse>()
-        val message = runSceneResp.message
+): Result<String> = runCatching {
+    val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
+    val data = RunSceneData(
+        scene_id = scene.scene_id,
+        trigger_key = "user.click",
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val runSceneResp = resp.body<RunSceneResponse>()
+    val message = runSceneResp.message
 
-        message
-    }.onFailure {
-        Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
-    }
+    message
 }
 
-suspend fun requestGetDeviceIconUrl(model: String): Result<String> = withContext(Dispatchers.IO) {
-    runCatching {
-        val resp = defaultHttpClient.get("${Constants.PRODUCT_URL}?model=$model")
-        val getDeviceBaikeResp = resp.body<GetDeviceBaikeResponse>()
-        val realIcon = getDeviceBaikeResp.data.realIcon
+suspend fun requestGetDeviceIconUrl(model: String): Result<String> = runCatching {
+    val resp = defaultHttpClient.get("${Constants.PRODUCT_URL}?model=$model")
+    val getDeviceBaikeResp = resp.body<GetDeviceBaikeResponse>()
+    val realIcon = getDeviceBaikeResp.data.realIcon
 
-        realIcon
-    }
+    realIcon
 }
 
-suspend fun requestGetDeviceInfo(model: String): Result<DeviceInfo> = withContext(Dispatchers.IO) {
-    runCatching {
-        val resp = defaultHttpClient.get("${Constants.DEVICE_URL}/${model}")
-        val respContent = resp.bodyAsText()
-        val getDeviceInfoContent = Regex("""data-page="(.*?)">""").find(respContent)
-            ?.groups
-            ?.get(1)
-            ?.value
-            ?: throw Exception("解析设备信息失败")
-        val getDeviceInfoJson = getDeviceInfoContent.replace("&quot;", "\"")
-        val getDeviceInfoResp = getDeviceInfoJson.decode<GetDeviceInfoResponse>().getOrThrow()
-        val deviceInfo = DeviceInfo.from(model, getDeviceInfoResp)
+suspend fun requestGetDeviceInfo(model: String): Result<DeviceInfo> = runCatching {
+    val resp = defaultHttpClient.get("${Constants.DEVICE_URL}/${model}")
+    val respContent = resp.bodyAsText()
+    val getDeviceInfoContent = Regex("""data-page="(.*?)">""").find(respContent)
+        ?.groups
+        ?.get(1)
+        ?.value
+        ?: throw Exception("解析设备信息失败")
+    val getDeviceInfoJson = getDeviceInfoContent.replace("&quot;", "\"")
+    val getDeviceInfoResp = getDeviceInfoJson.decode<GetDeviceInfoResponse>().getOrThrow()
+    val deviceInfo = DeviceInfo.from(model, getDeviceInfoResp)
 
-        deviceInfo
-    }.onFailure {
-        Log.e(Constants.TAG, "getDeviceInfo: ${it.stackTraceToString()}")
-    }
+    deviceInfo
 }
 
 suspend fun requestGetDeviceProperties(
     auth: Auth,
     device: Device,
     deviceInfo: DeviceInfo,
-): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/miotspec/prop/get"
-        val data = GetDevicePropertiesData(
-            params = deviceInfo.properties.map {
-                GetDevicePropertiesData.Params(
-                    did = device.did,
-                    siid = it.method.siid,
-                    piid = it.method.piid,
-                )
-            }
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getDevicePropertiesResp = resp.body<GetDevicePropertiesResponse>()
-        val deviceProperties = deviceInfo.properties.mapIndexed { i, it ->
-            Pair(it, getDevicePropertiesResp.result[i].value)
+): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = runCatching {
+    val uri = "/miotspec/prop/get"
+    val data = GetDevicePropertiesData(
+        params = deviceInfo.properties.map {
+            GetDevicePropertiesData.Params(
+                did = device.did,
+                siid = it.method.siid,
+                piid = it.method.piid,
+            )
         }
-
-        deviceProperties
-    }.onFailure {
-        Log.e(Constants.TAG, "getDeviceProperties: ${it.stackTraceToString()}")
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getDevicePropertiesResp = resp.body<GetDevicePropertiesResponse>()
+    val deviceProperties = deviceInfo.properties.mapIndexed { i, it ->
+        Pair(it, getDevicePropertiesResp.result[i].value)
     }
+
+    deviceProperties
 }
 
 suspend fun requestGetDeviceProperty(
     auth: Auth,
     device: Device,
     deviceProperty: DeviceInfo.Property,
-): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/miotspec/prop/get"
-        val data = GetDevicePropertiesData(
-            params = listOf(
-                GetDevicePropertiesData.Params(
-                    did = device.did,
-                    siid = deviceProperty.method.siid,
-                    piid = deviceProperty.method.piid,
-                )
+): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = runCatching {
+    val uri = "/miotspec/prop/get"
+    val data = GetDevicePropertiesData(
+        params = listOf(
+            GetDevicePropertiesData.Params(
+                did = device.did,
+                siid = deviceProperty.method.siid,
+                piid = deviceProperty.method.piid,
             )
         )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getDevicePropertiesResp = resp.body<GetDevicePropertiesResponse>()
-        val deviceProperty = Pair(deviceProperty, getDevicePropertiesResp.result[0].value)
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getDevicePropertiesResp = resp.body<GetDevicePropertiesResponse>()
+    val deviceProperty = Pair(deviceProperty, getDevicePropertiesResp.result[0].value)
 
-        deviceProperty
-    }.onFailure {
-        Log.e(Constants.TAG, "getDeviceProperties: ${it.stackTraceToString()}")
-    }
+    deviceProperty
 }
 
 suspend fun requestSetDeviceProperty(
@@ -281,33 +248,29 @@ suspend fun requestSetDeviceProperty(
     device: Device,
     deviceProperty: DeviceInfo.Property,
     value: DevicePropertyValue,
-): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
-    runCatching {
-        val oldDeviceProperty = requestGetDeviceProperty(auth, device, deviceProperty).getOrThrow()
-        val uri = "/miotspec/prop/set"
-        val data = SetDevicePropertiesData(
-            params = listOf(
-                SetDevicePropertiesData.Params(
-                    did = device.did,
-                    siid = deviceProperty.method.siid,
-                    piid = deviceProperty.method.piid,
-                    value = value,
-                )
+): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = runCatching {
+    val oldDeviceProperty = requestGetDeviceProperty(auth, device, deviceProperty).getOrThrow()
+    val uri = "/miotspec/prop/set"
+    val data = SetDevicePropertiesData(
+        params = listOf(
+            SetDevicePropertiesData.Params(
+                did = device.did,
+                siid = deviceProperty.method.siid,
+                piid = deviceProperty.method.piid,
+                value = value,
             )
         )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val setDevicePropertiesResp = resp.body<SetDevicePropertiesResponse>()
-        val deviceProperty = if (setDevicePropertiesResp.result[0].code == 0) {
-            Pair(deviceProperty, value)
-        } else {
-            Pair(deviceProperty, oldDeviceProperty.second)
-        }
-
-        deviceProperty
-    }.onFailure {
-        Log.e(Constants.TAG, "setDeviceProperties: ${it.stackTraceToString()}")
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val setDevicePropertiesResp = resp.body<SetDevicePropertiesResponse>()
+    val deviceProperty = if (setDevicePropertiesResp.result[0].code == 0) {
+        Pair(deviceProperty, value)
+    } else {
+        Pair(deviceProperty, oldDeviceProperty.second)
     }
+
+    deviceProperty
 }
 
 suspend fun requestRunAction(
@@ -315,40 +278,30 @@ suspend fun requestRunAction(
     device: Device,
     action: DeviceInfo.Action,
     inValues: List<DevicePropertyValue>,
-): Result<Int> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/miotspec/action"
-        val data = RunActionData(
-            params = RunActionData.Params(
-                did = device.did,
-                siid = action.method.siid,
-                aiid = action.method.aiid,
-                _in = inValues,
-            ),
-        )
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val runActionResp = resp.body<RunActionResponse>()
-        val code = runActionResp.result.code
+): Result<Int> = runCatching {
+    val uri = "/miotspec/action"
+    val data = RunActionData(
+        params = RunActionData.Params(
+            did = device.did,
+            siid = action.method.siid,
+            aiid = action.method.aiid,
+            _in = inValues,
+        ),
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val runActionResp = resp.body<RunActionResponse>()
+    val code = runActionResp.result.code
 
-        code
-    }.onFailure {
-        Log.e(Constants.TAG, "getDevices: ${it.stackTraceToString()}")
-    }
+    code
 }
 
-suspend fun requestGetProfile(
-    auth: Auth,
-): Result<GetProfileResponse> = withContext(Dispatchers.IO) {
-    runCatching {
-        val uri = "/home/profile"
-        val data = GetProfileData(id = auth.userId)
-        val dataJson = data.encode().getOrThrow()
-        val resp = post(auth, uri, dataJson).getOrThrow()
-        val getProfileResp = resp.body<GetProfileResponse>()
+suspend fun requestGetProfile(auth: Auth): Result<GetProfileResponse> = runCatching {
+    val uri = "/home/profile"
+    val data = GetProfileData(id = auth.userId)
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val getProfileResp = resp.body<GetProfileResponse>()
 
-        getProfileResp
-    }.onFailure {
-        Log.e(Constants.TAG, "getUserInfo: ${it.stackTraceToString()}")
-    }
+    getProfileResp
 }

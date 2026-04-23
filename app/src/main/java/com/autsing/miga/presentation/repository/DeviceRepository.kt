@@ -8,7 +8,9 @@ import com.autsing.miga.presentation.data.getDevices
 import com.autsing.miga.presentation.data.getFavoriteDeviceIds
 import com.autsing.miga.presentation.data.requestGetDeviceIconUrl
 import com.autsing.miga.presentation.data.requestGetDeviceInfo
+import com.autsing.miga.presentation.data.requestGetDeviceProperties
 import com.autsing.miga.presentation.data.requestGetDevices
+import com.autsing.miga.presentation.data.requestSetDeviceProperty
 import com.autsing.miga.presentation.data.setDeviceIconUrls
 import com.autsing.miga.presentation.data.setDeviceInfo
 import com.autsing.miga.presentation.data.setDevices
@@ -16,6 +18,7 @@ import com.autsing.miga.presentation.data.setFavoriteDeviceIds
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
+import com.autsing.miga.presentation.model.DevicePropertyValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -87,5 +90,22 @@ class DeviceRepository(
 
             info
         }
+    }
+
+    suspend fun getDeviceProperties(
+        auth: Auth,
+        device: Device,
+        deviceInfo: DeviceInfo,
+    ): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
+        runCatching { requestGetDeviceProperties(auth, device, deviceInfo).getOrThrow() }
+    }
+
+    suspend fun setDeviceProperty(
+        auth: Auth,
+        device: Device,
+        deviceProperty: DeviceInfo.Property,
+        value: DevicePropertyValue,
+    ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
+        runCatching { requestSetDeviceProperty(auth, device, deviceProperty, value).getOrThrow() }
     }
 }

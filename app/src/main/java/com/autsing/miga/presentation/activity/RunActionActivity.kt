@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
-import com.autsing.miga.presentation.helper.ApiHelper
+import com.autsing.miga.presentation.data.requestRunAction
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.DevicePropertyRange
@@ -35,7 +35,6 @@ class RunActionActivity : ComponentActivity() {
         }
     }
 
-    private val apiHelper: ApiHelper = ApiHelper.instance
     private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
@@ -191,7 +190,7 @@ class RunActionActivity : ComponentActivity() {
                 ?: throw Exception("读取设备失败")
             val auth = authRepository.getAuth().getOrThrow()
 
-            val code = apiHelper.runAction(
+            val code = requestRunAction(
                 auth = auth,
                 device = device,
                 action = action,
