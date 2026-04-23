@@ -69,6 +69,7 @@ fun MainScreen(
             )
         } else {
             MainContent(
+                sceneLoading = uiState.sceneLoading,
                 deviceLoading = uiState.deviceLoading,
                 message = uiState.message,
                 scenes = uiState.scenes,
@@ -266,6 +267,7 @@ private fun EmptyCard(text: String) {
 
 @Composable
 private fun MainContent(
+    sceneLoading: Boolean,
     deviceLoading: Boolean,
     message: String,
     scenes: List<Scene>,
@@ -287,6 +289,7 @@ private fun MainContent(
         item {
             Title(
                 title = "智能",
+                loading = sceneLoading,
                 tip = "在手机米家APP添加智能，点击最下方刷新；点击智能可执行；长按智能可收藏",
                 style = MaterialTheme.typography.displaySmall,
             )
@@ -372,6 +375,7 @@ private fun PreviewDeviceChip() {
 private fun PreviewEmptyContent() {
     FullScreenBox {
         MainContent(
+            sceneLoading = false,
             deviceLoading = true,
             message = "",
             scenes = emptyList(),
