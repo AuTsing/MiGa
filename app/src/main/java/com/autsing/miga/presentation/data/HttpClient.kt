@@ -345,7 +345,8 @@ fun getDeviceId(): String = deviceId
 
 suspend fun requestGetLoginIndex(): Result<LoginIndexResponse> = runCatching {
     val resp = loginHttpClient.get(MSG_URL)
-    val loginIndexResp = resp.body<LoginIndexResponse>()
+    val loginIndexJson = resp.bodyAsText().substring(11)
+    val loginIndexResp = loginIndexJson.decode<LoginIndexResponse>().getOrThrow()
 
     loginIndexResp
 }
@@ -375,7 +376,8 @@ suspend fun requestGetLoginUrl(resp: LoginIndexResponse): Result<LoginUrlRespons
     }.joinToString("&")
     val qrUrl = "$QR_URL?$paramsString"
     val resp = loginHttpClient.get(qrUrl)
-    val loginUrlResp = resp.body<LoginUrlResponse>()
+    val loginUrlJson = resp.bodyAsText().substring(11)
+    val loginUrlResp = loginUrlJson.decode<LoginUrlResponse>().getOrThrow()
 
     loginUrlResp
 }
