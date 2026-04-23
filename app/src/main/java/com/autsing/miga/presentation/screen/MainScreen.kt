@@ -83,7 +83,7 @@ fun MainScreen(
                 onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
                 onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
                 onClickLogout = { mainViewModel.handleLogout() },
-                onClickReload = {},
+                onClickReload = { mainViewModel.handleReload() },
             )
         }
     }

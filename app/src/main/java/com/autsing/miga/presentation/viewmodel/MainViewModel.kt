@@ -218,4 +218,9 @@ class MainViewModel : ViewModel() {
             uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
         }
     }
+
+    fun handleReload() {
+        handleLoadScenes()
+        handleLoadDevices()
+    }
 }
