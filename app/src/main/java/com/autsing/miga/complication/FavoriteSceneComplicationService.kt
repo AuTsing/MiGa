@@ -7,6 +7,7 @@ import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
+import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.repository.SceneRepository
 
 abstract class FavoriteSceneComplicationService : SuspendingComplicationDataSourceService() {
@@ -58,7 +59,7 @@ abstract class FavoriteSceneComplicationService : SuspendingComplicationDataSour
     }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
-        val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptyList())
+        val favoriteScenes = sceneRepository.getFavoriteScenes().getOrDefault()
         val maybeScene = favoriteScenes.getOrNull(favoriteIndex)
         if (maybeScene == null) {
             return ComplicationDataUtil.createAddComplicationData(

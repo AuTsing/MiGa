@@ -214,11 +214,11 @@ class ApiHelper(
         }
     }
 
-    suspend fun getDeviceInfo(device: Device): Result<DeviceInfo> = withContext(Dispatchers.IO) {
+    suspend fun getDeviceInfo(model: String): Result<DeviceInfo> = withContext(Dispatchers.IO) {
         var maybeResponse: Response? = null
 
         runCatching {
-            val request = Request.Builder().url("${Constants.DEVICE_URL}/${device.model}").build()
+            val request = Request.Builder().url("${Constants.DEVICE_URL}/${model}").build()
             val response = okHttpClient.newCall(request).execute().also { maybeResponse = it }
             val responseContent = response.body?.string() ?: throw Exception("获取设备信息失败")
             val getDeviceInfoContent = Regex("""data-page="(.*?)">""").find(responseContent)
@@ -236,7 +236,7 @@ class ApiHelper(
                     getDeviceInfoResponse.props.product.model,
                 )
             } else {
-                Pair(getDeviceInfoResponse.props.spec.name, device.model)
+                Pair(getDeviceInfoResponse.props.spec.name, model)
             }
             val deviceInfoProperties = mutableListOf<DeviceInfo.Property>()
             val deviceInfoActions = mutableListOf<DeviceInfo.Action>()

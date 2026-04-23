@@ -29,14 +29,10 @@ class MainApplication : Application() {
         )
         SceneRepository.instance = SceneRepository(
             context = this,
-            serdeHelper = SerdeHelper.instance,
-            fileHelper = FileHelper.instance,
             apiHelper = ApiHelper.instance,
         )
         DeviceRepository.instance = DeviceRepository(
             context = this,
-            serdeHelper = SerdeHelper.instance,
-            fileHelper = FileHelper.instance,
             apiHelper = ApiHelper.instance,
         )
     }

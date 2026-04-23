@@ -1,7 +1,6 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,7 +11,6 @@ import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.data.getOrDefault
-import com.autsing.miga.presentation.helper.Constants.TAG
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -132,12 +130,9 @@ class MainViewModel : ViewModel() {
             )
 
             val auth = authRepository.waitAuth().getOrThrow()
-            val remotes = Pair(
-                async { deviceRepository.getRemoteDevices(auth).getOrDefault() },
-                async { deviceRepository.getRemoteDeviceIconUrls(auth).getOrDefault() },
-            )
-            val remoteDevices = remotes.first.await()
-            val remoteDeviceIconUrls = remotes.second.await()
+            val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
+            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
+                .getOrDefault()
 
             uiState = uiState.copy(
                 deviceLoading = false,
@@ -171,12 +166,12 @@ class MainViewModel : ViewModel() {
 
             uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)
 
-            sceneRepository.saveFavoriteSceneIds(favoriteSceneIds).getOrThrow()
+            sceneRepository.setFavoriteSceneIds(favoriteSceneIds).getOrThrow()
 
             MainTileService.requestUpdate(context)
             FavoriteSceneComplicationService.requestUpdate(context)
-        }.onFailure {
-            Log.e(TAG, "handleToggleSceneFavorite: ${it.stackTraceToString()}")
+        }.onFailure { e ->
+            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
         }
     }
 
@@ -185,15 +180,18 @@ class MainViewModel : ViewModel() {
             val favoriteDeviceIds = uiState.favoriteDeviceIds
                 .toMutableList()
                 .apply {
-                    if (device.did in this) remove(device.did)
-                    else add(device.did)
+                    if (device.did in this) {
+                        remove(device.did)
+                    } else {
+                        add(device.did)
+                    }
                 }
 
             uiState = uiState.copy(favoriteDeviceIds = favoriteDeviceIds)
 
-            deviceRepository.saveFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
-        }.onFailure {
-            Log.e(TAG, "handleToggleDeviceFavorite: ${it.stackTraceToString()}")
+            deviceRepository.setFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
+        }.onFailure { e ->
+            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
         }
     }
 

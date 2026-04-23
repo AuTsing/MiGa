@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.Scene
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -22,7 +23,7 @@ private val DEVICE_ICON_URLS: Preferences.Key<String> = stringPreferencesKey("de
 private val Context.authDataStore: DataStore<Preferences> by preferencesDataStore(name = "auth")
 private val Context.sceneDataStore: DataStore<Preferences> by preferencesDataStore(name = "scene")
 private val Context.deviceDataStore: DataStore<Preferences> by preferencesDataStore(name = "device")
-private val Context.deviceInfosDataStore: DataStore<Preferences> by preferencesDataStore(name = "device_infos")
+private val Context.deviceInfoDataStore: DataStore<Preferences> by preferencesDataStore(name = "device_info")
 
 suspend fun Context.getAuth(): Result<Auth?> = runCatching {
     authDataStore.data
@@ -48,9 +49,17 @@ suspend fun Context.getScenes(): Result<List<Scene>> = runCatching {
         .getOrDefault()
 }
 
+suspend fun Context.setScenes(scenes: List<Scene>): Result<Unit> = runCatching {
+    sceneDataStore.updateData {
+        it.toMutablePreferences().also { preferences ->
+            preferences[SCENES] = scenes.encode().getOrThrow()
+        }
+    }
+}
+
 suspend fun Context.getFavoriteSceneIds(): Result<List<String>> = runCatching {
     sceneDataStore.data
-        .map { preferences -> preferences[FAVORITE_DEVICE_IDS] ?: "" }
+        .map { preferences -> preferences[FAVORITE_SCENE_IDS] ?: "" }
         .first()
         .decode<List<String>>()
         .getOrDefault()
@@ -62,6 +71,14 @@ suspend fun Context.getDevices(): Result<List<Device>> = runCatching {
         .first()
         .decode<List<Device>>()
         .getOrDefault()
+}
+
+suspend fun Context.setDevices(devices: List<Device>): Result<Unit> = runCatching {
+    deviceDataStore.updateData {
+        it.toMutablePreferences().also { preferences ->
+            preferences[DEVICES] = devices.encode().getOrThrow()
+        }
+    }
 }
 
 suspend fun Context.getFavoriteDeviceIds(): Result<List<String>> = runCatching {
@@ -86,4 +103,28 @@ suspend fun Context.getDeviceIconUrls(): Result<Map<String, String>> = runCatchi
         .first()
         .decode<Map<String, String>>()
         .getOrDefault()
+}
+
+suspend fun Context.setDeviceIconUrls(urls: Map<String, String>): Result<Unit> = runCatching {
+    deviceDataStore.updateData {
+        it.toMutablePreferences().also { preferences ->
+            preferences[DEVICE_ICON_URLS] = urls.encode().getOrThrow()
+        }
+    }
+}
+
+suspend fun Context.getDeviceInfo(model: String): Result<DeviceInfo?> = runCatching {
+    deviceInfoDataStore.data
+        .map { preferences -> preferences[stringPreferencesKey(model)] ?: "" }
+        .first()
+        .decode<DeviceInfo>()
+        .getOrNull()
+}
+
+suspend fun Context.setDeviceInfo(model: String, info: DeviceInfo): Result<Unit> = runCatching {
+    deviceDataStore.updateData {
+        it.toMutablePreferences().also { preferences ->
+            preferences[stringPreferencesKey(model)] = info.encode().getOrThrow()
+        }
+    }
 }

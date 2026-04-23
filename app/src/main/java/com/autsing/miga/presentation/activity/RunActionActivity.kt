@@ -87,8 +87,7 @@ class RunActionActivity : ComponentActivity() {
             val aiid = intent.getIntExtra(EXTRA_AIID, -1).takeIf { it > -1 }
                 ?: throw Exception("读取AIID失败")
 
-            val deviceInfo = deviceRepository.loadDeviceInfosLocal().getOrThrow()[deviceModel]
-                ?: throw Exception("读取设备信息失败")
+            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrThrow()
             val action = deviceInfo.actions
                 .find { it.method.siid == siid && it.method.aiid == aiid }
                 ?: throw Exception("读取动作失败")
@@ -189,7 +188,7 @@ class RunActionActivity : ComponentActivity() {
                     }
                 }
 
-            val devices = deviceRepository.loadDevicesLocal().getOrThrow()
+            val devices = deviceRepository.getLocalDevices().getOrThrow()
             val device = devices.find { it.model == deviceModel }
                 ?: throw Exception("读取设备失败")
             val authJson = fileHelper.readJson("auth.json").getOrThrow()

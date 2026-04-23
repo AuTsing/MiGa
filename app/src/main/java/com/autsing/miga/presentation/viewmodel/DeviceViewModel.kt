@@ -45,11 +45,11 @@ class DeviceViewModel : ViewModel() {
         runCatching {
             uiState = uiState.copy(loading = true)
 
-            val devices = deviceRepository.loadDevicesLocal().getOrThrow()
+            val devices = deviceRepository.getLocalDevices().getOrThrow()
             val device = devices.find { it.model == deviceModel }
                 ?: throw Exception("读取设备失败")
-            val deviceInfo = deviceRepository.loadDeviceInfosLocal().getOrNull()?.get(deviceModel)
-                ?: deviceRepository.loadDeviceInfosRemote(device).getOrThrow()[deviceModel]
+            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrNull()
+                ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
                 ?: throw Exception("读取设备信息失败")
             val authJson = fileHelper.readJson("auth.json").getOrThrow()
             val auth = Json.decodeFromString<Auth>(authJson)

@@ -5,6 +5,7 @@ import androidx.wear.protolayout.ResourceBuilders.Resources
 import androidx.wear.tiles.RequestBuilders.ResourcesRequest
 import androidx.wear.tiles.RequestBuilders.TileRequest
 import androidx.wear.tiles.TileBuilders.Tile
+import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.tiles.SuspendingTileService
@@ -33,7 +34,7 @@ class MainTileService : SuspendingTileService() {
     }
 
     override suspend fun tileRequest(requestParams: TileRequest): Tile {
-        val favoriteScenes = sceneRepository.loadFavoriteScenes().getOrDefault(emptyList())
+        val favoriteScenes = sceneRepository.getFavoriteScenes().getOrDefault()
 
         val state = MainTileState(
             scenes = favoriteScenes,

@@ -302,7 +302,7 @@ private fun MainContent(
                 onClickFavorite = onClickToggleSceneFavorite,
             )
         }
-        if (devices.isEmpty()) {
+        if (scenes.isEmpty()) {
             item { EmptyCard("无智能") }
         }
         item {
