@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.data.getFavoriteSceneIds
 import com.autsing.miga.presentation.data.getScenes
-import com.autsing.miga.presentation.data.setFavoriteDeviceIds
+import com.autsing.miga.presentation.data.setFavoriteSceneIds
 import com.autsing.miga.presentation.data.setScenes
 import com.autsing.miga.presentation.helper.ApiHelper
 import com.autsing.miga.presentation.model.Auth
@@ -34,7 +34,7 @@ class SceneRepository(
     suspend fun setFavoriteSceneIds(
         ids: List<String>,
     ): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching { context.setFavoriteDeviceIds(ids).getOrThrow() }
+        runCatching { context.setFavoriteSceneIds(ids).getOrThrow() }
     }
 
     suspend fun getRemoteScenes(auth: Auth): Result<List<Scene>> = withContext(Dispatchers.IO) {

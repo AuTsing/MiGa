@@ -160,8 +160,11 @@ class MainViewModel : ViewModel() {
             val favoriteSceneIds = uiState.favoriteSceneIds
                 .toMutableList()
                 .apply {
-                    if (scene.scene_id in this) remove(scene.scene_id)
-                    else add(scene.scene_id)
+                    if (scene.scene_id in this) {
+                        remove(scene.scene_id)
+                    } else {
+                        add(scene.scene_id)
+                    }
                 }
 
             uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)

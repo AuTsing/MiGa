@@ -65,6 +65,14 @@ suspend fun Context.getFavoriteSceneIds(): Result<List<String>> = runCatching {
         .getOrDefault()
 }
 
+suspend fun Context.setFavoriteSceneIds(ids: List<String>): Result<Unit> = runCatching {
+    sceneDataStore.updateData {
+        it.toMutablePreferences().also { preferences ->
+            preferences[FAVORITE_SCENE_IDS] = ids.encode().getOrThrow()
+        }
+    }
+}
+
 suspend fun Context.getDevices(): Result<List<Device>> = runCatching {
     deviceDataStore.data
         .map { preferences -> preferences[DEVICES] ?: "" }
