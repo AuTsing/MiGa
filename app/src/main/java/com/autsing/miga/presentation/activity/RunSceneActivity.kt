@@ -12,15 +12,13 @@ import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import com.autsing.miga.presentation.helper.ApiHelper
-import com.autsing.miga.presentation.helper.FileHelper
-import com.autsing.miga.presentation.model.Auth
+import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 class RunSceneActivity : ComponentActivity() {
 
@@ -65,8 +63,8 @@ class RunSceneActivity : ComponentActivity() {
         }
     }
 
-    private val fileHelper: FileHelper = FileHelper.instance
     private val apiHelper: ApiHelper = ApiHelper.instance
+    private val authRepository: AuthRepository = AuthRepository.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
 
     private val loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
@@ -89,10 +87,7 @@ class RunSceneActivity : ComponentActivity() {
 
     private fun handleRunScene() = lifecycleScope.launch(Dispatchers.IO) {
         runCatching {
-            val auth = runCatching {
-                val authJson = fileHelper.readJson("auth.json").getOrThrow()
-                Json.decodeFromString<Auth>(authJson)
-            }.getOrElse { throw Exception("用户信息无效") }
+            val auth = authRepository.getAuth().getOrThrow()
             val scene = runCatching {
                 val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
                 val scenes = sceneRepository.getLocalScenes().getOrThrow()

@@ -9,16 +9,15 @@ import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.RunActionActivity
 import com.autsing.miga.presentation.helper.ApiHelper
-import com.autsing.miga.presentation.helper.FileHelper
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
+import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 data class DeviceUiState(
     val loading: Boolean = true,
@@ -34,8 +33,8 @@ data class DeviceUiState(
 
 class DeviceViewModel : ViewModel() {
 
+    private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
-    private val fileHelper: FileHelper = FileHelper.instance
     private val apiHelper: ApiHelper = ApiHelper.instance
 
     var uiState: DeviceUiState by mutableStateOf(DeviceUiState())
@@ -51,8 +50,7 @@ class DeviceViewModel : ViewModel() {
             val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrNull()
                 ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
                 ?: throw Exception("读取设备信息失败")
-            val authJson = fileHelper.readJson("auth.json").getOrThrow()
-            val auth = Json.decodeFromString<Auth>(authJson)
+            val auth = authRepository.getAuth().getOrThrow()
             val deviceProperties = apiHelper.getDeviceProperties(auth, device, deviceInfo)
                 .getOrThrow()
 

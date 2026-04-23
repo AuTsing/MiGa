@@ -8,18 +8,16 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.helper.ApiHelper
-import com.autsing.miga.presentation.helper.FileHelper
-import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
+import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 class RunActionActivity : ComponentActivity() {
 
@@ -37,8 +35,8 @@ class RunActionActivity : ComponentActivity() {
         }
     }
 
-    private val fileHelper: FileHelper = FileHelper.instance
     private val apiHelper: ApiHelper = ApiHelper.instance
+    private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
     private lateinit var deviceModel: String
@@ -191,8 +189,7 @@ class RunActionActivity : ComponentActivity() {
             val devices = deviceRepository.getLocalDevices().getOrThrow()
             val device = devices.find { it.model == deviceModel }
                 ?: throw Exception("读取设备失败")
-            val authJson = fileHelper.readJson("auth.json").getOrThrow()
-            val auth = Json.decodeFromString<Auth>(authJson)
+            val auth = authRepository.getAuth().getOrThrow()
 
             val code = apiHelper.runAction(
                 auth = auth,
