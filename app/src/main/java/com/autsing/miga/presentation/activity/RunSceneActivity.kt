@@ -86,7 +86,12 @@ class RunSceneActivity : ComponentActivity() {
 
     private fun handleRunScene() = lifecycleScope.launch(Dispatchers.IO) {
         runCatching {
-            var auth = authRepository.getAuth().getOrThrow()
+            var auth = authRepository.getAuth().getOrNull()
+            if (auth == null) {
+                authRepository.loadLocalAuth().getOrThrow()
+                auth = authRepository.waitAuth().getOrThrow()
+            }
+
             val scene = runCatching {
                 val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
                 val scenes = sceneRepository.getLocalScenes().getOrThrow()
