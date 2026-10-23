@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.0.1"
 kotlin = "2.3.20"
 playServicesWearable = "19.0.0"
 wearCompose = "1.6.1"
