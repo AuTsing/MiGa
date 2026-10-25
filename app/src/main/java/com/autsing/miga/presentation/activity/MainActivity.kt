@@ -45,6 +45,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
-        setContent { MainScreen(mainViewModel) }
+        setContent { MainScreen(mainViewModel.uiState) }
     }
 }

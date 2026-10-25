@@ -43,6 +43,8 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
 import com.autsing.miga.R
+import com.autsing.miga.presentation.activity.LoginActivity
+import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PairButtons
@@ -50,41 +52,46 @@ import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.model.sort
-import com.autsing.miga.presentation.viewmodel.MainViewModel
+import com.autsing.miga.presentation.viewmodel.MainUiState
 import kotlin.math.max
 
 @Composable
-fun MainScreen(
-    mainViewModel: MainViewModel,
-) {
-    val uiState = mainViewModel.uiState
+fun MainScreen(state: MainUiState) {
     val context = LocalContext.current
 
     FullScreenBox {
-        if (uiState.authLoading) {
+        if (state.authLoading) {
             LoadingContent("加载中...")
-        } else if (uiState.auth == null) {
+        } else if (state.auth == null) {
             LoginContent(
-                onClickLogin = { mainViewModel.handleNavigateToLogin(context) }
+                onClickLogin = { LoginActivity.startActivity(context) }
             )
         } else {
             MainContent(
-                sceneLoading = uiState.sceneLoading,
-                deviceLoading = uiState.deviceLoading,
-                message = uiState.message,
-                scenes = uiState.scenes,
-                devices = uiState.devices,
-                favoriteSceneIds = uiState.favoriteSceneIds,
-                favoriteDeviceIds = uiState.favoriteDeviceIds,
-                deviceIconUrls = uiState.deviceIconUrls,
-                onClickScene = { mainViewModel.handleRunScene(context, it) },
+                sceneLoading = state.sceneLoading,
+                deviceLoading = state.deviceLoading,
+                message = state.message,
+                scenes = state.scenes,
+                devices = state.devices,
+                favoriteSceneIds = state.favoriteSceneIds,
+                favoriteDeviceIds = state.favoriteDeviceIds,
+                deviceIconUrls = state.deviceIconUrls,
+                onClickScene = { RunSceneActivity.startActivity(context, it.scene_id) },
                 onClickToggleSceneFavorite = {
-                    mainViewModel.handleToggleSceneFavorite(context, it)
+                    //TODO(onClickToggleSceneFavorite)
                 },
-                onClickDevice = { mainViewModel.handleOpenDevice(context, it) },
-                onClickToggleDeviceFavorite = { mainViewModel.handleToggleDeviceFavorite(it) },
-                onClickLogout = { mainViewModel.handleLogout() },
-                onClickReload = { mainViewModel.handleReload() },
+                onClickDevice = {
+                    //TODO(onClickDevice)
+                },
+                onClickToggleDeviceFavorite = {
+                    //TODO(onClickToggleDeviceFavorite)
+                },
+                onClickLogout = {
+                    //TODO(onClickLogout)
+                },
+                onClickReload = {
+                    //TODO(onClickReload)
+                },
             )
         }
     }
