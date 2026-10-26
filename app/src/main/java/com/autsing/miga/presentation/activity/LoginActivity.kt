@@ -35,13 +35,13 @@ class LoginActivity : ComponentActivity() {
             LoginScreen(
                 loginUrl = loginUrlState.collectAsState().value,
                 exception = exceptionState.collectAsState().value,
-                onRefresh = { handleRefresh() },
+                onRefresh = { handleLogin() },
             )
         }
-        handleRefresh()
+        handleLogin()
     }
 
-    private fun handleRefresh() = lifecycleScope.launch {
+    private fun handleLogin() = lifecycleScope.launch {
         runCatching {
             exceptionState.value = ""
             val deviceId = genDeviceId()
