@@ -11,12 +11,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
-import com.autsing.miga.presentation.data.requestRunScene
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -86,33 +84,35 @@ class RunSceneActivity : ComponentActivity() {
 
     private fun handleRunScene() = lifecycleScope.launch(Dispatchers.IO) {
         runCatching {
-            var auth = authRepository.getAuth().getOrNull()
-            if (auth == null) {
-                authRepository.loadLocalAuth().getOrThrow()
-                auth = authRepository.waitAuth().getOrThrow()
-            }
+            TODO("handleRunScene")
 
-            val scene = runCatching {
-                val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
-                val scenes = sceneRepository.getLocalScenes().getOrThrow()
-                scenes.first { it.scene_id == sceneId }
-            }.getOrElse { throw Exception("场景信息无效") }
-
-            var result = requestRunScene(auth, scene)
-
-            if (result.isFailure) {
-                authRepository.removeAuthSoft().getOrThrow()
-                authRepository.loadLocalAuth().getOrThrow()
-                auth = authRepository.waitAuth().getOrThrow()
-                result = requestRunScene(auth, scene)
-            }
-
-            if (result.isSuccess && result.getOrNull() == "ok") {
-                success.value = true
-                loading.value = false
-                delay(1500)
-                finish()
-            }
+//            var auth = authRepository.getAuth().getOrNull()
+//            if (auth == null) {
+//                authRepository.loadLocalAuth().getOrThrow()
+//                auth = authRepository.waitAuth().getOrThrow()
+//            }
+//
+//            val scene = runCatching {
+//                val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
+//                val scenes = sceneRepository.getLocalScenes().getOrThrow()
+//                scenes.first { it.scene_id == sceneId }
+//            }.getOrElse { throw Exception("场景信息无效") }
+//
+//            var result = requestRunScene(auth, scene)
+//
+//            if (result.isFailure) {
+//                authRepository.removeAuthSoft().getOrThrow()
+//                authRepository.loadLocalAuth().getOrThrow()
+//                auth = authRepository.waitAuth().getOrThrow()
+//                result = requestRunScene(auth, scene)
+//            }
+//
+//            if (result.isSuccess && result.getOrNull() == "ok") {
+//                success.value = true
+//                loading.value = false
+//                delay(1500)
+//                finish()
+//            }
         }.onFailure {
             success.value = false
             exception.value = it.stackTraceToString()

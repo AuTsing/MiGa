@@ -191,7 +191,7 @@ class RunActionActivity : ComponentActivity() {
             val auth = authRepository.getAuth().getOrThrow()
 
             val code = requestRunAction(
-                auth = auth,
+                auth = TODO(),
                 device = device,
                 action = action,
                 inValues = values,

@@ -12,7 +12,6 @@ import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
@@ -40,40 +39,42 @@ class DeviceViewModel : ViewModel() {
 
     fun handleLoad(deviceModel: String) = viewModelScope.launch {
         runCatching {
-            uiState = uiState.copy(loading = true)
+            TODO()
 
-            val devices = deviceRepository.getLocalDevices().getOrThrow()
-            val device = devices.find { it.model == deviceModel }
-                ?: throw Exception("读取设备失败")
-            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrNull()
-                ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
-                ?: throw Exception("读取设备信息失败")
-            val auth = authRepository.getAuth().getOrThrow()
-            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
-                .getOrThrow()
-
-            val switches = deviceProperties
-                .filter { (property, _) -> property.type == "bool" }
-                .map { (property, value) -> Component.Switch.from(property, value) }
-            val sliders = deviceProperties
-                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
-                .map { (property, value) -> Component.Slider.from(property, value) }
-            val selectors = deviceProperties
-                .filter { (property, _) -> property.values.size > 1 }
-                .map { (property, value) -> Component.Selector.from(property, value) }
-            val actions = deviceInfo.actions
-                .map { Component.Trigger.from(it) }
-
-            uiState = uiState.copy(
-                exception = "",
-                auth = auth,
-                device = device,
-                deviceInfo = deviceInfo,
-                switchComponents = switches,
-                sliderComponents = sliders,
-                selectorComponents = selectors,
-                triggerComponents = actions,
-            )
+//            uiState = uiState.copy(loading = true)
+//
+//            val devices = deviceRepository.getLocalDevices().getOrThrow()
+//            val device = devices.find { it.model == deviceModel }
+//                ?: throw Exception("读取设备失败")
+//            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrNull()
+//                ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
+//                ?: throw Exception("读取设备信息失败")
+//            val auth = authRepository.getAuth().getOrThrow()
+//            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
+//                .getOrThrow()
+//
+//            val switches = deviceProperties
+//                .filter { (property, _) -> property.type == "bool" }
+//                .map { (property, value) -> Component.Switch.from(property, value) }
+//            val sliders = deviceProperties
+//                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
+//                .map { (property, value) -> Component.Slider.from(property, value) }
+//            val selectors = deviceProperties
+//                .filter { (property, _) -> property.values.size > 1 }
+//                .map { (property, value) -> Component.Selector.from(property, value) }
+//            val actions = deviceInfo.actions
+//                .map { Component.Trigger.from(it) }
+//
+//            uiState = uiState.copy(
+//                exception = "",
+//                auth = auth,
+//                device = device,
+//                deviceInfo = deviceInfo,
+//                switchComponents = switches,
+//                sliderComponents = sliders,
+//                selectorComponents = selectors,
+//                triggerComponents = actions,
+//            )
         }.onFailure {
             uiState = uiState.copy(exception = it.stackTraceToString())
         }.also {

@@ -43,11 +43,11 @@ class LoginActivity : ComponentActivity() {
 
     private fun handleRefresh() = lifecycleScope.launch {
         runCatching {
+            exceptionState.value = ""
             val deviceId = genDeviceId()
             val respData = authRepository.getLoginUrl(deviceId).getOrThrow()
             loginUrlState.value = respData.loginUrl
-            exceptionState.value = ""
-            authRepository.loadRemoteAuth(deviceId, respData).getOrThrow()
+            authRepository.login(deviceId, respData).getOrThrow()
 
             finish()
         }.onFailure { e ->

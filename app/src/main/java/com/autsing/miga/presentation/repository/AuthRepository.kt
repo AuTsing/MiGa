@@ -3,10 +3,10 @@ package com.autsing.miga.presentation.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.api.LoginUrlRespData
-import com.autsing.miga.presentation.api.reqLoginIndex
 import com.autsing.miga.presentation.api.reqLoginLocation
 import com.autsing.miga.presentation.api.reqLoginLp
 import com.autsing.miga.presentation.api.reqLoginUrl
+import com.autsing.miga.presentation.api.reqServiceLogin
 import com.autsing.miga.presentation.data.getAuth
 import com.autsing.miga.presentation.data.setAuth
 import kotlinx.coroutines.Dispatchers
@@ -32,46 +32,32 @@ class AuthRepository(
 
     private val auth: MutableStateFlow<Auth?> = MutableStateFlow(null)
 
-    suspend fun loadLocalAuth(): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            var auth = context.getAuth().getOrThrow() ?: throw Exception("Auth is null")
-//            val profile = requestGetProfile(auth).getOrThrow()
-//
-//            if (profile.code != 0) {
-//                val location = requestGetLocation(auth).getOrThrow()
-//                val serviceToken = requestGetServiceToken(location.location).getOrThrow()
-//                auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
-//                context.setAuth(auth).getOrThrow()
-//            }
-
-            this@AuthRepository.auth.value = auth
-        }
-    }
-
     suspend fun getLoginUrl(
         deviceId: String,
     ): Result<LoginUrlRespData> = withContext(Dispatchers.IO) {
         runCatching {
-            val loginIndexRespData = reqLoginIndex(deviceId).getOrThrow()
-            val loginUrlRespData = reqLoginUrl(deviceId, loginIndexRespData).getOrThrow()
+            val loginUrlRespData = reqLoginUrl(deviceId).getOrThrow()
 
             loginUrlRespData
         }
     }
 
-    suspend fun loadRemoteAuth(
+    suspend fun login(
         deviceId: String,
         respData: LoginUrlRespData,
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val loginLpRespData = reqLoginLp(deviceId, respData).getOrThrow()
-            val serviceToken = reqLoginLocation(deviceId, loginLpRespData.location).getOrThrow()
+            val location = loginLpRespData.location
+            val cookies = reqLoginLocation(location, deviceId).getOrThrow()
+            val serviceToken = cookies["serviceToken"] ?: throw Exception("获取 serviceToken 失败")
 
             val auth = with(loginLpRespData) {
                 Auth(
                     deviceId = deviceId,
                     serviceToken = serviceToken,
                     cookies = mapOf(
+                        "deviceId" to deviceId,
                         "userId" to userId.toString(),
                         "cUserId" to cUserId,
                         "nonce" to nonce.toString(),
@@ -87,20 +73,17 @@ class AuthRepository(
         }
     }
 
-    fun getAuth(): Result<com.autsing.miga.presentation.model.Auth> = runCatching {
-        TODO("getAuth")
-    }
+    suspend fun getAuth(): Result<Auth> = runCatching {
+        var auth = context.getAuth().getOrThrow() ?: throw Exception("未登录")
 
-    suspend fun waitAuth(): Result<com.autsing.miga.presentation.model.Auth> = runCatching {
-        TODO("getAuth")
-    }
+        val serviceLoginRespData = reqServiceLogin(auth).getOrThrow()
+        val location = serviceLoginRespData.location
+        val cookies = reqLoginLocation(location, auth).getOrThrow()
 
-    fun removeAuthSoft(): Result<Unit> = runCatching {
-        auth.value = null
-    }
+        auth = auth.copy(
+            cookies = auth.cookies.toMutableMap().apply { cookies.forEach { (k, v) -> set(k, v) } },
+        )
 
-    suspend fun removeAuthHard(): Result<Unit> = runCatching {
-        context.setAuth(null).getOrThrow()
-        auth.value = null
+        auth
     }
 }

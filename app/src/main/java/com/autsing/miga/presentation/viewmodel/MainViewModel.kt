@@ -10,7 +10,6 @@ import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
-import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
@@ -18,7 +17,6 @@ import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.tile.MainTileService
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 data class MainUiState(
@@ -51,26 +49,28 @@ class MainViewModel : ViewModel() {
 
     fun handleLoadAuth() = viewModelScope.launch {
         runCatching {
-            uiState = uiState.copy(authLoading = true)
+            TODO()
 
-            authRepository.loadLocalAuth().getOrNull()
-            var auth = authRepository.getAuth().getOrNull()
-
-            uiState = uiState.copy(
-                authLoading = false,
-                auth = auth,
-            )
-
-            if (auth != null) {
-                return@runCatching
-            }
-
-            auth = authRepository.waitAuth().getOrThrow()
-
-            uiState = uiState.copy(
-                authLoading = false,
-                auth = auth,
-            )
+//            uiState = uiState.copy(authLoading = true)
+//
+//            authRepository.loadLocalAuth().getOrNull()
+//            var auth = authRepository.getAuth().getOrNull()
+//
+//            uiState = uiState.copy(
+//                authLoading = false,
+//                auth = auth,
+//            )
+//
+//            if (auth != null) {
+//                return@runCatching
+//            }
+//
+//            auth = authRepository.waitAuth().getOrThrow()
+//
+//            uiState = uiState.copy(
+//                authLoading = false,
+//                auth = auth,
+//            )
         }.onFailure { e ->
             uiState = uiState.copy(
                 authLoading = false,
@@ -81,27 +81,29 @@ class MainViewModel : ViewModel() {
 
     private fun handleLoadScenes() = viewModelScope.launch {
         runCatching {
-            uiState = uiState.copy(sceneLoading = true)
+            TODO()
 
-            val locals = Pair(
-                async { sceneRepository.getLocalScenes().getOrThrow() },
-                async { sceneRepository.getFavoriteSceneIds().getOrThrow() },
-            )
-            val localScenes = locals.first.await()
-            val favoriteSceneIds = locals.second.await()
-
-            uiState = uiState.copy(
-                scenes = localScenes,
-                favoriteSceneIds = favoriteSceneIds,
-            )
-
-            val auth = authRepository.waitAuth().getOrThrow()
-            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrDefault()
-
-            uiState = uiState.copy(
-                sceneLoading = false,
-                scenes = remoteScenes,
-            )
+//            uiState = uiState.copy(sceneLoading = true)
+//
+//            val locals = Pair(
+//                async { sceneRepository.getLocalScenes().getOrThrow() },
+//                async { sceneRepository.getFavoriteSceneIds().getOrThrow() },
+//            )
+//            val localScenes = locals.first.await()
+//            val favoriteSceneIds = locals.second.await()
+//
+//            uiState = uiState.copy(
+//                scenes = localScenes,
+//                favoriteSceneIds = favoriteSceneIds,
+//            )
+//
+//            val auth = authRepository.waitAuth().getOrThrow()
+//            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrDefault()
+//
+//            uiState = uiState.copy(
+//                sceneLoading = false,
+//                scenes = remoteScenes,
+//            )
         }.onFailure { e ->
             uiState = uiState.copy(
                 sceneLoading = false,
@@ -112,33 +114,35 @@ class MainViewModel : ViewModel() {
 
     private fun handleLoadDevices() = viewModelScope.launch {
         runCatching {
-            uiState = uiState.copy(deviceLoading = true)
+            TODO()
 
-            val locals = Triple(
-                async { deviceRepository.getLocalDevices().getOrThrow() },
-                async { deviceRepository.getFavoriteDeviceIds().getOrThrow() },
-                async { deviceRepository.getLocalDeviceIconUrls().getOrThrow() },
-            )
-            val localDevices = locals.first.await()
-            val favoriteDeviceIds = locals.second.await()
-            val localDeviceIconUrls = locals.third.await()
-
-            uiState = uiState.copy(
-                devices = localDevices,
-                favoriteDeviceIds = favoriteDeviceIds,
-                deviceIconUrls = localDeviceIconUrls,
-            )
-
-            val auth = authRepository.waitAuth().getOrThrow()
-            val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
-            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
-                .getOrDefault()
-
-            uiState = uiState.copy(
-                deviceLoading = false,
-                devices = remoteDevices,
-                deviceIconUrls = remoteDeviceIconUrls,
-            )
+//            uiState = uiState.copy(deviceLoading = true)
+//
+//            val locals = Triple(
+//                async { deviceRepository.getLocalDevices().getOrThrow() },
+//                async { deviceRepository.getFavoriteDeviceIds().getOrThrow() },
+//                async { deviceRepository.getLocalDeviceIconUrls().getOrThrow() },
+//            )
+//            val localDevices = locals.first.await()
+//            val favoriteDeviceIds = locals.second.await()
+//            val localDeviceIconUrls = locals.third.await()
+//
+//            uiState = uiState.copy(
+//                devices = localDevices,
+//                favoriteDeviceIds = favoriteDeviceIds,
+//                deviceIconUrls = localDeviceIconUrls,
+//            )
+//
+//            val auth = authRepository.waitAuth().getOrThrow()
+//            val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
+//            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
+//                .getOrDefault()
+//
+//            uiState = uiState.copy(
+//                deviceLoading = false,
+//                devices = remoteDevices,
+//                deviceIconUrls = remoteDeviceIconUrls,
+//            )
         }.onFailure { e ->
             uiState = uiState.copy(
                 deviceLoading = false,
@@ -206,7 +210,8 @@ class MainViewModel : ViewModel() {
         runCatching {
             uiState = uiState.copy(authLoading = true)
 
-            authRepository.removeAuthHard().getOrThrow()
+            TODO()
+//            authRepository.removeAuthHard().getOrThrow()
 
             uiState = uiState.copy(
                 authLoading = false,
