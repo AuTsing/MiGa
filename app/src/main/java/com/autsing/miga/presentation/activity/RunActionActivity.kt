@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
-import com.autsing.miga.presentation.data.requestRunAction
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.DeviceInfo
 import com.autsing.miga.presentation.model.DevicePropertyRange
@@ -15,7 +14,6 @@ import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -169,42 +167,42 @@ class RunActionActivity : ComponentActivity() {
     }
 
     private fun handleRunAction() = lifecycleScope.launch {
-        runCatching {
-            loading.value = true
-
-            val values = properties
-                .mapNotNull { property ->
-                    sliders.value.find { it.property == property }
-                        ?: selectors.value.find { it.property == property }
-                }
-                .map {
-                    when (it) {
-                        is Component.Slider -> it.range.getValueOfPercentage(it.value)
-                        is Component.Selector -> it.values[it.value].value
-                        else -> DevicePropertyValue.None
-                    }
-                }
-
-            val devices = deviceRepository.getLocalDevices().getOrThrow()
-            val device = devices.find { it.model == deviceModel }
-                ?: throw Exception("读取设备失败")
-            val auth = authRepository.getAuth().getOrThrow()
-
-            val code = requestRunAction(
-                auth = TODO(),
-                device = device,
-                action = action,
-                inValues = values,
-            ).getOrThrow()
-
-            message.value = "Code: $code"
-            loading.value = false
-            delay(1000)
-            finish()
-        }.onFailure {
-            message.value = it.stackTraceToString()
-            loading.value = false
-        }
+//        runCatching {
+//            loading.value = true
+//
+//            val values = properties
+//                .mapNotNull { property ->
+//                    sliders.value.find { it.property == property }
+//                        ?: selectors.value.find { it.property == property }
+//                }
+//                .map {
+//                    when (it) {
+//                        is Component.Slider -> it.range.getValueOfPercentage(it.value)
+//                        is Component.Selector -> it.values[it.value].value
+//                        else -> DevicePropertyValue.None
+//                    }
+//                }
+//
+//            val devices = deviceRepository.getLocalDevices().getOrThrow()
+//            val device = devices.find { it.model == deviceModel }
+//                ?: throw Exception("读取设备失败")
+//            val auth = authRepository.getAuth().getOrThrow()
+//
+//            val code = requestRunAction(
+//                auth = TODO(),
+//                device = device,
+//                action = action,
+//                inValues = values,
+//            ).getOrThrow()
+//
+//            message.value = "Code: $code"
+//            loading.value = false
+//            delay(1000)
+//            finish()
+//        }.onFailure {
+//            message.value = it.stackTraceToString()
+//            loading.value = false
+//        }
     }
 
     private fun handleClickBack() = lifecycleScope.launch {

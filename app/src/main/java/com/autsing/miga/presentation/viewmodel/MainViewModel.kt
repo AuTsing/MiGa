@@ -1,22 +1,20 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.autsing.miga.complication.FavoriteSceneComplicationService
-import com.autsing.miga.presentation.activity.DeviceActivity
-import com.autsing.miga.presentation.activity.LoginActivity
-import com.autsing.miga.presentation.activity.RunSceneActivity
-import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
+import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.repository.SceneRepository
-import com.autsing.miga.tile.MainTileService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class MainUiState(
@@ -38,8 +36,8 @@ class MainViewModel : ViewModel() {
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
 
-    var uiState: MainUiState by mutableStateOf(MainUiState())
-        private set
+    private val _uiState: MutableStateFlow<MainUiState> = MutableStateFlow(MainUiState())
+    val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     init {
         handleLoadAuth()
@@ -49,40 +47,48 @@ class MainViewModel : ViewModel() {
 
     fun handleLoadAuth() = viewModelScope.launch {
         runCatching {
-            TODO()
+            _uiState.update { it.copy(authLoading = true) }
 
-//            uiState = uiState.copy(authLoading = true)
-//
-//            authRepository.loadLocalAuth().getOrNull()
-//            var auth = authRepository.getAuth().getOrNull()
-//
-//            uiState = uiState.copy(
-//                authLoading = false,
-//                auth = auth,
-//            )
-//
-//            if (auth != null) {
-//                return@runCatching
-//            }
-//
-//            auth = authRepository.waitAuth().getOrThrow()
-//
-//            uiState = uiState.copy(
-//                authLoading = false,
-//                auth = auth,
-//            )
+            authRepository.getValidAuth()
+                .onSuccess { auth ->
+                    _uiState.update {
+                        it.copy(
+                            authLoading = false,
+                            auth = auth,
+                        )
+                    }
+                    return@runCatching
+                }
+                .onFailure { e ->
+                    if (e.message == "未登录") {
+                        _uiState.update {
+                            it.copy(
+                                authLoading = false,
+                                auth = null,
+                            )
+                        }
+                    }
+                }
+
+            val auth = authRepository.observeAuth().filterNotNull().first()
+            _uiState.update {
+                it.copy(
+                    authLoading = false,
+                    auth = auth,
+                )
+            }
         }.onFailure { e ->
-            uiState = uiState.copy(
-                authLoading = false,
-                message = e.message ?: e.stackTraceToString(),
-            )
+            _uiState.update {
+                it.copy(
+                    authLoading = false,
+                    message = e.message ?: e.stackTraceToString(),
+                )
+            }
         }
     }
 
     private fun handleLoadScenes() = viewModelScope.launch {
-        runCatching {
-            TODO()
-
+//        runCatching {
 //            uiState = uiState.copy(sceneLoading = true)
 //
 //            val locals = Pair(
@@ -104,18 +110,16 @@ class MainViewModel : ViewModel() {
 //                sceneLoading = false,
 //                scenes = remoteScenes,
 //            )
-        }.onFailure { e ->
-            uiState = uiState.copy(
-                sceneLoading = false,
-                message = e.message ?: e.stackTraceToString(),
-            )
-        }
+//        }.onFailure { e ->
+//            uiState = uiState.copy(
+//                sceneLoading = false,
+//                message = e.message ?: e.stackTraceToString(),
+//            )
+//        }
     }
 
     private fun handleLoadDevices() = viewModelScope.launch {
-        runCatching {
-            TODO()
-
+//        runCatching {
 //            uiState = uiState.copy(deviceLoading = true)
 //
 //            val locals = Triple(
@@ -143,89 +147,78 @@ class MainViewModel : ViewModel() {
 //                devices = remoteDevices,
 //                deviceIconUrls = remoteDeviceIconUrls,
 //            )
-        }.onFailure { e ->
-            uiState = uiState.copy(
-                deviceLoading = false,
-                message = e.message ?: e.stackTraceToString(),
-            )
-        }
-    }
-
-    fun handleNavigateToLogin(context: Context) = viewModelScope.launch {
-        LoginActivity.startActivity(context)
-    }
-
-    fun handleRunScene(context: Context, scene: Scene) = viewModelScope.launch {
-        RunSceneActivity.startActivity(context, scene.scene_id)
+//        }.onFailure { e ->
+//            uiState = uiState.copy(
+//                deviceLoading = false,
+//                message = e.message ?: e.stackTraceToString(),
+//            )
+//        }
     }
 
     fun handleToggleSceneFavorite(context: Context, scene: Scene) = viewModelScope.launch {
-        runCatching {
-            val favoriteSceneIds = uiState.favoriteSceneIds
-                .toMutableList()
-                .apply {
-                    if (scene.scene_id in this) {
-                        remove(scene.scene_id)
-                    } else {
-                        add(scene.scene_id)
-                    }
-                }
-
-            uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)
-
-            sceneRepository.setFavoriteSceneIds(favoriteSceneIds).getOrThrow()
-
-            MainTileService.requestUpdate(context)
-            FavoriteSceneComplicationService.requestUpdate(context)
-        }.onFailure { e ->
-            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
-        }
+//        runCatching {
+//            val favoriteSceneIds = uiState.favoriteSceneIds
+//                .toMutableList()
+//                .apply {
+//                    if (scene.scene_id in this) {
+//                        remove(scene.scene_id)
+//                    } else {
+//                        add(scene.scene_id)
+//                    }
+//                }
+//
+//            uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)
+//
+//            sceneRepository.setFavoriteSceneIds(favoriteSceneIds).getOrThrow()
+//
+//            MainTileService.requestUpdate(context)
+//            FavoriteSceneComplicationService.requestUpdate(context)
+//        }.onFailure { e ->
+//            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
+//        }
     }
 
     fun handleToggleDeviceFavorite(device: Device) = viewModelScope.launch {
-        runCatching {
-            val favoriteDeviceIds = uiState.favoriteDeviceIds
-                .toMutableList()
-                .apply {
-                    if (device.did in this) {
-                        remove(device.did)
-                    } else {
-                        add(device.did)
-                    }
-                }
-
-            uiState = uiState.copy(favoriteDeviceIds = favoriteDeviceIds)
-
-            deviceRepository.setFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
-        }.onFailure { e ->
-            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
-        }
-    }
-
-    fun handleOpenDevice(context: Context, device: Device) {
-        DeviceActivity.startActivity(context, device.model)
+//        runCatching {
+//            val favoriteDeviceIds = uiState.favoriteDeviceIds
+//                .toMutableList()
+//                .apply {
+//                    if (device.did in this) {
+//                        remove(device.did)
+//                    } else {
+//                        add(device.did)
+//                    }
+//                }
+//
+//            uiState = uiState.copy(favoriteDeviceIds = favoriteDeviceIds)
+//
+//            deviceRepository.setFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
+//        }.onFailure { e ->
+//            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
+//        }
     }
 
     fun handleLogout() = viewModelScope.launch {
         runCatching {
-            uiState = uiState.copy(authLoading = true)
+            _uiState.update { it.copy(authLoading = true) }
 
-            TODO()
-//            authRepository.removeAuthHard().getOrThrow()
+            authRepository.logout().getOrThrow()
 
-            uiState = uiState.copy(
-                authLoading = false,
-                auth = null,
-                scenes = emptyList(),
-                devices = emptyList(),
-            )
+            _uiState.update {
+                it.copy(
+                    authLoading = false,
+                    auth = null,
+                    scenes = emptyList(),
+                    devices = emptyList(),
+                )
+            }
         }.onFailure { e ->
-            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
+            _uiState.update {
+                it.copy(
+                    authLoading = false,
+                    message = e.message ?: e.stackTraceToString(),
+                )
+            }
         }
-    }
-
-    fun handleReload() {
-        handleLoadScenes()
-        handleLoadDevices()
     }
 }

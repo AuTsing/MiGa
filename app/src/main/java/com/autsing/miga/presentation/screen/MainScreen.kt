@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.Button
@@ -52,30 +54,31 @@ import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.model.sort
-import com.autsing.miga.presentation.viewmodel.MainUiState
+import com.autsing.miga.presentation.viewmodel.MainViewModel
 import kotlin.math.max
 
 @Composable
-fun MainScreen(state: MainUiState) {
+fun MainScreen(viewModel: MainViewModel) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     FullScreenBox {
-        if (state.authLoading) {
+        if (uiState.authLoading) {
             LoadingContent("加载中...")
-        } else if (state.auth == null) {
+        } else if (uiState.auth == null) {
             LoginContent(
-                onClickLogin = { LoginActivity.startActivity(context) }
+                onClickLogin = { LoginActivity.startActivity(context) },
             )
         } else {
             MainContent(
-                sceneLoading = state.sceneLoading,
-                deviceLoading = state.deviceLoading,
-                message = state.message,
-                scenes = state.scenes,
-                devices = state.devices,
-                favoriteSceneIds = state.favoriteSceneIds,
-                favoriteDeviceIds = state.favoriteDeviceIds,
-                deviceIconUrls = state.deviceIconUrls,
+                sceneLoading = uiState.sceneLoading,
+                deviceLoading = uiState.deviceLoading,
+                message = uiState.message,
+                scenes = uiState.scenes,
+                devices = uiState.devices,
+                favoriteSceneIds = uiState.favoriteSceneIds,
+                favoriteDeviceIds = uiState.favoriteDeviceIds,
+                deviceIconUrls = uiState.deviceIconUrls,
                 onClickScene = { RunSceneActivity.startActivity(context, it.scene_id) },
                 onClickToggleSceneFavorite = {
                     //TODO(onClickToggleSceneFavorite)
@@ -86,9 +89,7 @@ fun MainScreen(state: MainUiState) {
                 onClickToggleDeviceFavorite = {
                     //TODO(onClickToggleDeviceFavorite)
                 },
-                onClickLogout = {
-                    //TODO(onClickLogout)
-                },
+                onClickLogout = { viewModel.handleLogout() },
                 onClickReload = {
                     //TODO(onClickReload)
                 },
