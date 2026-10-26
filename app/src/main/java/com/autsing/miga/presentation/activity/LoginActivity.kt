@@ -7,8 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
+import com.autsing.miga.presentation.api.genDeviceId
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.screen.LoginScreen
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -41,13 +43,18 @@ class LoginActivity : ComponentActivity() {
 
     private fun handleRefresh() = lifecycleScope.launch {
         runCatching {
-            val resp = authRepository.getLoginUrl().getOrThrow()
-            loginUrlState.value = resp.loginUrl
-            authRepository.loadRemoteAuth(resp).getOrThrow()
+            val deviceId = genDeviceId()
+            val respData = authRepository.getLoginUrl(deviceId).getOrThrow()
+            loginUrlState.value = respData.loginUrl
+            exceptionState.value = ""
+            authRepository.loadRemoteAuth(deviceId, respData).getOrThrow()
 
             finish()
-        }.onFailure {
-            exceptionState.value = "登录失败: ${it.message}"
+        }.onFailure { e ->
+            when (e) {
+                is HttpRequestTimeoutException -> exceptionState.value = "登录超时"
+                else -> exceptionState.value = "登录失败: ${e.message}"
+            }
         }
     }
 }

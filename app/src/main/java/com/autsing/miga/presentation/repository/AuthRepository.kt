@@ -2,22 +2,24 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.autsing.miga.presentation.api.LoginUrlRespData
+import com.autsing.miga.presentation.api.reqLoginIndex
+import com.autsing.miga.presentation.api.reqLoginLocation
+import com.autsing.miga.presentation.api.reqLoginLp
+import com.autsing.miga.presentation.api.reqLoginUrl
 import com.autsing.miga.presentation.data.getAuth
-import com.autsing.miga.presentation.data.getDeviceId
-import com.autsing.miga.presentation.data.requestGetLocation
-import com.autsing.miga.presentation.data.requestGetLoginIndex
-import com.autsing.miga.presentation.data.requestGetLoginLpResponse
-import com.autsing.miga.presentation.data.requestGetLoginUrl
-import com.autsing.miga.presentation.data.requestGetProfile
-import com.autsing.miga.presentation.data.requestGetServiceToken
 import com.autsing.miga.presentation.data.setAuth
-import com.autsing.miga.presentation.model.Auth
-import com.autsing.miga.presentation.model.LoginUrlResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Auth(
+    val deviceId: String,
+    val serviceToken: String,
+    val cookies: Map<String, String>,
+)
 
 class AuthRepository(
     private val context: Context,
@@ -32,45 +34,51 @@ class AuthRepository(
 
     suspend fun loadLocalAuth(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            var auth = context.getAuth().getOrThrow() ?: throw NullPointerException("Auth is null")
-            val profile = requestGetProfile(auth).getOrThrow()
-
-            if (profile.code != 0) {
-                val location = requestGetLocation(auth).getOrThrow()
-                val serviceToken = requestGetServiceToken(location.location).getOrThrow()
-                auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
-                context.setAuth(auth).getOrThrow()
-            }
+            var auth = context.getAuth().getOrThrow() ?: throw Exception("Auth is null")
+//            val profile = requestGetProfile(auth).getOrThrow()
+//
+//            if (profile.code != 0) {
+//                val location = requestGetLocation(auth).getOrThrow()
+//                val serviceToken = requestGetServiceToken(location.location).getOrThrow()
+//                auth = auth.copy(serviceToken = serviceToken, ssecurity = location.ssecurity)
+//                context.setAuth(auth).getOrThrow()
+//            }
 
             this@AuthRepository.auth.value = auth
         }
     }
 
-    suspend fun getLoginUrl(): Result<LoginUrlResponse> = withContext(Dispatchers.IO) {
+    suspend fun getLoginUrl(
+        deviceId: String,
+    ): Result<LoginUrlRespData> = withContext(Dispatchers.IO) {
         runCatching {
-            val loginIndexResponse = requestGetLoginIndex().getOrThrow()
-            val loginUrlResponse = requestGetLoginUrl(loginIndexResponse).getOrThrow()
+            val loginIndexRespData = reqLoginIndex(deviceId).getOrThrow()
+            val loginUrlRespData = reqLoginUrl(deviceId, loginIndexRespData).getOrThrow()
 
-            loginUrlResponse
+            loginUrlRespData
         }
     }
 
-    suspend fun loadRemoteAuth(resp: LoginUrlResponse): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun loadRemoteAuth(
+        deviceId: String,
+        respData: LoginUrlRespData,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val loginLpResponse = requestGetLoginLpResponse(resp).getOrThrow()
-            val serviceToken = requestGetServiceToken(loginLpResponse.location).getOrThrow()
-            val deviceId = getDeviceId()
+            val loginLpRespData = reqLoginLp(deviceId, respData).getOrThrow()
+            val serviceToken = reqLoginLocation(deviceId, loginLpRespData.location).getOrThrow()
 
-            val auth = with(loginLpResponse) {
+            val auth = with(loginLpRespData) {
                 Auth(
                     deviceId = deviceId,
                     serviceToken = serviceToken,
-                    userId = userId,
-                    cUserId = cUserId,
-                    nonce = nonce,
-                    ssecurity = ssecurity,
-                    psecurity = psecurity,
-                    passToken = passToken,
+                    cookies = mapOf(
+                        "userId" to userId.toString(),
+                        "cUserId" to cUserId,
+                        "nonce" to nonce.toString(),
+                        "ssecurity" to ssecurity,
+                        "psecurity" to psecurity,
+                        "passToken" to passToken,
+                    ),
                 )
             }
 
@@ -79,11 +87,13 @@ class AuthRepository(
         }
     }
 
-    fun getAuth(): Result<Auth> = runCatching {
-        auth.value ?: throw NullPointerException("Auth is null")
+    fun getAuth(): Result<com.autsing.miga.presentation.model.Auth> = runCatching {
+        TODO("getAuth")
     }
 
-    suspend fun waitAuth(): Result<Auth> = runCatching { auth.filterNotNull().first() }
+    suspend fun waitAuth(): Result<com.autsing.miga.presentation.model.Auth> = runCatching {
+        TODO("getAuth")
+    }
 
     fun removeAuthSoft(): Result<Unit> = runCatching {
         auth.value = null

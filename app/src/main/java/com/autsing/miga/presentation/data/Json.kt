@@ -8,7 +8,7 @@ val defaultJson = Json {
 }
 
 inline fun <reified T> String.decode(): Result<T> = runCatching {
-    defaultJson.decodeFromString<T>(this)
+    defaultJson.decodeFromString<T>(replace("&&&START&&&", ""))
 }
 
 inline fun <reified T> T.encode(): Result<String> = runCatching { defaultJson.encodeToString(this) }
