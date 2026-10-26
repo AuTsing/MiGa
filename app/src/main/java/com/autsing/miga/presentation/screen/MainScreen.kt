@@ -52,8 +52,9 @@ import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PairButtons
 import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.model.sort
+import com.autsing.miga.presentation.repository.Scene
+import com.autsing.miga.presentation.repository.sort
 import com.autsing.miga.presentation.viewmodel.MainViewModel
 import kotlin.math.max
 

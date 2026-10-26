@@ -12,10 +12,6 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.ANDROID
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.cookie
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -24,7 +20,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
-import java.time.Instant
+import java.time.Instant.now
 
 private val client: HttpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -37,10 +33,6 @@ private val client: HttpClient = HttpClient(CIO) {
         requestTimeoutMillis = 60000L
         connectTimeoutMillis = 60000L
         socketTimeoutMillis = 60000L
-    }
-    install(Logging) {
-        logger = Logger.ANDROID
-        level = LogLevel.ALL
     }
     defaultRequest {
         header("User-Agent", USER_AGENT)
@@ -98,7 +90,7 @@ suspend fun reqLoginUrl(deviceId: String): Result<LoginUrlRespData> = runCatchin
         "serviceParam" to locationUrl.getQueryParameter("serviceParam"),
         "_local" to "zh_CN",
         "_sign" to serviceLoginRespData._sign,
-        "_dc" to (Instant.now().toEpochMilli()).toString(),
+        "_dc" to now().toEpochMilli().toString(),
     )
     val loginUrl = LOGIN_URL.toUri()
         .buildUpon()

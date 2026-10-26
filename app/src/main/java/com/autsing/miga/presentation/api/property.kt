@@ -1,40 +1,10 @@
 package com.autsing.miga.presentation.api
 
+import java.security.MessageDigest
+import java.util.Base64
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 import kotlin.random.Random.Default.nextInt
-
-private fun randomHex(length: Int): String {
-    val chars = "0123456789ABCDEF"
-    val value = buildString(length) {
-        repeat(length) {
-            append(chars[nextInt(chars.length)])
-        }
-    }
-
-    return value
-}
-
-fun genPassO(): String {
-    val chars = "0123456789abcdef"
-    val value = buildString(16) {
-        repeat(16) {
-            append(chars[nextInt(chars.length)])
-        }
-    }
-
-    return value
-}
-
-fun genUserAgent(po: String): String {
-    val uaId1 = randomHex(40)
-    val uaId2 = randomHex(32)
-    val uaId3 = randomHex(32)
-    val uaId4 = randomHex(40)
-
-    val ua = "Android-15-11.0.701-Xiaomi-23046RP50C-OS2.0.212.0.VMYCNXM-" +
-            "$uaId1-CN-$uaId3-$uaId2-SmartHome-MI_APP_STORE-$uaId1|$uaId4|$po-64"
-
-    return ua
-}
 
 fun genDeviceId(): String {
     val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-"
@@ -43,6 +13,39 @@ fun genDeviceId(): String {
             append(chars[nextInt(chars.length)])
         }
     }
+
+    return value
+}
+
+fun genNonce(length: Int = 16): String {
+    val chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    val value = (1..length)
+        .map { chars.random() }
+        .joinToString("")
+
+    return value
+}
+
+fun genSignedNonce(secret: String, nonce: String): String {
+    val messageDigest = MessageDigest.getInstance("SHA-256")
+    messageDigest.update(Base64.getDecoder().decode(secret))
+    messageDigest.update(Base64.getDecoder().decode(nonce))
+    val value = Base64.getEncoder().encodeToString(messageDigest.digest())
+
+    return value
+}
+
+fun genSignature(
+    uri: String,
+    signedNonce: String,
+    nonce: String,
+    data: String,
+): String {
+    val hmac = Mac.getInstance("HmacSHA256")
+    val sign = "$uri&$signedNonce&$nonce&data=$data"
+    val key = SecretKeySpec(Base64.getDecoder().decode(signedNonce), "HmacSHA256")
+    hmac.init(key)
+    val value = Base64.getEncoder().encodeToString(hmac.doFinal(sign.toByteArray(Charsets.UTF_8)))
 
     return value
 }

@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.repository.Auth
+import com.autsing.miga.presentation.repository.Scene
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 

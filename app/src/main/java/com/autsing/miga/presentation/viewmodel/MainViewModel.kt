@@ -3,12 +3,15 @@ package com.autsing.miga.presentation.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.Scene
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
+import com.autsing.miga.presentation.repository.Scene
 import com.autsing.miga.presentation.repository.SceneRepository
+import com.autsing.miga.tile.MainTileService
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,8 +36,8 @@ data class MainUiState(
 class MainViewModel : ViewModel() {
 
     private val authRepository: AuthRepository = AuthRepository.instance
-    private val deviceRepository: DeviceRepository = DeviceRepository.instance
     private val sceneRepository: SceneRepository = SceneRepository.instance
+    private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
     private val _uiState: MutableStateFlow<MainUiState> = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -71,6 +74,7 @@ class MainViewModel : ViewModel() {
                 }
 
             val auth = authRepository.observeAuth().filterNotNull().first()
+
             _uiState.update {
                 it.copy(
                     authLoading = false,
@@ -88,34 +92,41 @@ class MainViewModel : ViewModel() {
     }
 
     private fun handleLoadScenes() = viewModelScope.launch {
-//        runCatching {
-//            uiState = uiState.copy(sceneLoading = true)
-//
-//            val locals = Pair(
-//                async { sceneRepository.getLocalScenes().getOrThrow() },
-//                async { sceneRepository.getFavoriteSceneIds().getOrThrow() },
-//            )
-//            val localScenes = locals.first.await()
-//            val favoriteSceneIds = locals.second.await()
-//
-//            uiState = uiState.copy(
-//                scenes = localScenes,
-//                favoriteSceneIds = favoriteSceneIds,
-//            )
-//
-//            val auth = authRepository.waitAuth().getOrThrow()
-//            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrDefault()
-//
-//            uiState = uiState.copy(
-//                sceneLoading = false,
-//                scenes = remoteScenes,
-//            )
-//        }.onFailure { e ->
-//            uiState = uiState.copy(
-//                sceneLoading = false,
-//                message = e.message ?: e.stackTraceToString(),
-//            )
-//        }
+        runCatching {
+            _uiState.update { it.copy(sceneLoading = true) }
+
+            val locals = Pair(
+                async { sceneRepository.getLocalScenes().getOrThrow() },
+                async { sceneRepository.getFavoriteSceneIds().getOrThrow() },
+            )
+            val localScenes = locals.first.await()
+            val favoriteSceneIds = locals.second.await()
+
+            _uiState.update {
+                it.copy(
+                    scenes = localScenes,
+                    favoriteSceneIds = favoriteSceneIds,
+                )
+            }
+
+            val auth = authRepository.observeAuth().filterNotNull().first()
+            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrNull()
+                ?: return@runCatching
+
+            _uiState.update {
+                it.copy(
+                    sceneLoading = false,
+                    scenes = remoteScenes,
+                )
+            }
+        }.onFailure { e ->
+            _uiState.update {
+                it.copy(
+                    sceneLoading = false,
+                    message = e.message ?: e.stackTraceToString(),
+                )
+            }
+        }
     }
 
     private fun handleLoadDevices() = viewModelScope.launch {
@@ -156,26 +167,26 @@ class MainViewModel : ViewModel() {
     }
 
     fun handleToggleSceneFavorite(context: Context, scene: Scene) = viewModelScope.launch {
-//        runCatching {
-//            val favoriteSceneIds = uiState.favoriteSceneIds
-//                .toMutableList()
-//                .apply {
-//                    if (scene.scene_id in this) {
-//                        remove(scene.scene_id)
-//                    } else {
-//                        add(scene.scene_id)
-//                    }
-//                }
-//
-//            uiState = uiState.copy(favoriteSceneIds = favoriteSceneIds)
-//
-//            sceneRepository.setFavoriteSceneIds(favoriteSceneIds).getOrThrow()
-//
-//            MainTileService.requestUpdate(context)
-//            FavoriteSceneComplicationService.requestUpdate(context)
-//        }.onFailure { e ->
-//            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
-//        }
+        runCatching {
+            val ids = _uiState.value.favoriteSceneIds
+                .toMutableList()
+                .apply {
+                    if (scene.scene_id in this) {
+                        remove(scene.scene_id)
+                    } else {
+                        add(scene.scene_id)
+                    }
+                }
+
+            _uiState.update { it.copy(favoriteSceneIds = ids) }
+
+            sceneRepository.setFavoriteSceneIds(ids).getOrThrow()
+
+            MainTileService.requestUpdate(context)
+            FavoriteSceneComplicationService.requestUpdate(context)
+        }.onFailure { e ->
+            _uiState.update { it.copy(message = e.message ?: e.stackTraceToString()) }
+        }
     }
 
     fun handleToggleDeviceFavorite(device: Device) = viewModelScope.launch {
