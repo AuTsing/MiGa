@@ -178,3 +178,30 @@ suspend fun reqGetDeviceIconUrl(model: String): Result<String> = runCatching {
 
     realIcon
 }
+
+@Serializable
+data class RunSceneReqData(
+    val scene_id: String,
+    val trigger_key: String,
+)
+
+@Serializable
+data class RunSceneRespData(
+    val code: Int,
+    val message: String,
+    val result: Boolean,
+)
+
+suspend fun reqRunScene(auth: Auth, scene: Scene): Result<String> = runCatching {
+    val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
+    val data = RunSceneReqData(
+        scene_id = scene.scene_id,
+        trigger_key = "user.click",
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val runSceneResp = resp.body<RunSceneRespData>()
+    val message = runSceneResp.message
+
+    message
+}

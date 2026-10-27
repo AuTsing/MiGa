@@ -45,6 +45,7 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
 import com.autsing.miga.R
+import com.autsing.miga.presentation.activity.DeviceActivity
 import com.autsing.miga.presentation.activity.LoginActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
 import com.autsing.miga.presentation.component.FullScreenBox
@@ -80,9 +81,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 favoriteDeviceIds = uiState.favoriteDeviceIds,
                 deviceIconUrls = uiState.deviceIconUrls,
                 onClickScene = { RunSceneActivity.startActivity(context, it.scene_id) },
-                onClickDevice = {
-                    //TODO("onClickDevice")
-                },
+                onClickDevice = { DeviceActivity.startActivity(context, it.model) },
                 onClickReload = { viewModel.handleReload() },
                 onClickLogout = { viewModel.handleLogout() },
                 onLongClickScene = { viewModel.handleToggleSceneFavorite(context, it) },

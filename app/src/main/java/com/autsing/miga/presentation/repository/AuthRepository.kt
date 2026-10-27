@@ -2,13 +2,11 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import com.autsing.miga.presentation.api.LoginUrlRespData
 import com.autsing.miga.presentation.api.reqLoginLocation
 import com.autsing.miga.presentation.api.reqLoginLp
 import com.autsing.miga.presentation.api.reqLoginUrl
 import com.autsing.miga.presentation.api.reqServiceLogin
-import com.autsing.miga.presentation.data.TAG
 import com.autsing.miga.presentation.data.getAuth
 import com.autsing.miga.presentation.data.setAuth
 import kotlinx.coroutines.Dispatchers
@@ -65,8 +63,6 @@ class AuthRepository(
 
         context.setAuth(auth).getOrThrow()
         this@AuthRepository.auth.value = auth
-
-        Log.d(TAG, "getAuth: $auth")
     }
 
     suspend fun logout(): Result<Unit> = runCatching {
@@ -91,7 +87,6 @@ class AuthRepository(
             context.setAuth(newAuth).getOrThrow()
             this@AuthRepository.auth.value = newAuth
 
-            Log.d(TAG, "getAuth: $newAuth")
             newAuth
         }
     }

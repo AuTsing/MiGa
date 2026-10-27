@@ -6,17 +6,19 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
+import com.autsing.miga.presentation.api.reqRunScene
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class RunSceneActivity : ComponentActivity() {
 
@@ -72,9 +74,9 @@ class RunSceneActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val loading = loading.collectAsState()
-            val success = success.collectAsState()
-            val exception = exception.collectAsState()
+            val loading = loading.collectAsStateWithLifecycle()
+            val success = success.collectAsStateWithLifecycle()
+            val exception = exception.collectAsStateWithLifecycle()
 
             RunSceneScreen(loading.value, success.value, exception.value)
         }
@@ -82,37 +84,24 @@ class RunSceneActivity : ComponentActivity() {
         handleRunScene()
     }
 
-    private fun handleRunScene() = lifecycleScope.launch(Dispatchers.IO) {
+    private fun handleRunScene() = lifecycleScope.launch {
         runCatching {
-            TODO("handleRunScene")
+            val auth = authRepository.getValidAuth().getOrThrow()
+            val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: throw Exception("场景信息无效")
+            val scene = sceneRepository.getLocalScenes().getOrThrow()
+                .firstOrNull { it.scene_id == sceneId }
+                ?: throw Exception("场景信息无效")
 
-//            var auth = authRepository.getAuth().getOrNull()
-//            if (auth == null) {
-//                authRepository.loadLocalAuth().getOrThrow()
-//                auth = authRepository.waitAuth().getOrThrow()
-//            }
-//
-//            val scene = runCatching {
-//                val sceneId = intent.getStringExtra(EXTRA_SCENE_ID) ?: ""
-//                val scenes = sceneRepository.getLocalScenes().getOrThrow()
-//                scenes.first { it.scene_id == sceneId }
-//            }.getOrElse { throw Exception("场景信息无效") }
-//
-//            var result = requestRunScene(auth, scene)
-//
-//            if (result.isFailure) {
-//                authRepository.removeAuthSoft().getOrThrow()
-//                authRepository.loadLocalAuth().getOrThrow()
-//                auth = authRepository.waitAuth().getOrThrow()
-//                result = requestRunScene(auth, scene)
-//            }
-//
-//            if (result.isSuccess && result.getOrNull() == "ok") {
-//                success.value = true
-//                loading.value = false
-//                delay(1500)
-//                finish()
-//            }
+            val message = reqRunScene(auth, scene).getOrThrow()
+
+            if (message != "ok") {
+                throw Exception(message)
+            }
+
+            success.value = true
+            loading.value = false
+            delay(1000.milliseconds)
+            finish()
         }.onFailure {
             success.value = false
             exception.value = it.stackTraceToString()
