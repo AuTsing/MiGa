@@ -1,9 +1,12 @@
 package com.autsing.miga.presentation.screen
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.Text
@@ -17,14 +20,14 @@ import com.autsing.miga.presentation.component.SliderComponent
 import com.autsing.miga.presentation.component.SwitchComponent
 import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.component.TriggerComponent
-import com.autsing.miga.presentation.model.Component
+import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.viewmodel.DeviceViewModel
 
 @Composable
 fun DeviceScreen(
     deviceViewModel: DeviceViewModel,
 ) {
-    val uiState = deviceViewModel.uiState
+    val uiState by deviceViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     FullScreenBox {
@@ -45,7 +48,7 @@ fun DeviceScreen(
                 onClickSlider = deviceViewModel::handleChangeSlider,
                 onClickSelector = deviceViewModel::handleChangeSelector,
                 onClickTrigger = { deviceViewModel.handleClickTrigger(context, it) },
-                onBack = { deviceViewModel.handleClickBack(context) },
+                onBack = { (context as Activity).finish() },
             )
         }
     }

@@ -14,7 +14,7 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Slider
 import com.autsing.miga.R
-import com.autsing.miga.presentation.model.Component
+import com.autsing.miga.presentation.data.Component
 
 @Composable
 fun SelectorComponent(

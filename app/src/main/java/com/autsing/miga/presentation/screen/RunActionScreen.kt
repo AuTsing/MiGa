@@ -14,7 +14,7 @@ import com.autsing.miga.presentation.component.PairButtons
 import com.autsing.miga.presentation.component.SelectorComponent
 import com.autsing.miga.presentation.component.SliderComponent
 import com.autsing.miga.presentation.component.Title
-import com.autsing.miga.presentation.model.Component
+import com.autsing.miga.presentation.data.Component
 
 @Composable
 fun RunActionScreen(

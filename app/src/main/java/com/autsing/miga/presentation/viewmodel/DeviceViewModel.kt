@@ -1,19 +1,19 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.autsing.miga.presentation.activity.DeviceActivity
-import com.autsing.miga.presentation.activity.RunActionActivity
-import com.autsing.miga.presentation.model.Auth
-import com.autsing.miga.presentation.model.Component
-import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.DeviceInfo
+import com.autsing.miga.presentation.data.Component
+import com.autsing.miga.presentation.data.DevicePropertyRange
+import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
+import com.autsing.miga.presentation.repository.Device
+import com.autsing.miga.presentation.repository.DeviceInfo
 import com.autsing.miga.presentation.repository.DeviceRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class DeviceUiState(
@@ -33,51 +33,55 @@ class DeviceViewModel : ViewModel() {
     private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
-    var uiState: DeviceUiState by mutableStateOf(DeviceUiState())
-        private set
+    private val _uiState: MutableStateFlow<DeviceUiState> = MutableStateFlow(DeviceUiState())
+    val uiState: StateFlow<DeviceUiState> = _uiState.asStateFlow()
 
-    fun handleLoad(deviceModel: String) = viewModelScope.launch {
+    fun handleLoad(model: String) = viewModelScope.launch {
         runCatching {
-            TODO()
+            _uiState.update { it.copy(loading = true) }
 
-//            uiState = uiState.copy(loading = true)
-//
-//            val devices = deviceRepository.getLocalDevices().getOrThrow()
-//            val device = devices.find { it.model == deviceModel }
-//                ?: throw Exception("读取设备失败")
-//            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrNull()
-//                ?: deviceRepository.getRemoteDeviceInfo(deviceModel).getOrNull()
-//                ?: throw Exception("读取设备信息失败")
-//            val auth = authRepository.getAuth().getOrThrow()
-//            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
-//                .getOrThrow()
-//
-//            val switches = deviceProperties
-//                .filter { (property, _) -> property.type == "bool" }
-//                .map { (property, value) -> Component.Switch.from(property, value) }
-//            val sliders = deviceProperties
-//                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
-//                .map { (property, value) -> Component.Slider.from(property, value) }
-//            val selectors = deviceProperties
-//                .filter { (property, _) -> property.values.size > 1 }
-//                .map { (property, value) -> Component.Selector.from(property, value) }
-//            val actions = deviceInfo.actions
-//                .map { Component.Trigger.from(it) }
-//
-//            uiState = uiState.copy(
-//                exception = "",
-//                auth = auth,
-//                device = device,
-//                deviceInfo = deviceInfo,
-//                switchComponents = switches,
-//                sliderComponents = sliders,
-//                selectorComponents = selectors,
-//                triggerComponents = actions,
-//            )
-        }.onFailure {
-            uiState = uiState.copy(exception = it.stackTraceToString())
-        }.also {
-            uiState = uiState.copy(loading = false)
+            val devices = deviceRepository.getLocalDevices().getOrThrow()
+            val device = devices.find { it.model == model }
+                ?: throw Exception("读取设备失败")
+            val deviceInfo = deviceRepository.getLocalDeviceInfo(model).getOrNull()
+                ?: deviceRepository.getRemoteDeviceInfo(model).getOrNull()
+                ?: throw Exception("读取设备信息失败")
+            val auth = authRepository.getValidAuth().getOrThrow()
+            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
+                .getOrThrow()
+
+            val switches = deviceProperties
+                .filter { (property, _) -> property.type == "bool" }
+                .map { (property, value) -> Component.Switch.from(property, value) }
+            val sliders = deviceProperties
+                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
+                .map { (property, value) -> Component.Slider.from(property, value) }
+            val selectors = deviceProperties
+                .filter { (property, _) -> property.values.size > 1 }
+                .map { (property, value) -> Component.Selector.from(property, value) }
+            val actions = deviceInfo.actions
+                .map { Component.Trigger.from(it) }
+
+            _uiState.update {
+                it.copy(
+                    loading = false,
+                    exception = "",
+                    auth = auth,
+                    device = device,
+                    deviceInfo = deviceInfo,
+                    switchComponents = switches,
+                    sliderComponents = sliders,
+                    selectorComponents = selectors,
+                    triggerComponents = actions,
+                )
+            }
+        }.onFailure { e ->
+            _uiState.update {
+                it.copy(
+                    loading = false,
+                    exception = e.message ?: e.stackTraceToString(),
+                )
+            }
         }
     }
 
@@ -183,20 +187,16 @@ class DeviceViewModel : ViewModel() {
         context: Context,
         component: Component.Trigger,
     ) = viewModelScope.launch {
-        runCatching {
-            val device = uiState.device ?: throw Exception("读取设备失败")
-            RunActionActivity.startActivity(
-                context = context,
-                deviceModel = device.model,
-                siid = component.action.method.siid,
-                aiid = component.action.method.aiid,
-            )
-        }.onFailure {
-            uiState = uiState.copy(exception = it.stackTraceToString())
-        }
-    }
-
-    fun handleClickBack(context: Context) = viewModelScope.launch {
-        (context as DeviceActivity).finish()
+//        runCatching {
+//            val device = uiState.device ?: throw Exception("读取设备失败")
+//            RunActionActivity.startActivity(
+//                context = context,
+//                deviceModel = device.model,
+//                siid = component.action.method.siid,
+//                aiid = component.action.method.aiid,
+//            )
+//        }.onFailure {
+//            uiState = uiState.copy(exception = it.stackTraceToString())
+//        }
     }
 }

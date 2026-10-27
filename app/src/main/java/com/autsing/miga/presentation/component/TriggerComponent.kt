@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Text
-import com.autsing.miga.presentation.model.Component
+import com.autsing.miga.presentation.data.Component
 
 @Composable
 fun TriggerComponent(
