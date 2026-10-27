@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.complication.FavoriteSceneComplicationService
-import com.autsing.miga.presentation.model.Device
+import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
+import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.repository.Scene
 import com.autsing.miga.presentation.repository.SceneRepository
@@ -110,8 +111,7 @@ class MainViewModel : ViewModel() {
             }
 
             val auth = authRepository.observeAuth().filterNotNull().first()
-            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrNull()
-                ?: return@runCatching
+            val remoteScenes = sceneRepository.getRemoteScenes(auth).getOrDefault()
 
             _uiState.update {
                 it.copy(
@@ -130,40 +130,46 @@ class MainViewModel : ViewModel() {
     }
 
     private fun handleLoadDevices() = viewModelScope.launch {
-//        runCatching {
-//            uiState = uiState.copy(deviceLoading = true)
-//
-//            val locals = Triple(
-//                async { deviceRepository.getLocalDevices().getOrThrow() },
-//                async { deviceRepository.getFavoriteDeviceIds().getOrThrow() },
-//                async { deviceRepository.getLocalDeviceIconUrls().getOrThrow() },
-//            )
-//            val localDevices = locals.first.await()
-//            val favoriteDeviceIds = locals.second.await()
-//            val localDeviceIconUrls = locals.third.await()
-//
-//            uiState = uiState.copy(
-//                devices = localDevices,
-//                favoriteDeviceIds = favoriteDeviceIds,
-//                deviceIconUrls = localDeviceIconUrls,
-//            )
-//
-//            val auth = authRepository.waitAuth().getOrThrow()
-//            val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
-//            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
-//                .getOrDefault()
-//
-//            uiState = uiState.copy(
-//                deviceLoading = false,
-//                devices = remoteDevices,
-//                deviceIconUrls = remoteDeviceIconUrls,
-//            )
-//        }.onFailure { e ->
-//            uiState = uiState.copy(
-//                deviceLoading = false,
-//                message = e.message ?: e.stackTraceToString(),
-//            )
-//        }
+        runCatching {
+            _uiState.update { it.copy(deviceLoading = true) }
+
+            val locals = Triple(
+                async { deviceRepository.getLocalDevices().getOrThrow() },
+                async { deviceRepository.getFavoriteDeviceIds().getOrThrow() },
+                async { deviceRepository.getLocalDeviceIconUrls().getOrThrow() },
+            )
+            val localDevices = locals.first.await()
+            val favoriteDeviceIds = locals.second.await()
+            val localDeviceIconUrls = locals.third.await()
+
+            _uiState.update {
+                it.copy(
+                    devices = localDevices,
+                    favoriteDeviceIds = favoriteDeviceIds,
+                    deviceIconUrls = localDeviceIconUrls,
+                )
+            }
+
+            val auth = authRepository.observeAuth().filterNotNull().first()
+            val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
+            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
+                .getOrDefault()
+
+            _uiState.update {
+                it.copy(
+                    deviceLoading = false,
+                    devices = remoteDevices,
+                    deviceIconUrls = remoteDeviceIconUrls,
+                )
+            }
+        }.onFailure { e ->
+            _uiState.update {
+                it.copy(
+                    deviceLoading = false,
+                    message = e.message ?: e.stackTraceToString(),
+                )
+            }
+        }
     }
 
     fun handleToggleSceneFavorite(context: Context, scene: Scene) = viewModelScope.launch {
@@ -190,23 +196,28 @@ class MainViewModel : ViewModel() {
     }
 
     fun handleToggleDeviceFavorite(device: Device) = viewModelScope.launch {
-//        runCatching {
-//            val favoriteDeviceIds = uiState.favoriteDeviceIds
-//                .toMutableList()
-//                .apply {
-//                    if (device.did in this) {
-//                        remove(device.did)
-//                    } else {
-//                        add(device.did)
-//                    }
-//                }
-//
-//            uiState = uiState.copy(favoriteDeviceIds = favoriteDeviceIds)
-//
-//            deviceRepository.setFavoriteDeviceIds(favoriteDeviceIds).getOrThrow()
-//        }.onFailure { e ->
-//            uiState = uiState.copy(message = e.message ?: e.stackTraceToString())
-//        }
+        runCatching {
+            val ids = _uiState.value.favoriteDeviceIds
+                .toMutableList()
+                .apply {
+                    if (device.did in this) {
+                        remove(device.did)
+                    } else {
+                        add(device.did)
+                    }
+                }
+
+            _uiState.update { it.copy(favoriteDeviceIds = ids) }
+
+            deviceRepository.setFavoriteDeviceIds(ids).getOrThrow()
+        }.onFailure { e ->
+            _uiState.update { it.copy(message = e.message ?: e.stackTraceToString()) }
+        }
+    }
+
+    fun handleReload() {
+        handleLoadScenes()
+        handleLoadDevices()
     }
 
     fun handleLogout() = viewModelScope.launch {

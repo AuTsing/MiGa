@@ -12,7 +12,6 @@ import com.autsing.miga.presentation.model.Auth
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.Device
 import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import kotlinx.coroutines.launch
@@ -86,98 +85,98 @@ class DeviceViewModel : ViewModel() {
         component: Component.Switch,
         checked: Boolean,
     ) = viewModelScope.launch {
-        runCatching {
-            val auth = uiState.auth ?: throw Exception("读取权限失败")
-            val device = uiState.device ?: throw Exception("读取设备失败")
-            val value = DevicePropertyValue.Boolean(checked)
-            val (newProperty, _) = deviceRepository.setDeviceProperty(
-                auth,
-                device,
-                component.property,
-                value,
-            ).getOrThrow()
-
-            val newSwitchComponents = uiState.switchComponents.map {
-                if (it.property == newProperty) {
-                    it.copy(value = checked)
-                } else {
-                    it
-                }
-            }
-            uiState = uiState.copy(switchComponents = newSwitchComponents)
-        }.onFailure {
-            uiState = uiState.copy(exception = it.stackTraceToString())
-        }
+//        runCatching {
+//            val auth = uiState.auth ?: throw Exception("读取权限失败")
+//            val device = uiState.device ?: throw Exception("读取设备失败")
+//            val value = DevicePropertyValue.Boolean(checked)
+//            val (newProperty, _) = deviceRepository.setDeviceProperty(
+//                auth,
+//                device,
+//                component.property,
+//                value,
+//            ).getOrThrow()
+//
+//            val newSwitchComponents = uiState.switchComponents.map {
+//                if (it.property == newProperty) {
+//                    it.copy(value = checked)
+//                } else {
+//                    it
+//                }
+//            }
+//            uiState = uiState.copy(switchComponents = newSwitchComponents)
+//        }.onFailure {
+//            uiState = uiState.copy(exception = it.stackTraceToString())
+//        }
     }
 
     fun handleChangeSlider(
         component: Component.Slider,
         percentage: Float,
     ) = viewModelScope.launch {
-        runCatching {
-            val auth = uiState.auth ?: throw Exception("读取权限失败")
-            val device = uiState.device ?: throw Exception("读取设备失败")
-            val value = component.range.getValueOfPercentage(percentage)
-            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
-                auth,
-                device,
-                component.property,
-                value,
-            ).getOrThrow()
-
-            val newSliderComponents = uiState.sliderComponents.map {
-                if (it.property == newProperty) {
-                    val v = when (newValue) {
-                        is DevicePropertyValue.Long -> "${newValue.value}"
-                        is DevicePropertyValue.Double -> "${newValue.value}"
-                        else -> ""
-                    }
-                    it.copy(
-                        value = percentage,
-                        valueDisplay = "$v ${it.property.unit}",
-                    )
-                } else {
-                    it
-                }
-            }
-            uiState = uiState.copy(sliderComponents = newSliderComponents)
-        }.onFailure {
-            uiState = uiState.copy(exception = it.stackTraceToString())
-        }
+//        runCatching {
+//            val auth = uiState.auth ?: throw Exception("读取权限失败")
+//            val device = uiState.device ?: throw Exception("读取设备失败")
+//            val value = component.range.getValueOfPercentage(percentage)
+//            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
+//                auth,
+//                device,
+//                component.property,
+//                value,
+//            ).getOrThrow()
+//
+//            val newSliderComponents = uiState.sliderComponents.map {
+//                if (it.property == newProperty) {
+//                    val v = when (newValue) {
+//                        is DevicePropertyValue.Long -> "${newValue.value}"
+//                        is DevicePropertyValue.Double -> "${newValue.value}"
+//                        else -> ""
+//                    }
+//                    it.copy(
+//                        value = percentage,
+//                        valueDisplay = "$v ${it.property.unit}",
+//                    )
+//                } else {
+//                    it
+//                }
+//            }
+//            uiState = uiState.copy(sliderComponents = newSliderComponents)
+//        }.onFailure {
+//            uiState = uiState.copy(exception = it.stackTraceToString())
+//        }
     }
 
     fun handleChangeSelector(
         component: Component.Selector,
         index: Int,
     ) = viewModelScope.launch {
-        runCatching {
-            val auth = uiState.auth ?: throw Exception("读取权限失败")
-            val device = uiState.device ?: throw Exception("读取设备失败")
-            val value = component.values[index].value
-            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
-                auth,
-                device,
-                component.property,
-                value,
-            ).getOrThrow()
-
-            val newSelectorComponents = uiState.selectorComponents.map { component ->
-                if (component.property == newProperty) {
-                    val selectorValue = component.property.values.find { it.value == newValue }
-                        ?: component.property.values[0]
-                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-                    component.copy(
-                        value = index,
-                        valueDisplay = selectorDisplay,
-                    )
-                } else {
-                    component
-                }
-            }
-            uiState = uiState.copy(selectorComponents = newSelectorComponents)
-        }.onFailure {
-            uiState = uiState.copy(exception = it.stackTraceToString())
-        }
+//        runCatching {
+//            val auth = uiState.auth ?: throw Exception("读取权限失败")
+//            val device = uiState.device ?: throw Exception("读取设备失败")
+//            val value = component.values[index].value
+//            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
+//                auth,
+//                device,
+//                component.property,
+//                value,
+//            ).getOrThrow()
+//
+//            val newSelectorComponents = uiState.selectorComponents.map { component ->
+//                if (component.property == newProperty) {
+//                    val selectorValue = component.property.values.find { it.value == newValue }
+//                        ?: component.property.values[0]
+//                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
+//                    component.copy(
+//                        value = index,
+//                        valueDisplay = selectorDisplay,
+//                    )
+//                } else {
+//                    component
+//                }
+//            }
+//            uiState = uiState.copy(selectorComponents = newSelectorComponents)
+//        }.onFailure {
+//            uiState = uiState.copy(exception = it.stackTraceToString())
+//        }
     }
 
     fun handleClickTrigger(

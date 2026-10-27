@@ -2,27 +2,33 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.autsing.miga.presentation.api.reqGetDeviceIconUrl
+import com.autsing.miga.presentation.api.reqGetDevices
 import com.autsing.miga.presentation.data.getDeviceIconUrls
-import com.autsing.miga.presentation.data.getDeviceInfo
 import com.autsing.miga.presentation.data.getDevices
 import com.autsing.miga.presentation.data.getFavoriteDeviceIds
-import com.autsing.miga.presentation.data.requestGetDeviceIconUrl
-import com.autsing.miga.presentation.data.requestGetDeviceInfo
-import com.autsing.miga.presentation.data.requestGetDeviceProperties
-import com.autsing.miga.presentation.data.requestGetDevices
-import com.autsing.miga.presentation.data.requestSetDeviceProperty
 import com.autsing.miga.presentation.data.setDeviceIconUrls
-import com.autsing.miga.presentation.data.setDeviceInfo
 import com.autsing.miga.presentation.data.setDevices
 import com.autsing.miga.presentation.data.setFavoriteDeviceIds
-import com.autsing.miga.presentation.model.Auth
-import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.DevicePropertyValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Device(
+    val did: String,
+    val name: String,
+    val isOnline: Boolean,
+    val model: String,
+)
+
+fun List<Device>.sort(favoriteDeviceIds: List<String>): List<Device> {
+    val favoriteDeviceIdsMap = favoriteDeviceIds.withIndex()
+        .associate { it.value to it.index }
+    return this.sortedBy { favoriteDeviceIdsMap[it.did] ?: Int.MAX_VALUE }
+}
 
 class DeviceRepository(
     private val context: Context,
@@ -52,7 +58,8 @@ class DeviceRepository(
 
     suspend fun getRemoteDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devices = requestGetDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
+            val devices = reqGetDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
+
             context.setDevices(devices).getOrThrow()
 
             devices
@@ -64,48 +71,13 @@ class DeviceRepository(
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
         runCatching {
             val urls = devices
-                .map { async { requestGetDeviceIconUrl(it.model).getOrDefault("") } }
+                .map { async { reqGetDeviceIconUrl(it.model).getOrDefault("") } }
                 .awaitAll()
             val deviceIconUrls = devices.map { it.model }.zip(urls).toMap()
+
             context.setDeviceIconUrls(deviceIconUrls).getOrThrow()
 
             deviceIconUrls
         }
-    }
-
-    suspend fun getLocalDeviceInfo(
-        model: String,
-    ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
-        runCatching {
-            context.getDeviceInfo(model).getOrThrow() ?: throw Exception("$model is null")
-        }
-    }
-
-    suspend fun getRemoteDeviceInfo(
-        model: String,
-    ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
-        runCatching {
-            val info = requestGetDeviceInfo(model).getOrThrow()
-            context.setDeviceInfo(model, info).getOrThrow()
-
-            info
-        }
-    }
-
-    suspend fun getDeviceProperties(
-        auth: Auth,
-        device: Device,
-        deviceInfo: DeviceInfo,
-    ): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
-        runCatching { requestGetDeviceProperties(auth, device, deviceInfo).getOrThrow() }
-    }
-
-    suspend fun setDeviceProperty(
-        auth: Auth,
-        device: Device,
-        deviceProperty: DeviceInfo.Property,
-        value: DevicePropertyValue,
-    ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
-        runCatching { requestSetDeviceProperty(auth, device, deviceProperty, value).getOrThrow() }
     }
 }

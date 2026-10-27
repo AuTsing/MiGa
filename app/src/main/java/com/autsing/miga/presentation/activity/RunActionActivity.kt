@@ -9,7 +9,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.model.Component
 import com.autsing.miga.presentation.model.DeviceInfo
-import com.autsing.miga.presentation.model.DevicePropertyRange
 import com.autsing.miga.presentation.model.DevicePropertyValue
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
@@ -74,47 +73,47 @@ class RunActionActivity : ComponentActivity() {
     }
 
     private fun handleLoad() = lifecycleScope.launch {
-        runCatching {
-            val deviceModel = intent.getStringExtra(EXTRA_DEVICE_MODEL)
-                ?: throw Exception("读取设备型号失败")
-            val siid = intent.getIntExtra(EXTRA_SIID, -1).takeIf { it > -1 }
-                ?: throw Exception("读取SIID失败")
-            val aiid = intent.getIntExtra(EXTRA_AIID, -1).takeIf { it > -1 }
-                ?: throw Exception("读取AIID失败")
-
-            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrThrow()
-            val action = deviceInfo.actions
-                .find { it.method.siid == siid && it.method.aiid == aiid }
-                ?: throw Exception("读取动作失败")
-            val title = action.descZhCn.takeIf { it.isNotBlank() } ?: action.name
-            val properties = action.inPiids
-                .mapNotNull { inPiid -> deviceInfo.properties.find { it.method.siid == siid && it.method.piid == inPiid } }
-
-            val sliders = properties
-                .filter { it.range !is DevicePropertyRange.None }
-                .map {
-                    val v = when (it.range) {
-                        is DevicePropertyRange.Long -> DevicePropertyValue.Long(it.range.from)
-                        is DevicePropertyRange.Double -> DevicePropertyValue.Double(it.range.from)
-                        is DevicePropertyRange.None -> DevicePropertyValue.None
-                    }
-                    Component.Slider.from(it, v)
-                }
-            val selectors = properties
-                .filter { it.values.size > 1 }
-                .map { Component.Selector.from(it, it.values[0].value) }
-
-            this@RunActionActivity.deviceModel = deviceModel
-            this@RunActionActivity.action = action
-            this@RunActionActivity.properties = properties
-            this@RunActionActivity.title.value = title
-            this@RunActionActivity.sliders.value = sliders
-            this@RunActionActivity.selectors.value = selectors
-        }.onFailure {
-            message.value = it.stackTraceToString()
-        }.also {
-            loading.value = false
-        }
+//        runCatching {
+//            val deviceModel = intent.getStringExtra(EXTRA_DEVICE_MODEL)
+//                ?: throw Exception("读取设备型号失败")
+//            val siid = intent.getIntExtra(EXTRA_SIID, -1).takeIf { it > -1 }
+//                ?: throw Exception("读取SIID失败")
+//            val aiid = intent.getIntExtra(EXTRA_AIID, -1).takeIf { it > -1 }
+//                ?: throw Exception("读取AIID失败")
+//
+//            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrThrow()
+//            val action = deviceInfo.actions
+//                .find { it.method.siid == siid && it.method.aiid == aiid }
+//                ?: throw Exception("读取动作失败")
+//            val title = action.descZhCn.takeIf { it.isNotBlank() } ?: action.name
+//            val properties = action.inPiids
+//                .mapNotNull { inPiid -> deviceInfo.properties.find { it.method.siid == siid && it.method.piid == inPiid } }
+//
+//            val sliders = properties
+//                .filter { it.range !is DevicePropertyRange.None }
+//                .map {
+//                    val v = when (it.range) {
+//                        is DevicePropertyRange.Long -> DevicePropertyValue.Long(it.range.from)
+//                        is DevicePropertyRange.Double -> DevicePropertyValue.Double(it.range.from)
+//                        is DevicePropertyRange.None -> DevicePropertyValue.None
+//                    }
+//                    Component.Slider.from(it, v)
+//                }
+//            val selectors = properties
+//                .filter { it.values.size > 1 }
+//                .map { Component.Selector.from(it, it.values[0].value) }
+//
+//            this@RunActionActivity.deviceModel = deviceModel
+//            this@RunActionActivity.action = action
+//            this@RunActionActivity.properties = properties
+//            this@RunActionActivity.title.value = title
+//            this@RunActionActivity.sliders.value = sliders
+//            this@RunActionActivity.selectors.value = selectors
+//        }.onFailure {
+//            message.value = it.stackTraceToString()
+//        }.also {
+//            loading.value = false
+//        }
     }
 
     private fun handleChangeSlider(

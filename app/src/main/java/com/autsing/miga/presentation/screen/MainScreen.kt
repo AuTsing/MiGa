@@ -51,8 +51,7 @@ import com.autsing.miga.presentation.component.FullScreenBox
 import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.PairButtons
 import com.autsing.miga.presentation.component.Title
-import com.autsing.miga.presentation.model.Device
-import com.autsing.miga.presentation.model.sort
+import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.Scene
 import com.autsing.miga.presentation.repository.sort
 import com.autsing.miga.presentation.viewmodel.MainViewModel
@@ -81,19 +80,13 @@ fun MainScreen(viewModel: MainViewModel) {
                 favoriteDeviceIds = uiState.favoriteDeviceIds,
                 deviceIconUrls = uiState.deviceIconUrls,
                 onClickScene = { RunSceneActivity.startActivity(context, it.scene_id) },
-                onClickToggleSceneFavorite = {
-                    //TODO(onClickToggleSceneFavorite)
-                },
                 onClickDevice = {
-                    //TODO(onClickDevice)
+                    //TODO("onClickDevice")
                 },
-                onClickToggleDeviceFavorite = {
-                    //TODO(onClickToggleDeviceFavorite)
-                },
+                onClickReload = { viewModel.handleReload() },
                 onClickLogout = { viewModel.handleLogout() },
-                onClickReload = {
-                    //TODO(onClickReload)
-                },
+                onLongClickScene = { viewModel.handleToggleSceneFavorite(context, it) },
+                onLongClickDevice = { viewModel.handleToggleDeviceFavorite(it) },
             )
         }
     }
@@ -165,11 +158,11 @@ private fun SceneChip(
     scene: Scene,
     favorite: Boolean,
     onClick: (Scene) -> Unit = {},
-    onClickFavorite: (Scene) -> Unit = {},
+    onLongClick: (Scene) -> Unit = {},
 ) {
     TitleCard(
         onClick = { onClick(scene) },
-        onLongClick = { onClickFavorite(scene) },
+        onLongClick = { onLongClick(scene) },
         border = if (favorite) {
             CardDefaults.outlinedCardBorder()
         } else {
@@ -186,7 +179,7 @@ private fun DeviceChip(
     iconUrl: String,
     favorite: Boolean,
     onClick: (Device) -> Unit = {},
-    onClickFavorite: (Device) -> Unit = {},
+    onLongClick: (Device) -> Unit = {},
 ) {
     val bgPainter = ColorPainter(CardDefaults.cardColors().containerColor)
     val imagePainter = rememberAsyncImagePainter(iconUrl)
@@ -236,7 +229,7 @@ private fun DeviceChip(
 
     TitleCard(
         onClick = { onClick(device) },
-        onLongClick = { onClickFavorite(device) },
+        onLongClick = { onLongClick(device) },
         border = if (favorite) {
             CardDefaults.outlinedCardBorder()
         } else {
@@ -285,11 +278,11 @@ private fun MainContent(
     favoriteDeviceIds: List<String>,
     deviceIconUrls: Map<String, String>,
     onClickScene: (Scene) -> Unit,
-    onClickToggleSceneFavorite: (Scene) -> Unit,
     onClickDevice: (Device) -> Unit,
-    onClickToggleDeviceFavorite: (Device) -> Unit,
-    onClickLogout: () -> Unit,
     onClickReload: () -> Unit,
+    onClickLogout: () -> Unit,
+    onLongClickScene: (Scene) -> Unit,
+    onLongClickDevice: (Device) -> Unit,
 ) {
     ScalingLazyColumn {
         if (message.isNotEmpty()) {
@@ -311,7 +304,7 @@ private fun MainContent(
                 scene = it,
                 favorite = it.scene_id in favoriteSceneIds,
                 onClick = onClickScene,
-                onClickFavorite = onClickToggleSceneFavorite,
+                onLongClick = onLongClickScene,
             )
         }
         if (scenes.isEmpty()) {
@@ -334,7 +327,7 @@ private fun MainContent(
                 iconUrl = deviceIconUrls.getOrDefault(it.model, ""),
                 favorite = it.did in favoriteDeviceIds,
                 onClick = onClickDevice,
-                onClickFavorite = onClickToggleDeviceFavorite,
+                onLongClick = onLongClickDevice,
             )
         }
         if (devices.isEmpty()) {
@@ -393,11 +386,11 @@ private fun PreviewEmptyContent() {
             favoriteDeviceIds = emptyList(),
             deviceIconUrls = emptyMap(),
             onClickScene = {},
-            onClickToggleSceneFavorite = {},
             onClickDevice = {},
-            onClickToggleDeviceFavorite = {},
             onClickLogout = {},
             onClickReload = {},
+            onLongClickScene = {},
+            onLongClickDevice = {},
         )
     }
 }
