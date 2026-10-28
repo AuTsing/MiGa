@@ -7,8 +7,11 @@ import com.autsing.miga.presentation.data.DEVICE_URL
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyValue
+import com.autsing.miga.presentation.data.GetDeviceBaikeRespData
 import com.autsing.miga.presentation.data.GetDevicePropertiesReqData
 import com.autsing.miga.presentation.data.GetDevicePropertiesRespData
+import com.autsing.miga.presentation.data.GetDevicesReqData
+import com.autsing.miga.presentation.data.GetDevicesRespData
 import com.autsing.miga.presentation.data.GetHomesReqData
 import com.autsing.miga.presentation.data.GetHomesRespData
 import com.autsing.miga.presentation.data.GetScenesReqData
@@ -136,25 +139,6 @@ suspend fun reqGetScenes(auth: Auth): Result<List<Scene>> = runCatching {
     scenes
 }
 
-@Serializable
-data class GetDevicesReqData(
-    val getVirtualModel: Boolean,
-    val getHuamiDevices: Int,
-)
-
-@Serializable
-data class GetDevicesRespData(
-    val code: Int,
-    val message: String,
-    val result: Result,
-) {
-
-    @Serializable
-    data class Result(
-        val list: List<Device>,
-    )
-}
-
 suspend fun reqGetDevices(auth: Auth): Result<List<Device>> = runCatching {
     val uri = "/home/device_list"
     val data = GetDevicesReqData(
@@ -167,18 +151,6 @@ suspend fun reqGetDevices(auth: Auth): Result<List<Device>> = runCatching {
     val devices = respData.result.list
 
     devices
-}
-
-@Serializable
-data class GetDeviceBaikeRespData(
-    val code: Int,
-    val data: Data,
-) {
-
-    @Serializable
-    data class Data(
-        val realIcon: String,
-    )
 }
 
 suspend fun reqGetDeviceIconUrl(model: String): Result<String> = runCatching {

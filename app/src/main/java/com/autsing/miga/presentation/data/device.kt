@@ -360,6 +360,37 @@ data class DeviceInfo(
 }
 
 @Serializable
+data class GetDevicesReqData(
+    val getVirtualModel: Boolean,
+    val getHuamiDevices: Int,
+)
+
+@Serializable
+data class GetDevicesRespData(
+    val code: Int,
+    val message: String,
+    val result: Result,
+) {
+
+    @Serializable
+    data class Result(
+        val list: List<Device>,
+    )
+}
+
+@Serializable
+data class GetDeviceBaikeRespData(
+    val code: Int,
+    val data: Data,
+) {
+
+    @Serializable
+    data class Data(
+        val realIcon: String,
+    )
+}
+
+@Serializable
 data class GetDevicePropertiesReqData(
     val params: List<Params>,
 ) {
