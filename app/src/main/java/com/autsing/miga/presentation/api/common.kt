@@ -18,6 +18,8 @@ import com.autsing.miga.presentation.data.GetScenesReqData
 import com.autsing.miga.presentation.data.GetScenesRespData
 import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.PRODUCT_URL
+import com.autsing.miga.presentation.data.RunSceneReqData
+import com.autsing.miga.presentation.data.RunSceneRespData
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.SetDevicePropertiesReqData
 import com.autsing.miga.presentation.data.SetDevicePropertiesRespData
@@ -160,19 +162,6 @@ suspend fun reqGetDeviceIconUrl(model: String): Result<String> = runCatching {
 
     realIcon
 }
-
-@Serializable
-data class RunSceneReqData(
-    val scene_id: String,
-    val trigger_key: String,
-)
-
-@Serializable
-data class RunSceneRespData(
-    val code: Int,
-    val message: String,
-    val result: Boolean,
-)
 
 suspend fun reqRunScene(auth: Auth, scene: Scene): Result<String> = runCatching {
     val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
