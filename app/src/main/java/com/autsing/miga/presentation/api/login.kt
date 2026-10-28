@@ -3,7 +3,10 @@ package com.autsing.miga.presentation.api
 import androidx.core.net.toUri
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.LOGIN_URL
+import com.autsing.miga.presentation.data.LoginLpRespData
+import com.autsing.miga.presentation.data.LoginUrlRespData
 import com.autsing.miga.presentation.data.SERVICE_LOGIN_URL
+import com.autsing.miga.presentation.data.ServiceLoginRespData
 import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
@@ -19,7 +22,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import java.time.Instant.now
 
 private val client: HttpClient = HttpClient(CIO) {
@@ -42,14 +44,6 @@ private val client: HttpClient = HttpClient(CIO) {
     }
 }
 
-@Serializable
-data class ServiceLoginRespData(
-    val qs: String,
-    val _sign: String,
-    val callback: String,
-    val location: String,
-)
-
 suspend fun reqServiceLogin(deviceId: String): Result<ServiceLoginRespData> = runCatching {
     val resp = client.get(SERVICE_LOGIN_URL) {
         cookie("deviceId", deviceId)
@@ -67,12 +61,6 @@ suspend fun reqServiceLogin(auth: Auth): Result<ServiceLoginRespData> = runCatch
 
     respData
 }
-
-@Serializable
-data class LoginUrlRespData(
-    val loginUrl: String,
-    val lp: String,
-)
 
 suspend fun reqLoginUrl(deviceId: String): Result<LoginUrlRespData> = runCatching {
     val serviceLoginRespData = reqServiceLogin(deviceId).getOrThrow()
@@ -103,17 +91,6 @@ suspend fun reqLoginUrl(deviceId: String): Result<LoginUrlRespData> = runCatchin
 
     respData
 }
-
-@Serializable
-data class LoginLpRespData(
-    val location: String,
-    val userId: Long,
-    val cUserId: String,
-    val nonce: Long,
-    val ssecurity: String,
-    val psecurity: String,
-    val passToken: String,
-)
 
 suspend fun reqLoginLp(
     deviceId: String,
