@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.data.Component
+import com.autsing.miga.presentation.data.Device
+import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyRange
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
-import com.autsing.miga.presentation.repository.Device
-import com.autsing.miga.presentation.repository.DeviceInfo
 import com.autsing.miga.presentation.repository.DeviceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

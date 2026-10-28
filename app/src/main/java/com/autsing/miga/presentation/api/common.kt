@@ -3,6 +3,8 @@ package com.autsing.miga.presentation.api
 import android.util.Log
 import com.autsing.miga.presentation.data.API_URL
 import com.autsing.miga.presentation.data.DEVICE_URL
+import com.autsing.miga.presentation.data.Device
+import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyValue
 import com.autsing.miga.presentation.data.GetDevicePropertiesReqData
 import com.autsing.miga.presentation.data.GetDevicePropertiesRespData
@@ -19,8 +21,6 @@ import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
 import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.Auth
-import com.autsing.miga.presentation.repository.Device
-import com.autsing.miga.presentation.repository.DeviceInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

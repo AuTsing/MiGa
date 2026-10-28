@@ -1,7 +1,5 @@
 package com.autsing.miga.presentation.data
 
-import com.autsing.miga.presentation.repository.DeviceInfo
-
 sealed class Component {
 
     data class Switch(

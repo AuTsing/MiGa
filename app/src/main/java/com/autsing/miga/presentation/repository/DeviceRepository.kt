@@ -2,13 +2,13 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.autsing.miga.presentation.api.GetDeviceInfoRespData
 import com.autsing.miga.presentation.api.reqGetDeviceIconUrl
 import com.autsing.miga.presentation.api.reqGetDeviceInfo
 import com.autsing.miga.presentation.api.reqGetDeviceProperties
 import com.autsing.miga.presentation.api.reqGetDevices
 import com.autsing.miga.presentation.api.reqSetDeviceProperty
-import com.autsing.miga.presentation.data.DevicePropertyRange
+import com.autsing.miga.presentation.data.Device
+import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyValue
 import com.autsing.miga.presentation.data.getDeviceIconUrls
 import com.autsing.miga.presentation.data.getDeviceInfo
@@ -22,173 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class Device(
-    val did: String,
-    val name: String,
-    val isOnline: Boolean,
-    val model: String,
-)
-
-fun List<Device>.sort(favoriteDeviceIds: List<String>): List<Device> {
-    val favoriteDeviceIdsMap = favoriteDeviceIds.withIndex()
-        .associate { it.value to it.index }
-    return this.sortedBy { favoriteDeviceIdsMap[it.did] ?: Int.MAX_VALUE }
-}
-
-@Serializable
-data class DeviceInfo(
-    val name: String,
-    val model: String,
-    val properties: List<Property>,
-    val actions: List<Action>,
-) {
-
-    companion object {
-
-        fun from(model: String, resp: GetDeviceInfoRespData): DeviceInfo {
-            val (deviceInfoName, deviceInfoModel) = if (resp.props.product != null) {
-                Pair(
-                    resp.props.product.name,
-                    resp.props.product.model,
-                )
-            } else {
-                Pair(resp.props.spec.name, model)
-            }
-            val deviceInfoProperties = mutableListOf<Property>()
-            val deviceInfoActions = mutableListOf<Action>()
-
-            val services = resp.props.spec.services.values
-            for (service in services) {
-
-                val properties = service.properties?.values ?: emptyList()
-                for (property in properties) {
-
-                    val type = property.format
-                    val access = Property.Access(
-                        read = property.access.contains("read"),
-                        write = property.access.contains("write"),
-                        notify = property.access.contains("notify"),
-                    )
-                    val range = DevicePropertyRange.from(property.valueRange)
-                    val values = when (property.valueList) {
-                        is GetDeviceInfoRespData.Props.Spec.Service.Property.Values.Uint8 -> property.valueList.values.map {
-                            Property.Value(
-                                value = DevicePropertyValue.Long(it.value.toLong()),
-                                description = it.description,
-                                desc_zh_cn = it.desc_zh_cn,
-                            )
-                        }
-
-                        is GetDeviceInfoRespData.Props.Spec.Service.Property.Values.String -> property.valueList.values.map {
-                            Property.Value(
-                                value = DevicePropertyValue.String(it.value),
-                                description = it.description,
-                                desc_zh_cn = it.desc_zh_cn,
-                            )
-                        }
-
-                        else -> emptyList()
-                    }
-
-                    deviceInfoProperties.add(
-                        Property(
-                            name = property.name,
-                            description = property.description,
-                            descZhCn = property.desc_zh_cn ?: "",
-                            type = type,
-                            access = access,
-                            unit = property.unit ?: "",
-                            range = range,
-                            values = values,
-                            method = Property.Method(
-                                siid = service.iid,
-                                piid = property.iid,
-                            )
-                        )
-                    )
-                }
-
-                val actions = service.actions?.values ?: emptyList()
-                for (action in actions) {
-                    deviceInfoActions.add(
-                        Action(
-                            name = action.name,
-                            description = action.description,
-                            descZhCn = action.desc_zh_cn ?: "",
-                            method = Action.Method(
-                                siid = service.iid,
-                                aiid = action.iid,
-                            ),
-                            inPiids = action._in,
-                            outPiids = action._out,
-                        )
-                    )
-                }
-            }
-
-            return DeviceInfo(
-                name = deviceInfoName,
-                model = deviceInfoModel,
-                properties = deviceInfoProperties,
-                actions = deviceInfoActions,
-            )
-        }
-    }
-
-    @Serializable
-    data class Property(
-        val name: String,
-        val description: String,
-        val descZhCn: String,
-        val type: String,
-        val access: Access,
-        val unit: String,
-        val range: DevicePropertyRange,
-        val values: List<Value>,
-        val method: Method,
-    ) {
-
-        @Serializable
-        data class Access(
-            val read: Boolean,
-            val write: Boolean,
-            val notify: Boolean,
-        )
-
-        @Serializable
-        data class Value(
-            val value: DevicePropertyValue,
-            val description: String,
-            val desc_zh_cn: String? = null,
-        )
-
-        @Serializable
-        data class Method(
-            val siid: Int,
-            val piid: Int,
-        )
-    }
-
-    @Serializable
-    data class Action(
-        val name: String,
-        val description: String,
-        val descZhCn: String,
-        val method: Method,
-        val inPiids: List<Int>,
-        val outPiids: List<Int>,
-    ) {
-
-        @Serializable
-        data class Method(
-            val siid: Int,
-            val aiid: Int,
-        )
-    }
-}
 
 class DeviceRepository(
     private val context: Context,

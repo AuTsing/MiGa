@@ -8,9 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.data.Component
+import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyValue
 import com.autsing.miga.presentation.repository.AuthRepository
-import com.autsing.miga.presentation.repository.DeviceInfo
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
 import kotlinx.coroutines.flow.MutableStateFlow
