@@ -22,3 +22,21 @@ fun getMockScene(index: Int? = 0): Scene {
         icon_url = "http://localhost",
     )
 }
+
+@Serializable
+data class GetScenesReqData(
+    val home_id: String,
+)
+
+@Serializable
+data class GetScenesRespData(
+    val code: Int,
+    val message: String,
+    val result: Result,
+) {
+
+    @Serializable
+    data class Result(
+        val scene_info_list: List<Scene>,
+    )
+}

@@ -11,6 +11,8 @@ import com.autsing.miga.presentation.data.GetDevicePropertiesReqData
 import com.autsing.miga.presentation.data.GetDevicePropertiesRespData
 import com.autsing.miga.presentation.data.GetHomesReqData
 import com.autsing.miga.presentation.data.GetHomesRespData
+import com.autsing.miga.presentation.data.GetScenesReqData
+import com.autsing.miga.presentation.data.GetScenesRespData
 import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.PRODUCT_URL
 import com.autsing.miga.presentation.data.Scene
@@ -117,24 +119,6 @@ suspend fun reqGetHomes(auth: Auth): Result<List<Home>> = runCatching {
     val homes = respData.result.homelist
 
     homes
-}
-
-@Serializable
-data class GetScenesReqData(
-    val home_id: String,
-)
-
-@Serializable
-data class GetScenesRespData(
-    val code: Int,
-    val message: String,
-    val result: Result,
-) {
-
-    @Serializable
-    data class Result(
-        val scene_info_list: List<Scene>,
-    )
 }
 
 suspend fun reqGetScenes(auth: Auth): Result<List<Scene>> = runCatching {
