@@ -182,7 +182,7 @@ private fun DeviceChip(
 ) {
     val bgPainter = ColorPainter(CardDefaults.cardColors().containerColor)
     val imagePainter = rememberAsyncImagePainter(iconUrl)
-    val containerPainter = remember(imagePainter) {
+    val containerPainter = remember(iconUrl) {
         object : Painter() {
             override val intrinsicSize = Size.Unspecified
 

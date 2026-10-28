@@ -192,3 +192,65 @@ sealed class DevicePropertyValue {
         }
     }
 }
+
+@Serializable
+data class GetDevicePropertiesReqData(
+    val params: List<Params>,
+) {
+
+    @Serializable
+    data class Params(
+        val did: String,
+        val siid: Int,
+        val piid: Int,
+    )
+}
+
+@Serializable
+data class GetDevicePropertiesRespData(
+    val code: Int,
+    val message: String,
+    val result: List<Result>,
+) {
+
+    @Serializable
+    data class Result(
+        val did: String,
+        val iid: String,
+        val siid: Int,
+        val piid: Int,
+        val value: DevicePropertyValue = DevicePropertyValue.None,
+        val code: Int,
+    )
+}
+
+@Serializable
+data class SetDevicePropertiesReqData(
+    val params: List<Params>,
+) {
+
+    @Serializable
+    data class Params(
+        val did: String,
+        val siid: Int,
+        val piid: Int,
+        val value: DevicePropertyValue,
+    )
+}
+
+@Serializable
+data class SetDevicePropertiesRespData(
+    val code: Int,
+    val message: String,
+    val result: List<Result>,
+) {
+
+    @Serializable
+    data class Result(
+        val did: String,
+        val iid: String,
+        val siid: Int,
+        val piid: Int,
+        val code: Int,
+    )
+}

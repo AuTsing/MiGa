@@ -7,6 +7,7 @@ import com.autsing.miga.presentation.api.reqGetDeviceIconUrl
 import com.autsing.miga.presentation.api.reqGetDeviceInfo
 import com.autsing.miga.presentation.api.reqGetDeviceProperties
 import com.autsing.miga.presentation.api.reqGetDevices
+import com.autsing.miga.presentation.api.reqSetDeviceProperty
 import com.autsing.miga.presentation.data.DevicePropertyRange
 import com.autsing.miga.presentation.data.DevicePropertyValue
 import com.autsing.miga.presentation.data.getDeviceIconUrls
@@ -245,7 +246,10 @@ class DeviceRepository(
         model: String,
     ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
         runCatching {
-            context.getDeviceInfo(model).getOrThrow() ?: throw Exception("$model 不存在")
+            val device = context.getDeviceInfo(model).getOrThrow()
+                ?: throw Exception("$model 不存在")
+
+            device
         }
     }
 
@@ -264,18 +268,17 @@ class DeviceRepository(
     suspend fun getDeviceProperties(
         auth: Auth,
         device: Device,
-        deviceInfo: DeviceInfo,
+        info: DeviceInfo,
     ): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
-        runCatching { reqGetDeviceProperties(auth, device, deviceInfo).getOrThrow() }
+        runCatching { reqGetDeviceProperties(auth, device, info).getOrThrow() }
     }
 
     suspend fun setDeviceProperty(
         auth: Auth,
         device: Device,
-        deviceProperty: DeviceInfo.Property,
+        property: DeviceInfo.Property,
         value: DevicePropertyValue,
-    ): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = withContext(Dispatchers.IO) {
-        TODO()
-//        runCatching { requestSetDeviceProperty(auth, device, deviceProperty, value).getOrThrow() }
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching { reqSetDeviceProperty(auth, device, property, value).getOrThrow() }
     }
 }

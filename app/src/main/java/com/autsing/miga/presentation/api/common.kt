@@ -1,18 +1,25 @@
 package com.autsing.miga.presentation.api
 
+import android.util.Log
 import com.autsing.miga.presentation.data.API_URL
 import com.autsing.miga.presentation.data.DEVICE_URL
 import com.autsing.miga.presentation.data.DevicePropertyValue
+import com.autsing.miga.presentation.data.GetDevicePropertiesReqData
+import com.autsing.miga.presentation.data.GetDevicePropertiesRespData
+import com.autsing.miga.presentation.data.GetHomesReqData
+import com.autsing.miga.presentation.data.GetHomesRespData
+import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.PRODUCT_URL
+import com.autsing.miga.presentation.data.SetDevicePropertiesReqData
+import com.autsing.miga.presentation.data.SetDevicePropertiesRespData
+import com.autsing.miga.presentation.data.TAG
 import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
 import com.autsing.miga.presentation.data.encode
-import com.autsing.miga.presentation.model.GetHomesData
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.DeviceInfo
-import com.autsing.miga.presentation.repository.Home
 import com.autsing.miga.presentation.repository.Scene
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -92,30 +99,20 @@ private suspend fun post(
     resp
 }
 
-@Serializable
-data class GetHomesRespData(
-    val code: Int,
-    val message: String,
-    val result: Result,
-) {
-
-    @Serializable
-    data class Result(
-        val homelist: List<Home>,
-    )
-}
-
 suspend fun reqGetHomes(auth: Auth): Result<List<Home>> = runCatching {
-    val uri = "/v2/homeroom/gethome"
-    val data = GetHomesData(
-        fg = false,
+    val uri = "/v2/homeroom/gethome_merged"
+    val data = GetHomesReqData(
+        fg = true,
         fetch_share = true,
         fetch_share_dev = true,
+        fetch_cariot = true,
         limit = 300,
         app_ver = 7,
+        plat_form = 0,
     )
     val dataJson = data.encode().getOrThrow()
     val resp = post(auth, uri, dataJson).getOrThrow()
+    Log.d(TAG, "reqGetHomes: ${resp.bodyAsText()}")
     val respData = resp.body<GetHomesRespData>()
     val homes = respData.result.homelist
 
@@ -466,37 +463,6 @@ suspend fun reqGetDeviceInfo(model: String): Result<DeviceInfo> = runCatching {
     info
 }
 
-@Serializable
-data class GetDevicePropertiesReqData(
-    val params: List<Params>,
-) {
-
-    @Serializable
-    data class Params(
-        val did: String,
-        val siid: Int,
-        val piid: Int,
-    )
-}
-
-@Serializable
-data class GetDevicePropertiesRespData(
-    val code: Int,
-    val message: String,
-    val result: List<Result>,
-) {
-
-    @Serializable
-    data class Result(
-        val did: String,
-        val iid: String,
-        val siid: Int,
-        val piid: Int,
-        val value: DevicePropertyValue = DevicePropertyValue.None,
-        val code: Int,
-    )
-}
-
 suspend fun reqGetDeviceProperties(
     auth: Auth,
     device: Device,
@@ -514,10 +480,59 @@ suspend fun reqGetDeviceProperties(
     )
     val dataJson = data.encode().getOrThrow()
     val resp = post(auth, uri, dataJson).getOrThrow()
-    val getDevicePropertiesResp = resp.body<GetDevicePropertiesRespData>()
-    val deviceProperties = info.properties.mapIndexed { i, it ->
-        Pair(it, getDevicePropertiesResp.result[i].value)
+    val respData = resp.body<GetDevicePropertiesRespData>()
+    val properties = info.properties.mapIndexed { i, it ->
+        Pair(it, respData.result[i].value)
     }
 
-    deviceProperties
+    properties
+}
+
+suspend fun reqGetDeviceProperty(
+    auth: Auth,
+    device: Device,
+    deviceProperty: DeviceInfo.Property,
+): Result<Pair<DeviceInfo.Property, DevicePropertyValue>> = runCatching {
+    val uri = "/miotspec/prop/get"
+    val data = GetDevicePropertiesReqData(
+        params = listOf(
+            GetDevicePropertiesReqData.Params(
+                did = device.did,
+                siid = deviceProperty.method.siid,
+                piid = deviceProperty.method.piid,
+            )
+        )
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val respData = resp.body<GetDevicePropertiesRespData>()
+    val property = Pair(deviceProperty, respData.result[0].value)
+
+    property
+}
+
+suspend fun reqSetDeviceProperty(
+    auth: Auth,
+    device: Device,
+    property: DeviceInfo.Property,
+    value: DevicePropertyValue,
+): Result<Unit> = runCatching {
+    val uri = "/miotspec/prop/set"
+    val data = SetDevicePropertiesReqData(
+        params = listOf(
+            SetDevicePropertiesReqData.Params(
+                did = device.did,
+                siid = property.method.siid,
+                piid = property.method.piid,
+                value = value,
+            )
+        )
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = post(auth, uri, dataJson).getOrThrow()
+    val respData = resp.body<SetDevicePropertiesRespData>()
+
+    if (respData.result[0].code != 0) {
+        throw Exception(respData.message)
+    }
 }

@@ -41,13 +41,12 @@ class DeviceViewModel : ViewModel() {
             _uiState.update { it.copy(loading = true) }
 
             val devices = deviceRepository.getLocalDevices().getOrThrow()
-            val device = devices.find { it.model == model }
-                ?: throw Exception("读取设备失败")
-            val deviceInfo = deviceRepository.getLocalDeviceInfo(model).getOrNull()
-                ?: deviceRepository.getRemoteDeviceInfo(model).getOrNull()
+            val device = devices.find { it.model == model } ?: throw Exception("读取设备失败")
+            val info = deviceRepository.getLocalDeviceInfo(device.model).getOrNull()
+                ?: deviceRepository.getRemoteDeviceInfo(device.model).getOrNull()
                 ?: throw Exception("读取设备信息失败")
             val auth = authRepository.getValidAuth().getOrThrow()
-            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, deviceInfo)
+            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, info)
                 .getOrThrow()
 
             val switches = deviceProperties
@@ -59,7 +58,7 @@ class DeviceViewModel : ViewModel() {
             val selectors = deviceProperties
                 .filter { (property, _) -> property.values.size > 1 }
                 .map { (property, value) -> Component.Selector.from(property, value) }
-            val actions = deviceInfo.actions
+            val actions = info.actions
                 .map { Component.Trigger.from(it) }
 
             _uiState.update {
@@ -68,7 +67,7 @@ class DeviceViewModel : ViewModel() {
                     exception = "",
                     auth = auth,
                     device = device,
-                    deviceInfo = deviceInfo,
+                    deviceInfo = info,
                     switchComponents = switches,
                     sliderComponents = sliders,
                     selectorComponents = selectors,
