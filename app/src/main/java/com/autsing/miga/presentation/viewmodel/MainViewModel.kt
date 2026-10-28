@@ -4,12 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.complication.FavoriteSceneComplicationService
+import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.DeviceRepository
-import com.autsing.miga.presentation.repository.Scene
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.tile.MainTileService
 import kotlinx.coroutines.async

@@ -10,6 +10,7 @@ import com.autsing.miga.presentation.data.GetHomesReqData
 import com.autsing.miga.presentation.data.GetHomesRespData
 import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.PRODUCT_URL
+import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.SetDevicePropertiesReqData
 import com.autsing.miga.presentation.data.SetDevicePropertiesRespData
 import com.autsing.miga.presentation.data.TAG
@@ -20,7 +21,6 @@ import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.DeviceInfo
-import com.autsing.miga.presentation.repository.Scene
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

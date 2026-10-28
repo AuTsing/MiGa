@@ -3,34 +3,14 @@ package com.autsing.miga.presentation.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.api.reqGetScenes
+import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.getFavoriteSceneIds
 import com.autsing.miga.presentation.data.getScenes
 import com.autsing.miga.presentation.data.setFavoriteSceneIds
 import com.autsing.miga.presentation.data.setScenes
+import com.autsing.miga.presentation.data.sort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class Scene(
-    val scene_id: String,
-    val name: String,
-    val icon_url: String,
-)
-
-fun List<Scene>.sort(favoriteSceneIds: List<String>): List<Scene> {
-    val favoriteSceneIdsMap = favoriteSceneIds.withIndex()
-        .associate { it.value to it.index }
-    return this.sortedBy { favoriteSceneIdsMap[it.scene_id] ?: Int.MAX_VALUE }
-}
-
-fun getMockScene(index: Int? = 0): Scene {
-    return Scene(
-        scene_id = "abcde$index",
-        name = "开灯$index",
-        icon_url = "http://localhost",
-    )
-}
 
 class SceneRepository(
     private val context: Context,

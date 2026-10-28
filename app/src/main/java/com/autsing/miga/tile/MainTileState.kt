@@ -1,7 +1,7 @@
 package com.autsing.miga.tile
 
-import com.autsing.miga.presentation.repository.Scene
-import com.autsing.miga.presentation.repository.getMockScene
+import com.autsing.miga.presentation.data.Scene
+import com.autsing.miga.presentation.data.getMockScene
 
 data class MainTileState(
     val scenes: List<Scene>,

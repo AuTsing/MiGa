@@ -30,7 +30,7 @@ import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
 import com.autsing.miga.presentation.activity.MainActivity
 import com.autsing.miga.presentation.activity.RunSceneActivity
-import com.autsing.miga.presentation.repository.Scene
+import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_ADD
 import com.autsing.miga.tile.MainTileRenderer.Companion.RES_IC_SCENE
 import com.google.android.horologist.annotations.ExperimentalHorologistApi

@@ -8,7 +8,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.autsing.miga.presentation.repository.Auth
 import com.autsing.miga.presentation.repository.Device
 import com.autsing.miga.presentation.repository.DeviceInfo
-import com.autsing.miga.presentation.repository.Scene
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
