@@ -2,12 +2,12 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.autsing.miga.presentation.api.LoginUrlRespData
 import com.autsing.miga.presentation.api.reqLoginLocation
 import com.autsing.miga.presentation.api.reqLoginLp
 import com.autsing.miga.presentation.api.reqLoginUrl
 import com.autsing.miga.presentation.api.reqServiceLogin
 import com.autsing.miga.presentation.data.Auth
+import com.autsing.miga.presentation.data.LoginUrlRespData
 import com.autsing.miga.presentation.data.getAuth
 import com.autsing.miga.presentation.data.setAuth
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 
 class AuthRepository(
     private val context: Context,
