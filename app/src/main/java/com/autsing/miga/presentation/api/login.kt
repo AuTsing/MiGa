@@ -1,12 +1,12 @@
 package com.autsing.miga.presentation.api
 
 import androidx.core.net.toUri
+import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.LOGIN_URL
 import com.autsing.miga.presentation.data.SERVICE_LOGIN_URL
 import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
-import com.autsing.miga.presentation.repository.Auth
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout

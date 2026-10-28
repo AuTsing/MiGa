@@ -3,6 +3,7 @@ package com.autsing.miga.presentation.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.api.reqGetScenes
+import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.getFavoriteSceneIds
 import com.autsing.miga.presentation.data.getScenes

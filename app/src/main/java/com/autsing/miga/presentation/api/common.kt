@@ -2,6 +2,7 @@ package com.autsing.miga.presentation.api
 
 import android.util.Log
 import com.autsing.miga.presentation.data.API_URL
+import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.DEVICE_URL
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfo
@@ -20,7 +21,6 @@ import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
 import com.autsing.miga.presentation.data.encode
-import com.autsing.miga.presentation.repository.Auth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

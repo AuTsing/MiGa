@@ -7,6 +7,7 @@ import com.autsing.miga.presentation.api.reqGetDeviceInfo
 import com.autsing.miga.presentation.api.reqGetDeviceProperties
 import com.autsing.miga.presentation.api.reqGetDevices
 import com.autsing.miga.presentation.api.reqSetDeviceProperty
+import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfo
 import com.autsing.miga.presentation.data.DevicePropertyValue

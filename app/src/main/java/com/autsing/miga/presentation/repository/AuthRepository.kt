@@ -7,6 +7,7 @@ import com.autsing.miga.presentation.api.reqLoginLocation
 import com.autsing.miga.presentation.api.reqLoginLp
 import com.autsing.miga.presentation.api.reqLoginUrl
 import com.autsing.miga.presentation.api.reqServiceLogin
+import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.getAuth
 import com.autsing.miga.presentation.data.setAuth
 import kotlinx.coroutines.Dispatchers
@@ -15,12 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class Auth(
-    val deviceId: String,
-    val cookies: Map<String, String>,
-)
 
 class AuthRepository(
     private val context: Context,
