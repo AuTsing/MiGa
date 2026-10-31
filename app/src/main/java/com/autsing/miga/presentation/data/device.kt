@@ -1,12 +1,5 @@
 package com.autsing.miga.presentation.data
 
-import com.autsing.miga.presentation.data.DeviceInfoV2.Property.Range
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Int16
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Int32
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Int8
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Uint16
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Uint32
-import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2.Service.Property.ValueRange.Uint8
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -26,7 +19,6 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.float
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -51,28 +43,24 @@ fun List<Device>.sort(favoriteDeviceIds: List<String>): List<Device> {
 @Serializable
 data class DeviceInfoV2(
     val name: String,
-    val type: String,
+    val urn: String,
     val properties: List<Property>,
     val actions: List<Action>,
 ) {
 
     @Serializable
-    data class Property(
-        val name: String,
-        val type: String,
-        val access: Access,
-        val method: Method,
-        val range: Range,
-        val values: List<Value>,
-        val nameZh: String? = null,
-        val unit: String? = null,
-    ) {
+    sealed interface Property {
+        val name: kotlin.String
+        val urn: kotlin.String
+        val access: Access
+        val method: Method
+        val nameZh: kotlin.String?
 
         @Serializable
         data class Access(
-            val read: Boolean,
-            val write: Boolean,
-            val notify: Boolean,
+            val read: kotlin.Boolean,
+            val write: kotlin.Boolean,
+            val notify: kotlin.Boolean,
         )
 
         @Serializable
@@ -82,68 +70,84 @@ data class DeviceInfoV2(
         )
 
         @Serializable
-        sealed interface Range {
-
-            @Serializable
-            @SerialName("long")
-            data class Long(
-                val from: kotlin.Long,
-                val to: kotlin.Long,
-                val step: kotlin.Long,
-            ) : Range
-
-            @Serializable
-            @SerialName("double")
-            data class Double(
-                val from: kotlin.Double,
-                val to: kotlin.Double,
-                val step: kotlin.Double,
-            ) : Range
-
-            @Serializable
-            @SerialName("none")
-            object None : Range
-        }
+        data class Boolean(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+        ) : Property
 
         @Serializable
-        sealed interface Value {
+        data class String(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+        ) : Property
 
-            @Serializable
-            @SerialName("boolean")
-            data class Boolean(
-                val name: kotlin.String,
-                val value: kotlin.Boolean,
-                val nameZh: kotlin.String? = null,
-            ) : Value
+        @Serializable
+        data class DoubleRange(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+            val from: Double,
+            val to: Double,
+            val step: Double,
+            val unit: kotlin.String? = null,
+        ) : Property
 
-            @Serializable
-            @SerialName("long")
-            data class Long(
-                val name: kotlin.String,
-                val value: kotlin.Long,
-                val nameZh: kotlin.String? = null,
-            ) : Value
+        @Serializable
+        data class LongRange(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+            val from: Long,
+            val to: Long,
+            val step: Long,
+            val unit: kotlin.String? = null,
+        ) : Property
 
-            @Serializable
-            @SerialName("double")
-            data class Double(
-                val name: kotlin.String,
-                val value: kotlin.Double,
-                val nameZh: kotlin.String? = null,
-            ) : Value
+        @Serializable
+        data class Value<T>(
+            val name: kotlin.String,
+            val value: T,
+            val nameZh: kotlin.String? = null,
+        )
 
-            @Serializable
-            @SerialName("string")
-            data class String(
-                val name: kotlin.String,
-                val value: kotlin.String,
-                val nameZh: kotlin.String? = null,
-            ) : Value
+        @Serializable
+        data class IntEnum(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+            val values: List<Value<Int>>,
+        ) : Property
 
-            @Serializable
-            @SerialName("none")
-            object None : Value
-        }
+        @Serializable
+        data class StringEnum(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+            val values: List<Value<kotlin.String>>,
+        ) : Property
+
+        @Serializable
+        data class None(
+            override val name: kotlin.String,
+            override val urn: kotlin.String,
+            override val access: Access,
+            override val method: Method,
+            override val nameZh: kotlin.String? = null,
+        ) : Property
     }
 
     @Serializable
@@ -179,78 +183,80 @@ data class DeviceInfoV2(
                         siid = service.iid,
                         piid = p.iid,
                     )
-                    val range = when (p.valueRange) {
-                        is GetDeviceInfoRespDataV2.Service.Property.ValueRange.Float -> Range.Double(
-                            from = p.valueRange.value.first.toDouble(),
-                            to = p.valueRange.value.second.toDouble(),
-                            step = p.valueRange.value.third.toDouble(),
+                    val property = if (p.format == "bool") {
+                        Property.Boolean(
+                            name = p.description,
+                            urn = p.type,
+                            access = access,
+                            method = method,
                         )
-
-                        is Uint8 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
+                    } else if (p.format == "string") {
+                        Property.String(
+                            name = p.description,
+                            urn = p.type,
+                            access = access,
+                            method = method,
                         )
+                    } else if (p.valueRange != null) {
+                        when (p.valueRange) {
+                            is GetDeviceInfoRespDataV2.Service.Property.ValueRange.Double -> Property.DoubleRange(
+                                name = p.description,
+                                urn = p.type,
+                                access = access,
+                                method = method,
+                                from = p.valueRange.value.first,
+                                to = p.valueRange.value.second,
+                                step = p.valueRange.value.third,
+                                unit = p.unit,
+                            )
 
-                        is Uint16 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
-                        )
-
-                        is Uint32 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
-                        )
-
-                        is Int8 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
-                        )
-
-                        is Int16 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
-                        )
-
-                        is Int32 -> Range.Long(
-                            from = p.valueRange.value.first.toLong(),
-                            to = p.valueRange.value.second.toLong(),
-                            step = p.valueRange.value.third.toLong(),
-                        )
-
-                        null -> Range.None
-                    }
-                    val values = when (p.valueList) {
-                        is GetDeviceInfoRespDataV2.Service.Property.ValueList.Uint8 -> p.valueList.value.map {
-                            Property.Value.Long(
-                                name = it.description,
-                                value = it.value.toLong(),
+                            is GetDeviceInfoRespDataV2.Service.Property.ValueRange.Long -> Property.LongRange(
+                                name = p.description,
+                                urn = p.type,
+                                access = access,
+                                method = method,
+                                from = p.valueRange.value.first,
+                                to = p.valueRange.value.second,
+                                step = p.valueRange.value.third,
+                                unit = p.unit,
                             )
                         }
+                    } else if (p.valueList != null) {
+                        when (p.valueList) {
+                            is GetDeviceInfoRespDataV2.Service.Property.ValueList.Int -> Property.IntEnum(
+                                name = p.description,
+                                urn = p.type,
+                                access = access,
+                                method = method,
+                                values = p.valueList.value.map {
+                                    Property.Value(
+                                        name = it.description,
+                                        value = it.value,
+                                    )
+                                },
+                            )
 
-                        is GetDeviceInfoRespDataV2.Service.Property.ValueList.String -> p.valueList.value.map {
-                            Property.Value.String(
-                                name = it.description,
-                                value = it.value,
+                            is GetDeviceInfoRespDataV2.Service.Property.ValueList.String -> Property.StringEnum(
+                                name = p.description,
+                                urn = p.type,
+                                access = access,
+                                method = method,
+                                values = p.valueList.value.map {
+                                    Property.Value(
+                                        name = it.description,
+                                        value = it.value,
+                                    )
+                                },
                             )
                         }
-
-                        null -> emptyList()
+                    } else {
+                        Property.None(
+                            name = p.description,
+                            urn = p.type,
+                            access = access,
+                            method = method,
+                        )
                     }
-
-                    val property = Property(
-                        name = p.description,
-                        type = p.type,
-                        access = access,
-                        method = method,
-                        range = range,
-                        values = values,
-                        unit = p.unit,
-                    )
 
                     properties.add(property)
                 }
@@ -274,7 +280,7 @@ data class DeviceInfoV2(
 
             val info = DeviceInfoV2(
                 name = respData.description,
-                type = respData.type,
+                urn = respData.type,
                 properties = properties,
                 actions = actions,
             )
@@ -348,20 +354,17 @@ data class GetDeviceInfoRespDataV2(
         ) {
 
             sealed interface ValueRange {
-                data class Float(
-                    val value: Triple<kotlin.Float, kotlin.Float, kotlin.Float>,
+                data class Double(
+                    val value: Triple<kotlin.Double, kotlin.Double, kotlin.Double>,
                 ) : ValueRange
 
-                data class Uint8(val value: Triple<UByte, UByte, UByte>) : ValueRange
-                data class Uint16(val value: Triple<UShort, UShort, UShort>) : ValueRange
-                data class Uint32(val value: Triple<UInt, UInt, UInt>) : ValueRange
-                data class Int8(val value: Triple<Byte, Byte, Byte>) : ValueRange
-                data class Int16(val value: Triple<Short, Short, Short>) : ValueRange
-                data class Int32(val value: Triple<Int, Int, Int>) : ValueRange
+                data class Long(
+                    val value: Triple<kotlin.Long, kotlin.Long, kotlin.Long>,
+                ) : ValueRange
             }
 
             sealed interface ValueList {
-                data class Uint8(val value: List<Value<UByte>>) : ValueList
+                data class Int(val value: List<Value<kotlin.Int>>) : ValueList
                 data class String(val value: List<Value<kotlin.String>>) : ValueList
 
                 @Serializable
@@ -390,21 +393,16 @@ data class GetDeviceInfoRespDataV2(
                         value.unit?.let { put("unit", JsonPrimitive(it)) }
                         value.valueRange?.let { r ->
                             val array = when (r) {
-                                is ValueRange.Float -> r.value.toList().map { JsonPrimitive(it) }
-                                is Uint8 -> r.value.toList().map { JsonPrimitive(it) }
-                                is Uint16 -> r.value.toList().map { JsonPrimitive(it) }
-                                is Uint32 -> r.value.toList().map { JsonPrimitive(it) }
-                                is Int8 -> r.value.toList().map { JsonPrimitive(it) }
-                                is Int16 -> r.value.toList().map { JsonPrimitive(it) }
-                                is Int32 -> r.value.toList().map { JsonPrimitive(it) }
+                                is ValueRange.Double -> r.value.toList().map { JsonPrimitive(it) }
+                                is ValueRange.Long -> r.value.toList().map { JsonPrimitive(it) }
                             }
                             put("value-range", JsonArray(array))
                         }
                         value.valueList?.let { r ->
                             val array = when (r) {
-                                is ValueList.Uint8 -> r.value.map {
+                                is ValueList.Int -> r.value.map {
                                     Json.encodeToJsonElement(
-                                        ValueList.Value.serializer(UByte.serializer()),
+                                        ValueList.Value.serializer(Int.serializer()),
                                         it,
                                     )
                                 }
@@ -415,6 +413,7 @@ data class GetDeviceInfoRespDataV2(
                                         it,
                                     )
                                 }
+
                             }
                             put("value-list", JsonArray(array))
                         }
@@ -433,33 +432,33 @@ data class GetDeviceInfoRespDataV2(
                     val valueRange = jsonObject["value-range"]?.jsonArray
                         ?.let { a ->
                             when (format) {
-                                "float" -> a.map { it.jsonPrimitive.float }
+                                "float" -> a.map { it.jsonPrimitive.content.toDouble() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { ValueRange.Float(it) }
+                                    .let { ValueRange.Double(it) }
 
-                                "uint8" -> a.map { it.jsonPrimitive.content.toUByte() }
+                                "uint8" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Uint8(it) }
+                                    .let { ValueRange.Long(it) }
 
-                                "uint16" -> a.map { it.jsonPrimitive.content.toUShort() }
+                                "uint16" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Uint16(it) }
+                                    .let { ValueRange.Long(it) }
 
-                                "uint32" -> a.map { it.jsonPrimitive.content.toUInt() }
+                                "uint32" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Uint32(it) }
+                                    .let { ValueRange.Long(it) }
 
-                                "int8" -> a.map { it.jsonPrimitive.content.toByte() }
+                                "int8" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Int8(it) }
+                                    .let { ValueRange.Long(it) }
 
-                                "int16" -> a.map { it.jsonPrimitive.content.toShort() }
+                                "int16" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Int16(it) }
+                                    .let { ValueRange.Long(it) }
 
-                                "int32" -> a.map { it.jsonPrimitive.int }
+                                "int32" -> a.map { it.jsonPrimitive.content.toLong() }
                                     .let { Triple(it[0], it[1], it[2]) }
-                                    .let { Int32(it) }
+                                    .let { ValueRange.Long(it) }
 
                                 else -> null
                             }
@@ -469,10 +468,10 @@ data class GetDeviceInfoRespDataV2(
                             when (format) {
                                 "uint8" -> a.map {
                                     ValueList.Value(
-                                        value = it.jsonObject["value"]!!.jsonPrimitive.content.toUByte(),
+                                        value = it.jsonObject["value"]!!.jsonPrimitive.content.toInt(),
                                         description = it.jsonObject["description"]!!.jsonPrimitive.content,
                                     )
-                                }.let { ValueList.Uint8(it) }
+                                }.let { ValueList.Int(it) }
 
                                 "string" -> a.map {
                                     ValueList.Value(
@@ -488,7 +487,7 @@ data class GetDeviceInfoRespDataV2(
                     return Property(
                         iid = jsonObject["iid"]!!.jsonPrimitive.int,
                         type = jsonObject["type"]!!.jsonPrimitive.content,
-                        description = jsonObject["type"]!!.jsonPrimitive.content,
+                        description = jsonObject["description"]!!.jsonPrimitive.content,
                         access = access,
                         format = jsonObject["format"]!!.jsonPrimitive.content,
                         unit = jsonObject["unit"]?.jsonPrimitive?.content,
@@ -586,11 +585,11 @@ data class GetDevicePropertiesRespDataV2(
 
 @Serializable
 data class SetDevicePropertiesReqDataV2(
-    val params: List<Params>,
+    val params: List<Param>,
 ) {
 
     @Serializable
-    data class Params(
+    data class Param(
         val did: String,
         val siid: Int,
         val piid: Int,
@@ -607,10 +606,11 @@ data class SetDevicePropertiesRespDataV2(
 
     @Serializable
     data class Result(
+        val code: Int,
         val did: String,
         val iid: String,
         val siid: Int,
         val piid: Int,
-        val code: Int,
+        val value: DevicePropertyValueV2 = DevicePropertyValueV2.None,
     )
 }

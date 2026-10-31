@@ -1,6 +1,5 @@
 package com.autsing.miga.presentation.api
 
-import android.util.Log
 import com.autsing.miga.presentation.data.API_URL
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.DEVICE_URL
@@ -19,7 +18,7 @@ import com.autsing.miga.presentation.data.GetScenesRespDataV2
 import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.SetDevicePropertiesReqDataV2
-import com.autsing.miga.presentation.data.TAG
+import com.autsing.miga.presentation.data.SetDevicePropertiesRespDataV2
 import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.defaultJson
 import com.autsing.miga.presentation.data.encode
@@ -38,11 +37,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
-import org.json.JSONObject
 
 private val client: HttpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -192,7 +189,7 @@ suspend fun reqSetDevicePropertyV2(
     val uri = "/miotspec/prop/set"
     val data = SetDevicePropertiesReqDataV2(
         params = listOf(
-            SetDevicePropertiesReqDataV2.Params(
+            SetDevicePropertiesReqDataV2.Param(
                 did = device.did,
                 siid = property.method.siid,
                 piid = property.method.piid,
@@ -202,5 +199,9 @@ suspend fun reqSetDevicePropertyV2(
     )
     val dataJson = data.encode().getOrThrow()
     val resp = request(uri, dataJson, auth).getOrThrow()
-        .also { Log.d(TAG, "reqSetDevicePropertyV2: ${JSONObject(it.bodyAsText()).toString(4)}") }
+    val respData = resp.body<SetDevicePropertiesRespDataV2>()
+
+    if (respData.code != 0) {
+        throw Exception(respData.message)
+    }
 }
