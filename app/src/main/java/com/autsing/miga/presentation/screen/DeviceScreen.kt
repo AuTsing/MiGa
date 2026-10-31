@@ -16,7 +16,6 @@ import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.component.PrimaryButton
 import com.autsing.miga.presentation.component.SelectorComponent
-import com.autsing.miga.presentation.component.SliderComponent
 import com.autsing.miga.presentation.component.SwitchComponent
 import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.component.TriggerComponent
@@ -41,11 +40,9 @@ fun DeviceScreen(
         } else {
             DeviceInfoContent(
                 switches = uiState.switchComponents,
-                sliders = uiState.sliderComponents,
                 selectors = uiState.selectorComponents,
                 triggers = uiState.triggerComponents,
                 onClickSwitch = deviceViewModel::handleChangeSwitch,
-                onClickSlider = deviceViewModel::handleChangeSlider,
                 onClickSelector = deviceViewModel::handleChangeSelector,
                 onClickTrigger = { deviceViewModel.handleClickTrigger(context, it) },
                 onBack = { (context as Activity).finish() },
@@ -57,11 +54,9 @@ fun DeviceScreen(
 @Composable
 private fun DeviceInfoContent(
     switches: List<Component.Switch>,
-    sliders: List<Component.Slider>,
     selectors: List<Component.Selector>,
     triggers: List<Component.Trigger>,
     onClickSwitch: (Component.Switch, Boolean) -> Unit = { _, _ -> },
-    onClickSlider: (Component.Slider, Float) -> Unit = { _, _ -> },
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
     onClickTrigger: (Component.Trigger) -> Unit = {},
     onBack: () -> Unit = {},
@@ -72,10 +67,6 @@ private fun DeviceInfoContent(
             SwitchComponent(switch) { onClickSwitch(switch, it) }
         }
         item { Title("调整") }
-        items(sliders) { slider ->
-            SliderComponent(slider) { onClickSlider(slider, it) }
-        }
-        item { Title("模式") }
         items(selectors) { selector ->
             SelectorComponent(selector) { onClickSelector(selector, it) }
         }

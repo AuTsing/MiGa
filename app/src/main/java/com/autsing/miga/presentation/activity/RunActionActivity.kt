@@ -8,8 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.data.Component
-import com.autsing.miga.presentation.data.DeviceInfo
-import com.autsing.miga.presentation.data.DevicePropertyValue
+import com.autsing.miga.presentation.data.DeviceInfoV2
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
@@ -36,13 +35,12 @@ class RunActionActivity : ComponentActivity() {
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
     private lateinit var deviceModel: String
-    private lateinit var action: DeviceInfo.Action
-    private lateinit var properties: List<DeviceInfo.Property>
+    private lateinit var action: DeviceInfoV2.Action
+    private lateinit var properties: List<DeviceInfoV2.Property>
 
     private val loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
     private val message: MutableStateFlow<String> = MutableStateFlow("")
     private val title: MutableStateFlow<String> = MutableStateFlow("")
-    private val sliders: MutableStateFlow<List<Component.Slider>> = MutableStateFlow(emptyList())
     private val selectors: MutableStateFlow<List<Component.Selector>> =
         MutableStateFlow(emptyList())
 
@@ -53,16 +51,13 @@ class RunActionActivity : ComponentActivity() {
             val loading = loading.collectAsState()
             val message = message.collectAsState()
             val title = title.collectAsState()
-            val sliders = sliders.collectAsState()
             val selectors = selectors.collectAsState()
 
             RunActionScreen(
                 loading = loading.value,
                 message = message.value,
                 title = title.value,
-                sliders = sliders.value,
                 selectors = selectors.value,
-                onClickSlider = this::handleChangeSlider,
                 onClickSelector = this::handleChangeSelector,
                 onClickRun = this::handleRunAction,
                 onClickBack = this::handleClickBack,
@@ -116,53 +111,26 @@ class RunActionActivity : ComponentActivity() {
 //        }
     }
 
-    private fun handleChangeSlider(
-        component: Component.Slider,
-        percentage: Float,
-    ) = lifecycleScope.launch {
-        runCatching {
-            sliders.value = sliders.value.map {
-                if (it == component) {
-                    val value = component.range.getValueOfPercentage(percentage)
-                    val sliderValue = when (value) {
-                        is DevicePropertyValue.Long -> "${value.value}"
-                        is DevicePropertyValue.Double -> "${value.value}"
-                        else -> ""
-                    }
-                    val sliderDisplay = "$sliderValue ${it.property.unit}"
-                    it.copy(
-                        value = percentage,
-                        valueDisplay = sliderDisplay,
-                    )
-                } else {
-                    it
-                }
-            }
-        }.onFailure {
-            message.value = it.stackTraceToString()
-        }
-    }
-
     private fun handleChangeSelector(
         component: Component.Selector,
         index: Int,
     ) = lifecycleScope.launch {
-        runCatching {
-            selectors.value = selectors.value.map {
-                if (it == component) {
-                    val selectorValue = component.values[index]
-                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-                    it.copy(
-                        value = index,
-                        valueDisplay = selectorDisplay,
-                    )
-                } else {
-                    it
-                }
-            }
-        }.onFailure {
-            message.value = it.stackTraceToString()
-        }
+//        runCatching {
+//            selectors.value = selectors.value.map {
+//                if (it == component) {
+//                    val selectorValue = component.values[index]
+//                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
+//                    it.copy(
+//                        value = index,
+//                        valueDisplay = selectorDisplay,
+//                    )
+//                } else {
+//                    it
+//                }
+//            }
+//        }.onFailure {
+//            message.value = it.stackTraceToString()
+//        }
     }
 
     private fun handleRunAction() = lifecycleScope.launch {

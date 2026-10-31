@@ -12,7 +12,6 @@ import com.autsing.miga.presentation.component.LoadingContent
 import com.autsing.miga.presentation.component.MessageContent
 import com.autsing.miga.presentation.component.PairButtons
 import com.autsing.miga.presentation.component.SelectorComponent
-import com.autsing.miga.presentation.component.SliderComponent
 import com.autsing.miga.presentation.component.Title
 import com.autsing.miga.presentation.data.Component
 
@@ -21,9 +20,7 @@ fun RunActionScreen(
     loading: Boolean,
     message: String,
     title: String,
-    sliders: List<Component.Slider>,
     selectors: List<Component.Selector>,
-    onClickSlider: (Component.Slider, Float) -> Unit = { _, _ -> },
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
     onClickRun: () -> Unit = {},
     onClickBack: () -> Unit = {},
@@ -36,9 +33,7 @@ fun RunActionScreen(
         } else {
             RunActionContent(
                 title = title,
-                sliders = sliders,
                 selectors = selectors,
-                onClickSlider = onClickSlider,
                 onClickSelector = onClickSelector,
                 onClickRun = onClickRun,
                 onClickBack = onClickBack,
@@ -50,9 +45,7 @@ fun RunActionScreen(
 @Composable
 private fun RunActionContent(
     title: String,
-    sliders: List<Component.Slider>,
     selectors: List<Component.Selector>,
-    onClickSlider: (Component.Slider, Float) -> Unit = { _, _ -> },
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
     onClickRun: () -> Unit = {},
     onClickBack: () -> Unit = {},
@@ -71,7 +64,6 @@ private fun RunActionContent(
             )
         },
         content = {
-            items(sliders) { slider -> SliderComponent(slider) { onClickSlider(slider, it) } }
             items(selectors) { selector ->
                 SelectorComponent(selector) { onClickSelector(selector, it) }
             }
@@ -93,7 +85,6 @@ private fun PreviewRunActionContent() {
     FullScreenBox {
         RunActionContent(
             title = "开关状态切换",
-            sliders = emptyList(),
             selectors = emptyList(),
         )
     }

@@ -6,8 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.Device
-import com.autsing.miga.presentation.data.DeviceInfo
-import com.autsing.miga.presentation.data.DevicePropertyRange
+import com.autsing.miga.presentation.data.DeviceInfoV2
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,9 +20,8 @@ data class DeviceUiState(
     val exception: String = "",
     val auth: Auth? = null,
     val device: Device? = null,
-    val deviceInfo: DeviceInfo? = null,
+    val deviceInfo: DeviceInfoV2? = null,
     val switchComponents: List<Component.Switch> = emptyList(),
-    val sliderComponents: List<Component.Slider> = emptyList(),
     val selectorComponents: List<Component.Selector> = emptyList(),
     val triggerComponents: List<Component.Trigger> = emptyList(),
 )
@@ -46,20 +44,12 @@ class DeviceViewModel : ViewModel() {
                 ?: deviceRepository.getRemoteDeviceInfo(device.model).getOrNull()
                 ?: throw Exception("读取设备信息失败")
             val auth = authRepository.getValidAuth().getOrThrow()
-            val deviceProperties = deviceRepository.getDeviceProperties(auth, device, info)
+            val deviceProperties = deviceRepository.getDeviceProperties(device, info, auth)
                 .getOrThrow()
 
-            val switches = deviceProperties
-                .filter { (property, _) -> property.type == "bool" }
-                .map { (property, value) -> Component.Switch.from(property, value) }
-            val sliders = deviceProperties
-                .filter { (property, _) -> property.range !is DevicePropertyRange.None }
-                .map { (property, value) -> Component.Slider.from(property, value) }
-            val selectors = deviceProperties
-                .filter { (property, _) -> property.values.size > 1 }
-                .map { (property, value) -> Component.Selector.from(property, value) }
-            val actions = info.actions
-                .map { Component.Trigger.from(it) }
+            val switches = TODO()
+            val selectors = TODO()
+            val actions = info.actions.map { Component.Trigger.from(it) }
 
             _uiState.update {
                 it.copy(
@@ -69,7 +59,6 @@ class DeviceViewModel : ViewModel() {
                     device = device,
                     deviceInfo = info,
                     switchComponents = switches,
-                    sliderComponents = sliders,
                     selectorComponents = selectors,
                     triggerComponents = actions,
                 )
@@ -107,42 +96,6 @@ class DeviceViewModel : ViewModel() {
 //                }
 //            }
 //            uiState = uiState.copy(switchComponents = newSwitchComponents)
-//        }.onFailure {
-//            uiState = uiState.copy(exception = it.stackTraceToString())
-//        }
-    }
-
-    fun handleChangeSlider(
-        component: Component.Slider,
-        percentage: Float,
-    ) = viewModelScope.launch {
-//        runCatching {
-//            val auth = uiState.auth ?: throw Exception("读取权限失败")
-//            val device = uiState.device ?: throw Exception("读取设备失败")
-//            val value = component.range.getValueOfPercentage(percentage)
-//            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
-//                auth,
-//                device,
-//                component.property,
-//                value,
-//            ).getOrThrow()
-//
-//            val newSliderComponents = uiState.sliderComponents.map {
-//                if (it.property == newProperty) {
-//                    val v = when (newValue) {
-//                        is DevicePropertyValue.Long -> "${newValue.value}"
-//                        is DevicePropertyValue.Double -> "${newValue.value}"
-//                        else -> ""
-//                    }
-//                    it.copy(
-//                        value = percentage,
-//                        valueDisplay = "$v ${it.property.unit}",
-//                    )
-//                } else {
-//                    it
-//                }
-//            }
-//            uiState = uiState.copy(sliderComponents = newSliderComponents)
 //        }.onFailure {
 //            uiState = uiState.copy(exception = it.stackTraceToString())
 //        }

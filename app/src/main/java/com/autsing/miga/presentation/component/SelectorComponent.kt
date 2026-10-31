@@ -28,7 +28,7 @@ fun SelectorComponent(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Title(
-            title = "${component.headline}: ${component.valueDisplay}",
+            title = "${component.headline}: ${component.display}",
             style = MaterialTheme.typography.titleMedium,
         )
         Slider(
@@ -37,7 +37,7 @@ fun SelectorComponent(
                 value = it
                 onClick(it)
             },
-            valueProgression = 0..<component.values.size,
+            valueProgression = 0..<component.size,
             segmented = true,
             enabled = !component.readOnly,
             increaseIcon = {

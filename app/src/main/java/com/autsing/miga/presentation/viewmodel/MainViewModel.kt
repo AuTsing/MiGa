@@ -1,12 +1,19 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.complication.FavoriteSceneComplicationService
+import com.autsing.miga.presentation.api.reqGetDeviceInfoV2
+import com.autsing.miga.presentation.api.reqGetDevicePropertiesV2
+import com.autsing.miga.presentation.api.reqGetDevicesV2
+import com.autsing.miga.presentation.api.reqGetHomesV2
+import com.autsing.miga.presentation.api.reqGetScenesV2
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.Scene
+import com.autsing.miga.presentation.data.TAG
 import com.autsing.miga.presentation.data.getOrDefault
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
@@ -45,8 +52,9 @@ class MainViewModel : ViewModel() {
 
     init {
         handleLoadAuth()
-        handleLoadScenes()
-        handleLoadDevices()
+//        handleLoadScenes()
+//        handleLoadDevices()
+        handleLoadScenesV2()
     }
 
     fun handleLoadAuth() = viewModelScope.launch {
@@ -169,6 +177,28 @@ class MainViewModel : ViewModel() {
                     message = e.message ?: e.stackTraceToString(),
                 )
             }
+        }
+    }
+
+    private fun handleLoadScenesV2() = viewModelScope.launch {
+        runCatching {
+            val auth = authRepository.observeAuth().filterNotNull().first()
+            reqGetHomesV2(auth).getOrThrow().also {
+                Log.d(TAG, "handleLoadScenesV2: ${it.map { it.name }}")
+            }
+            reqGetScenesV2(auth).getOrThrow().also {
+                Log.d(TAG, "handleLoadScenesV2: ${it.map { it.name }}")
+            }
+            val devices = reqGetDevicesV2(auth).getOrThrow().also {
+                Log.d(TAG, "handleLoadScenesV2: ${it.map { it.name }}")
+            }
+            val device = devices.first { it.name == "米家台灯1S 增强版" }
+            val info = reqGetDeviceInfoV2(device.spec_type).getOrThrow()
+                .also { Log.d(TAG, "handleLoadScenesV2: $it") }
+            val properties = reqGetDevicePropertiesV2(device, info, auth).getOrThrow()
+
+        }.onFailure { e ->
+            Log.e(TAG, "handleLoadScenesV2: ${e.stackTraceToString()}")
         }
     }
 

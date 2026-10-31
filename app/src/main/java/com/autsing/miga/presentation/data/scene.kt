@@ -42,6 +42,19 @@ data class GetScenesRespData(
 }
 
 @Serializable
+data class GetScenesRespDataV2(
+    val code: Int,
+    val message: String,
+    val result: Result,
+) {
+
+    @Serializable
+    data class Result(
+        val manual_scene_info_list: List<Scene>,
+    )
+}
+
+@Serializable
 data class RunSceneReqData(
     val scene_id: String,
     val trigger_key: String,

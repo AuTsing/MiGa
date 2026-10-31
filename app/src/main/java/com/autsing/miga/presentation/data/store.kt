@@ -121,18 +121,18 @@ suspend fun Context.setDeviceIconUrls(urls: Map<String, String>): Result<Unit> =
     }
 }
 
-suspend fun Context.getDeviceInfo(model: String): Result<DeviceInfo?> = runCatching {
+suspend fun Context.getDeviceInfo(key: String): Result<DeviceInfoV2?> = runCatching {
     deviceInfoDataStore.data
-        .map { preferences -> preferences[stringPreferencesKey(model)] ?: "" }
+        .map { preferences -> preferences[stringPreferencesKey(key)] ?: "" }
         .first()
-        .decode<DeviceInfo>()
+        .decode<DeviceInfoV2>()
         .getOrNull()
 }
 
-suspend fun Context.setDeviceInfo(model: String, info: DeviceInfo): Result<Unit> = runCatching {
+suspend fun Context.setDeviceInfo(key: String, info: DeviceInfoV2): Result<Unit> = runCatching {
     deviceInfoDataStore.updateData {
         it.toMutablePreferences().also { preferences ->
-            preferences[stringPreferencesKey(model)] = info.encode().getOrThrow()
+            preferences[stringPreferencesKey(key)] = info.encode().getOrThrow()
         }
     }
 }

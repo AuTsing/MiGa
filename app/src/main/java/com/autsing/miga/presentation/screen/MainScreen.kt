@@ -365,6 +365,7 @@ private fun PreviewDeviceChip() {
             name = "米家台灯",
             isOnline = true,
             model = "",
+            spec_type = "",
         ),
         iconUrl = "https://cdn.cnbj1.fds.api.mi-img.com/iotweb-user-center/developer_1679040583270V7znmyVX.png?GalaxyAccessKeyId=AKVGLQWBOVIRQ3XLEW&Expires=9223372036854775807&Signature=JV+tC8MQ3QbAYiU3nC+T1U9DlZ0=",
         favorite = false,

@@ -3,14 +3,14 @@ package com.autsing.miga.presentation.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import com.autsing.miga.presentation.api.reqGetDeviceIconUrl
-import com.autsing.miga.presentation.api.reqGetDeviceInfo
-import com.autsing.miga.presentation.api.reqGetDeviceProperties
-import com.autsing.miga.presentation.api.reqGetDevices
-import com.autsing.miga.presentation.api.reqSetDeviceProperty
+import com.autsing.miga.presentation.api.reqGetDeviceInfoV2
+import com.autsing.miga.presentation.api.reqGetDevicePropertiesV2
+import com.autsing.miga.presentation.api.reqGetDevicesV2
+import com.autsing.miga.presentation.api.reqSetDevicePropertyV2
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Device
-import com.autsing.miga.presentation.data.DeviceInfo
-import com.autsing.miga.presentation.data.DevicePropertyValue
+import com.autsing.miga.presentation.data.DeviceInfoV2
+import com.autsing.miga.presentation.data.DevicePropertyValueV2
 import com.autsing.miga.presentation.data.getDeviceIconUrls
 import com.autsing.miga.presentation.data.getDeviceInfo
 import com.autsing.miga.presentation.data.getDevices
@@ -52,7 +52,7 @@ class DeviceRepository(
 
     suspend fun getRemoteDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devices = reqGetDevices(auth).getOrThrow().sortedByDescending { it.isOnline }
+            val devices = reqGetDevicesV2(auth).getOrThrow().sortedByDescending { it.isOnline }
 
             context.setDevices(devices).getOrThrow()
 
@@ -77,42 +77,42 @@ class DeviceRepository(
     }
 
     suspend fun getLocalDeviceInfo(
-        model: String,
-    ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
+        key: String,
+    ): Result<DeviceInfoV2> = withContext(Dispatchers.IO) {
         runCatching {
-            val device = context.getDeviceInfo(model).getOrThrow()
-                ?: throw Exception("$model 不存在")
+            val device = context.getDeviceInfo(key).getOrThrow()
+                ?: throw Exception("$key 不存在")
 
             device
         }
     }
 
     suspend fun getRemoteDeviceInfo(
-        model: String,
-    ): Result<DeviceInfo> = withContext(Dispatchers.IO) {
+        key: String,
+    ): Result<DeviceInfoV2> = withContext(Dispatchers.IO) {
         runCatching {
-            val info = reqGetDeviceInfo(model).getOrThrow()
+            val info = reqGetDeviceInfoV2(key).getOrThrow()
 
-            context.setDeviceInfo(model, info).getOrThrow()
+            context.setDeviceInfo(key, info).getOrThrow()
 
             info
         }
     }
 
     suspend fun getDeviceProperties(
-        auth: Auth,
         device: Device,
-        info: DeviceInfo,
-    ): Result<List<Pair<DeviceInfo.Property, DevicePropertyValue>>> = withContext(Dispatchers.IO) {
-        runCatching { reqGetDeviceProperties(auth, device, info).getOrThrow() }
+        info: DeviceInfoV2,
+        auth: Auth,
+    ): Result<Map<DeviceInfoV2.Property, DevicePropertyValueV2>> = withContext(Dispatchers.IO) {
+        runCatching { reqGetDevicePropertiesV2(device, info, auth).getOrThrow() }
     }
 
     suspend fun setDeviceProperty(
-        auth: Auth,
         device: Device,
-        property: DeviceInfo.Property,
-        value: DevicePropertyValue,
+        property: DeviceInfoV2.Property,
+        value: DevicePropertyValueV2,
+        auth: Auth,
     ): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching { reqSetDeviceProperty(auth, device, property, value).getOrThrow() }
+        runCatching { reqSetDevicePropertyV2(device, property, value, auth).getOrThrow() }
     }
 }

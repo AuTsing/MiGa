@@ -2,7 +2,7 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.autsing.miga.presentation.api.reqGetScenes
+import com.autsing.miga.presentation.api.reqGetScenesV2
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.getFavoriteSceneIds
@@ -38,7 +38,7 @@ class SceneRepository(
 
     suspend fun getRemoteScenes(auth: Auth): Result<List<Scene>> = withContext(Dispatchers.IO) {
         runCatching {
-            val scenes = reqGetScenes(auth).getOrThrow()
+            val scenes = reqGetScenesV2(auth).getOrThrow()
 
             context.setScenes(scenes).getOrThrow()
 
