@@ -39,12 +39,14 @@ fun DeviceScreen(
             MessageContent(uiState.exception)
         } else {
             DeviceInfoContent(
-                switches = uiState.switchComponents,
-                selectors = uiState.selectorComponents,
-                triggers = uiState.triggerComponents,
+                switches = uiState.switches,
+                selectors = uiState.selectors,
+                triggers = uiState.triggers,
                 onClickSwitch = deviceViewModel::handleChangeSwitch,
                 onClickSelector = deviceViewModel::handleChangeSelector,
-                onClickTrigger = { deviceViewModel.handleClickTrigger(context, it) },
+                onClickTrigger = {
+
+                },
                 onBack = { (context as Activity).finish() },
             )
         }

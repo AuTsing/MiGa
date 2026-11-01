@@ -1,19 +1,22 @@
 package com.autsing.miga.presentation.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfoV2
+import com.autsing.miga.presentation.data.DevicePropertyValueV2
+import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.round
 
 data class DeviceUiState(
     val loading: Boolean = true,
@@ -21,9 +24,9 @@ data class DeviceUiState(
     val auth: Auth? = null,
     val device: Device? = null,
     val deviceInfo: DeviceInfoV2? = null,
-    val switchComponents: List<Component.Switch> = emptyList(),
-    val selectorComponents: List<Component.Selector> = emptyList(),
-    val triggerComponents: List<Component.Trigger> = emptyList(),
+    val switches: List<Component.Switch> = emptyList(),
+    val selectors: List<Component.Selector> = emptyList(),
+    val triggers: List<Component.Trigger> = emptyList(),
 )
 
 class DeviceViewModel : ViewModel() {
@@ -61,9 +64,9 @@ class DeviceViewModel : ViewModel() {
                     auth = auth,
                     device = device,
                     deviceInfo = info,
-                    switchComponents = switches,
-                    selectorComponents = selectors,
-                    triggerComponents = actions,
+                    switches = switches,
+                    selectors = selectors,
+                    triggers = actions,
                 )
             }
         }.onFailure { e ->
@@ -76,82 +79,73 @@ class DeviceViewModel : ViewModel() {
         }
     }
 
-    fun handleChangeSwitch(
-        component: Component.Switch,
-        checked: Boolean,
-    ) = viewModelScope.launch {
-//        runCatching {
-//            val auth = uiState.auth ?: throw Exception("读取权限失败")
-//            val device = uiState.device ?: throw Exception("读取设备失败")
-//            val value = DevicePropertyValue.Boolean(checked)
-//            val (newProperty, _) = deviceRepository.setDeviceProperty(
-//                auth,
-//                device,
-//                component.property,
-//                value,
-//            ).getOrThrow()
-//
-//            val newSwitchComponents = uiState.switchComponents.map {
-//                if (it.property == newProperty) {
-//                    it.copy(value = checked)
-//                } else {
-//                    it
-//                }
-//            }
-//            uiState = uiState.copy(switchComponents = newSwitchComponents)
-//        }.onFailure {
-//            uiState = uiState.copy(exception = it.stackTraceToString())
-//        }
+    fun handleChangeSwitch(component: Component.Switch, checked: Boolean) = viewModelScope.launch {
+        runCatching {
+            val auth = _uiState.value.auth ?: throw Exception("读取权限失败")
+            val device = _uiState.value.device ?: throw Exception("读取设备失败")
+            val value = DevicePropertyValueV2.Boolean(checked)
+
+            deviceRepository.setDeviceProperty(device, component.property, value, auth).getOrThrow()
+
+            val newSwitches = _uiState.value.switches.map {
+                if (it == component) it.copy(value = checked) else it
+            }
+
+            _uiState.update { it.copy(switches = newSwitches) }
+        }.onFailure { e ->
+            _uiState.update { it.copy(exception = e.message ?: e.stackTraceToString()) }
+        }
     }
 
-    fun handleChangeSelector(
-        component: Component.Selector,
-        index: Int,
-    ) = viewModelScope.launch {
-//        runCatching {
-//            val auth = uiState.auth ?: throw Exception("读取权限失败")
-//            val device = uiState.device ?: throw Exception("读取设备失败")
-//            val value = component.values[index].value
-//            val (newProperty, newValue) = deviceRepository.setDeviceProperty(
-//                auth,
-//                device,
-//                component.property,
-//                value,
-//            ).getOrThrow()
-//
-//            val newSelectorComponents = uiState.selectorComponents.map { component ->
-//                if (component.property == newProperty) {
-//                    val selectorValue = component.property.values.find { it.value == newValue }
-//                        ?: component.property.values[0]
-//                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-//                    component.copy(
-//                        value = index,
-//                        valueDisplay = selectorDisplay,
-//                    )
-//                } else {
-//                    component
-//                }
-//            }
-//            uiState = uiState.copy(selectorComponents = newSelectorComponents)
-//        }.onFailure {
-//            uiState = uiState.copy(exception = it.stackTraceToString())
-//        }
-    }
+    fun handleChangeSelector(component: Component.Selector, index: Int) = viewModelScope.launch {
+        runCatching {
+            val auth = _uiState.value.auth ?: throw Exception("读取权限失败")
+            val device = _uiState.value.device ?: throw Exception("读取设备失败")
+            val value = when (component.property) {
+                is DeviceInfoV2.Property.DoubleRange -> {
+                    val min = component.property.from
+                    val max = component.property.to
+                    val step = component.property.step
+                    val actual = min + ((max - min) * index.toDouble() / 10)
+                    val v = round(actual / step) * step
+                    DevicePropertyValueV2.Double(v)
+                }
 
-    fun handleClickTrigger(
-        context: Context,
-        component: Component.Trigger,
-    ) = viewModelScope.launch {
-//        runCatching {
-//            val device = uiState.device ?: throw Exception("读取设备失败")
-//            RunActionActivity.startActivity(
-//                context = context,
-//                deviceModel = device.model,
-//                siid = component.action.method.siid,
-//                aiid = component.action.method.aiid,
-//            )
-//        }.onFailure {
-//            uiState = uiState.copy(exception = it.stackTraceToString())
-//        }
+                is DeviceInfoV2.Property.LongRange -> {
+                    val min = component.property.from
+                    val max = component.property.to
+                    val step = component.property.step
+                    val actual = min + ((max - min) * index.toDouble() / 10)
+                    val v = (round(actual / step) * step).toLong()
+                    DevicePropertyValueV2.Long(v)
+                }
+
+                is DeviceInfoV2.Property.IntEnum -> {
+                    DevicePropertyValueV2.Long(component.property.values[index].value.toLong())
+                }
+
+                is DeviceInfoV2.Property.StringEnum -> {
+                    DevicePropertyValueV2.String(component.property.values[index].value)
+                }
+
+                else -> throw Exception("参数错误")
+            }
+
+            deviceRepository.setDeviceProperty(device, component.property, value, auth).getOrThrow()
+
+            val newSelectors = _uiState.value.selectors.map {
+                if (it == component) {
+                    it.copy(
+                        value = index,
+                        display = value.encode().getOrThrow(),
+                    )
+                } else it
+            }
+
+            _uiState.update { it.copy(selectors = newSelectors) }
+        }.onFailure { e ->
+            if (e is HttpRequestTimeoutException) return@onFailure
+            _uiState.update { it.copy(exception = e.message ?: e.stackTraceToString()) }
+        }
     }
 }
