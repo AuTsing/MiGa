@@ -68,15 +68,19 @@ class DeviceRepository(
         devices: List<Device>,
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
         runCatching {
+            val existedUrls = context.getDeviceIconUrls().getOrThrow()
+
             val urls = devices
                 .map { async { reqGetDeviceIconUrlV2(it.model).getOrDefault("") } }
                 .awaitAll()
                 .withIndex()
                 .associate { (i, url) -> devices[i].model to url }
 
-            context.setDeviceIconUrls(urls).getOrThrow()
+            val newUrls = existedUrls + urls
 
-            urls
+            context.setDeviceIconUrls(newUrls).getOrThrow()
+
+            newUrls
         }
     }
 

@@ -151,7 +151,8 @@ class MainViewModel : ViewModel() {
 
             val auth = authRepository.observeAuth().filterNotNull().first()
             val remoteDevices = deviceRepository.getRemoteDevices(auth).getOrDefault()
-            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(remoteDevices)
+            val needIconDevices = remoteDevices.filter { it.model !in localDeviceIconUrls.keys }
+            val remoteDeviceIconUrls = deviceRepository.getRemoteDeviceIconUrls(needIconDevices)
                 .getOrDefault()
 
             _uiState.update {

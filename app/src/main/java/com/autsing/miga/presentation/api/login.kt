@@ -15,6 +15,10 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.ANDROID
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.cookie
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -41,6 +45,10 @@ private val client: HttpClient = HttpClient(CIO) {
         header("Connection", "keep-alive")
         cookie("uLocale", "zh_CN")
         cookie("sdkVersion", "3.4.1")
+    }
+    install(Logging) {
+        logger = Logger.ANDROID
+        level = LogLevel.ALL
     }
 }
 
