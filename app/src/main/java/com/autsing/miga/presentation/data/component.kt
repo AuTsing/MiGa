@@ -76,7 +76,7 @@ sealed interface Component {
                     }
 
                     is DeviceInfoV2.Property.IntEnum if value is DevicePropertyValueV2.Long -> {
-                        val i = value.value.toInt()
+                        val i = property.values.indexOfFirst { it.value.toLong() == value.value }
                         val v = property.values[i]
                         Selector(
                             property = property,

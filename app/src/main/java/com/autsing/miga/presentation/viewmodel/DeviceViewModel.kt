@@ -9,7 +9,6 @@ import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfoV2
 import com.autsing.miga.presentation.data.DevicePropertyValueV2
-import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -121,13 +120,9 @@ class DeviceViewModel : ViewModel() {
 
             deviceRepository.setDeviceProperty(device, component.property, value, auth).getOrThrow()
 
+            val newSelector = Component.Selector.from(component.property, value)
             val newSelectors = _uiState.value.selectors.map {
-                if (it == component) {
-                    it.copy(
-                        value = index,
-                        display = value.encode().getOrThrow(),
-                    )
-                } else it
+                if (it == component) newSelector else it
             }
 
             _uiState.update { it.copy(selectors = newSelectors) }

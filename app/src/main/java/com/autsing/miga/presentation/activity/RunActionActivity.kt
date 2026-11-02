@@ -12,7 +12,6 @@ import com.autsing.miga.presentation.api.reqRunActionV2
 import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.DeviceInfoV2
 import com.autsing.miga.presentation.data.DevicePropertyValueV2
-import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
@@ -136,15 +135,8 @@ class RunActionActivity : ComponentActivity() {
     ) = lifecycleScope.launch {
         runCatching {
             val value = DevicePropertyValueV2.from(component.property, index)
-
-            val newSelectors = selectors.value.map {
-                if (it == component) {
-                    it.copy(
-                        value = index,
-                        display = value.encode().getOrThrow(),
-                    )
-                } else it
-            }
+            val newSelector = Component.Selector.from(component.property, value)
+            val newSelectors = selectors.value.map { if (it == component) newSelector else it }
 
             selectors.update { newSelectors }
         }.onFailure { e ->
