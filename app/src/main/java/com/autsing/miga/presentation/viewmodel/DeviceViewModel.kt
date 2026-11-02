@@ -1,7 +1,9 @@
 package com.autsing.miga.presentation.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autsing.miga.presentation.activity.RunActionActivity
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.Device
@@ -16,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.round
 
 data class DeviceUiState(
     val loading: Boolean = true,
@@ -53,8 +54,23 @@ class DeviceViewModel : ViewModel() {
                 .filter { it.key is DeviceInfoV2.Property.Boolean }
                 .map { Component.Switch.from(it.key, it.value) }
             val selectors = properties
-                .filter { it.key is DeviceInfoV2.Property.DoubleRange || it.key is DeviceInfoV2.Property.LongRange }
-                .map { Component.Selector.from(it.key, it.value) }
+                .mapNotNull {
+                    when (it.key) {
+                        is DeviceInfoV2.Property.DoubleRange ->
+                            Component.Selector.from(it.key, it.value)
+
+                        is DeviceInfoV2.Property.LongRange ->
+                            Component.Selector.from(it.key, it.value)
+
+                        is DeviceInfoV2.Property.IntEnum ->
+                            Component.Selector.from(it.key, it.value)
+
+                        is DeviceInfoV2.Property.StringEnum ->
+                            Component.Selector.from(it.key, it.value)
+
+                        else -> null
+                    }
+                }
             val actions = info.actions.map { Component.Trigger.from(it) }
 
             _uiState.update {
@@ -101,35 +117,7 @@ class DeviceViewModel : ViewModel() {
         runCatching {
             val auth = _uiState.value.auth ?: throw Exception("读取权限失败")
             val device = _uiState.value.device ?: throw Exception("读取设备失败")
-            val value = when (component.property) {
-                is DeviceInfoV2.Property.DoubleRange -> {
-                    val min = component.property.from
-                    val max = component.property.to
-                    val step = component.property.step
-                    val actual = min + ((max - min) * index.toDouble() / 10)
-                    val v = round(actual / step) * step
-                    DevicePropertyValueV2.Double(v)
-                }
-
-                is DeviceInfoV2.Property.LongRange -> {
-                    val min = component.property.from
-                    val max = component.property.to
-                    val step = component.property.step
-                    val actual = min + ((max - min) * index.toDouble() / 10)
-                    val v = (round(actual / step) * step).toLong()
-                    DevicePropertyValueV2.Long(v)
-                }
-
-                is DeviceInfoV2.Property.IntEnum -> {
-                    DevicePropertyValueV2.Long(component.property.values[index].value.toLong())
-                }
-
-                is DeviceInfoV2.Property.StringEnum -> {
-                    DevicePropertyValueV2.String(component.property.values[index].value)
-                }
-
-                else -> throw Exception("参数错误")
-            }
+            val value = DevicePropertyValueV2.from(component.property, index)
 
             deviceRepository.setDeviceProperty(device, component.property, value, auth).getOrThrow()
 
@@ -145,6 +133,21 @@ class DeviceViewModel : ViewModel() {
             _uiState.update { it.copy(selectors = newSelectors) }
         }.onFailure { e ->
             if (e is HttpRequestTimeoutException) return@onFailure
+            _uiState.update { it.copy(exception = e.message ?: e.stackTraceToString()) }
+        }
+    }
+
+    fun handleClickTrigger(component: Component.Trigger, context: Context) = viewModelScope.launch {
+        runCatching {
+            val device = _uiState.value.device ?: throw Exception("读取设备失败")
+
+            RunActionActivity.startActivity(
+                context = context,
+                urn = device.spec_type,
+                siid = component.action.method.siid,
+                aiid = component.action.method.aiid,
+            )
+        }.onFailure { e ->
             _uiState.update { it.copy(exception = e.message ?: e.stackTraceToString()) }
         }
     }

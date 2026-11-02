@@ -5,26 +5,34 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.autsing.miga.presentation.api.reqRunActionV2
 import com.autsing.miga.presentation.data.Component
 import com.autsing.miga.presentation.data.DeviceInfoV2
+import com.autsing.miga.presentation.data.DevicePropertyValueV2
+import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.DeviceRepository
 import com.autsing.miga.presentation.screen.RunActionScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 class RunActionActivity : ComponentActivity() {
 
     companion object {
-        private const val EXTRA_DEVICE_MODEL = "extra_device_model"
+        private const val EXTRA_URN = "extra_urn"
         private const val EXTRA_SIID = "extra_siid"
         private const val EXTRA_AIID = "extra_aiid"
 
-        fun startActivity(context: Context, deviceModel: String, siid: Int, aiid: Int) {
+        fun startActivity(context: Context, urn: String, siid: Int, aiid: Int) {
             val intent = Intent(context, RunActionActivity::class.java)
-            intent.putExtra(EXTRA_DEVICE_MODEL, deviceModel)
+            intent.putExtra(EXTRA_URN, urn)
             intent.putExtra(EXTRA_SIID, siid)
             intent.putExtra(EXTRA_AIID, aiid)
             context.startActivity(intent)
@@ -34,11 +42,12 @@ class RunActionActivity : ComponentActivity() {
     private val authRepository: AuthRepository = AuthRepository.instance
     private val deviceRepository: DeviceRepository = DeviceRepository.instance
 
-    private lateinit var deviceModel: String
+    private lateinit var urn: String
     private lateinit var action: DeviceInfoV2.Action
     private lateinit var properties: List<DeviceInfoV2.Property>
 
     private val loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    private val success: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val message: MutableStateFlow<String> = MutableStateFlow("")
     private val title: MutableStateFlow<String> = MutableStateFlow("")
     private val selectors: MutableStateFlow<List<Component.Selector>> =
@@ -48,10 +57,10 @@ class RunActionActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val loading = loading.collectAsState()
-            val message = message.collectAsState()
-            val title = title.collectAsState()
-            val selectors = selectors.collectAsState()
+            val loading = loading.collectAsStateWithLifecycle()
+            val message = message.collectAsStateWithLifecycle()
+            val title = title.collectAsStateWithLifecycle()
+            val selectors = selectors.collectAsStateWithLifecycle()
 
             RunActionScreen(
                 loading = loading.value,
@@ -68,108 +77,99 @@ class RunActionActivity : ComponentActivity() {
     }
 
     private fun handleLoad() = lifecycleScope.launch {
-//        runCatching {
-//            val deviceModel = intent.getStringExtra(EXTRA_DEVICE_MODEL)
-//                ?: throw Exception("读取设备型号失败")
-//            val siid = intent.getIntExtra(EXTRA_SIID, -1).takeIf { it > -1 }
-//                ?: throw Exception("读取SIID失败")
-//            val aiid = intent.getIntExtra(EXTRA_AIID, -1).takeIf { it > -1 }
-//                ?: throw Exception("读取AIID失败")
-//
-//            val deviceInfo = deviceRepository.getLocalDeviceInfo(deviceModel).getOrThrow()
-//            val action = deviceInfo.actions
-//                .find { it.method.siid == siid && it.method.aiid == aiid }
-//                ?: throw Exception("读取动作失败")
-//            val title = action.descZhCn.takeIf { it.isNotBlank() } ?: action.name
-//            val properties = action.inPiids
-//                .mapNotNull { inPiid -> deviceInfo.properties.find { it.method.siid == siid && it.method.piid == inPiid } }
-//
-//            val sliders = properties
-//                .filter { it.range !is DevicePropertyRange.None }
-//                .map {
-//                    val v = when (it.range) {
-//                        is DevicePropertyRange.Long -> DevicePropertyValue.Long(it.range.from)
-//                        is DevicePropertyRange.Double -> DevicePropertyValue.Double(it.range.from)
-//                        is DevicePropertyRange.None -> DevicePropertyValue.None
-//                    }
-//                    Component.Slider.from(it, v)
-//                }
-//            val selectors = properties
-//                .filter { it.values.size > 1 }
-//                .map { Component.Selector.from(it, it.values[0].value) }
-//
-//            this@RunActionActivity.deviceModel = deviceModel
-//            this@RunActionActivity.action = action
-//            this@RunActionActivity.properties = properties
-//            this@RunActionActivity.title.value = title
-//            this@RunActionActivity.sliders.value = sliders
-//            this@RunActionActivity.selectors.value = selectors
-//        }.onFailure {
-//            message.value = it.stackTraceToString()
-//        }.also {
-//            loading.value = false
-//        }
+        runCatching {
+            val urn = intent.getStringExtra(EXTRA_URN)
+                ?: throw Exception("读取设备型号失败")
+            val siid = intent.getIntExtra(EXTRA_SIID, -1).takeIf { it > -1 }
+                ?: throw Exception("读取SIID失败")
+            val aiid = intent.getIntExtra(EXTRA_AIID, -1).takeIf { it > -1 }
+                ?: throw Exception("读取AIID失败")
+
+            val info = deviceRepository.getLocalDeviceInfo(urn).getOrThrow()
+            val action = info.actions.find { it.method.siid == siid && it.method.aiid == aiid }
+                ?: throw Exception("读取动作失败")
+            val title = action.nameZh ?: action.name
+            val properties = action.inPiids
+                .mapNotNull { inPiid -> info.properties.find { it.method.siid == siid && it.method.piid == inPiid } }
+            val selectors = properties.map {
+                when (it) {
+                    is DeviceInfoV2.Property.DoubleRange ->
+                        Component.Selector.from(it, DevicePropertyValueV2.Double(it.from))
+
+                    is DeviceInfoV2.Property.LongRange ->
+                        Component.Selector.from(it, DevicePropertyValueV2.Long(it.from))
+
+                    is DeviceInfoV2.Property.IntEnum ->
+                        Component.Selector.from(
+                            it,
+                            DevicePropertyValueV2.Long(it.values[0].value.toLong()),
+                        )
+
+                    is DeviceInfoV2.Property.StringEnum ->
+                        Component.Selector.from(
+                            it,
+                            DevicePropertyValueV2.String(it.values[0].value),
+                        )
+
+                    else -> throw Exception("读取属性失败")
+                }
+            }
+
+            this@RunActionActivity.urn = urn
+            this@RunActionActivity.action = action
+            this@RunActionActivity.properties = properties
+            this@RunActionActivity.title.value = title
+            this@RunActionActivity.selectors.value = selectors
+            loading.value = false
+        }.onFailure { e ->
+            message.value = e.message ?: e.stackTraceToString()
+            loading.value = false
+        }
     }
 
     private fun handleChangeSelector(
         component: Component.Selector,
         index: Int,
     ) = lifecycleScope.launch {
-//        runCatching {
-//            selectors.value = selectors.value.map {
-//                if (it == component) {
-//                    val selectorValue = component.values[index]
-//                    val selectorDisplay = selectorValue.desc_zh_cn ?: selectorValue.description
-//                    it.copy(
-//                        value = index,
-//                        valueDisplay = selectorDisplay,
-//                    )
-//                } else {
-//                    it
-//                }
-//            }
-//        }.onFailure {
-//            message.value = it.stackTraceToString()
-//        }
+        runCatching {
+            val value = DevicePropertyValueV2.from(component.property, index)
+
+            val newSelectors = selectors.value.map {
+                if (it == component) {
+                    it.copy(
+                        value = index,
+                        display = value.encode().getOrThrow(),
+                    )
+                } else it
+            }
+
+            selectors.update { newSelectors }
+        }.onFailure { e ->
+            message.value = e.message ?: e.stackTraceToString()
+        }
     }
 
     private fun handleRunAction() = lifecycleScope.launch {
-//        runCatching {
-//            loading.value = true
-//
-//            val values = properties
-//                .mapNotNull { property ->
-//                    sliders.value.find { it.property == property }
-//                        ?: selectors.value.find { it.property == property }
-//                }
-//                .map {
-//                    when (it) {
-//                        is Component.Slider -> it.range.getValueOfPercentage(it.value)
-//                        is Component.Selector -> it.values[it.value].value
-//                        else -> DevicePropertyValue.None
-//                    }
-//                }
-//
-//            val devices = deviceRepository.getLocalDevices().getOrThrow()
-//            val device = devices.find { it.model == deviceModel }
-//                ?: throw Exception("读取设备失败")
-//            val auth = authRepository.getAuth().getOrThrow()
-//
-//            val code = requestRunAction(
-//                auth = TODO(),
-//                device = device,
-//                action = action,
-//                inValues = values,
-//            ).getOrThrow()
-//
-//            message.value = "Code: $code"
-//            loading.value = false
-//            delay(1000)
-//            finish()
-//        }.onFailure {
-//            message.value = it.stackTraceToString()
-//            loading.value = false
-//        }
+        runCatching {
+            loading.value = true
+
+            val values = selectors.value.map { DevicePropertyValueV2.from(it.property, it.value) }
+            val devices = deviceRepository.getLocalDevices().getOrThrow()
+            val device = devices.find { it.spec_type == urn } ?: throw Exception("读取设备失败")
+            val auth = authRepository.getValidAuth().getOrThrow()
+
+            withContext(Dispatchers.IO) {
+                reqRunActionV2(device, action, values, auth).getOrThrow()
+            }
+
+            success.value = true
+            loading.value = false
+            delay(1000.milliseconds)
+            finish()
+        }.onFailure { e ->
+            message.value = e.message ?: e.stackTraceToString()
+            loading.value = false
+        }
     }
 
     private fun handleClickBack() = lifecycleScope.launch {

@@ -44,9 +44,7 @@ fun DeviceScreen(
                 triggers = uiState.triggers,
                 onClickSwitch = deviceViewModel::handleChangeSwitch,
                 onClickSelector = deviceViewModel::handleChangeSelector,
-                onClickTrigger = {
-
-                },
+                onClickTrigger = { deviceViewModel.handleClickTrigger(it, context) },
                 onBack = { (context as Activity).finish() },
             )
         }

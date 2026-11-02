@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import kotlin.math.round
 
 @Serializable
 data class Device(
@@ -561,6 +562,41 @@ sealed interface DevicePropertyValueV2 {
                 ?: None
 
             return value
+        }
+    }
+
+    companion object {
+
+        fun from(property: DeviceInfoV2.Property, index: Int): DevicePropertyValueV2 {
+            return when (property) {
+                is DeviceInfoV2.Property.DoubleRange -> {
+                    val min = property.from
+                    val max = property.to
+                    val step = property.step
+                    val actual = min + ((max - min) * index.toDouble() / 10)
+                    val v = round(actual / step) * step
+                    Double(v)
+                }
+
+                is DeviceInfoV2.Property.LongRange -> {
+                    val min = property.from
+                    val max = property.to
+                    val step = property.step
+                    val actual = min + ((max - min) * index.toDouble() / 10)
+                    val v = (round(actual / step) * step).toLong()
+                    Long(v)
+                }
+
+                is DeviceInfoV2.Property.IntEnum -> {
+                    Long(property.values[index].value.toLong())
+                }
+
+                is DeviceInfoV2.Property.StringEnum -> {
+                    String(property.values[index].value)
+                }
+
+                else -> throw Exception("参数错误")
+            }
         }
     }
 }
