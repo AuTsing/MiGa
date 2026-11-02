@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.AlertDialogContent
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SuccessConfirmationDialogContent
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.autsing.miga.R
 import com.autsing.miga.presentation.component.FullScreenBox
@@ -18,7 +19,8 @@ import com.autsing.miga.presentation.data.Component
 @Composable
 fun RunActionScreen(
     loading: Boolean,
-    message: String,
+    success: Boolean,
+    exception: String,
     title: String,
     selectors: List<Component.Selector>,
     onClickSelector: (Component.Selector, Int) -> Unit = { _, _ -> },
@@ -27,9 +29,11 @@ fun RunActionScreen(
 ) {
     FullScreenBox {
         if (loading) {
-            LoadingContent("加载中...")
-        } else if (message.isNotBlank()) {
-            MessageContent(message)
+            LoadingContent("执行中...")
+        } else if (success) {
+            SuccessContent()
+        } else if (exception.isNotBlank()) {
+            MessageContent(exception)
         } else {
             RunActionContent(
                 title = title,
@@ -40,6 +44,11 @@ fun RunActionScreen(
             )
         }
     }
+}
+
+@Composable
+private fun SuccessContent() {
+    SuccessConfirmationDialogContent(curvedText = null)
 }
 
 @Composable

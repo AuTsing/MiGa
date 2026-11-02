@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.api.reqRunActionV2
@@ -48,7 +49,7 @@ class RunActionActivity : ComponentActivity() {
 
     private val loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
     private val success: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val message: MutableStateFlow<String> = MutableStateFlow("")
+    private val exception: MutableStateFlow<String> = MutableStateFlow("")
     private val title: MutableStateFlow<String> = MutableStateFlow("")
     private val selectors: MutableStateFlow<List<Component.Selector>> =
         MutableStateFlow(emptyList())
@@ -57,16 +58,18 @@ class RunActionActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val loading = loading.collectAsStateWithLifecycle()
-            val message = message.collectAsStateWithLifecycle()
-            val title = title.collectAsStateWithLifecycle()
-            val selectors = selectors.collectAsStateWithLifecycle()
+            val loading by loading.collectAsStateWithLifecycle()
+            val success by success.collectAsStateWithLifecycle()
+            val exception by exception.collectAsStateWithLifecycle()
+            val title by title.collectAsStateWithLifecycle()
+            val selectors by selectors.collectAsStateWithLifecycle()
 
             RunActionScreen(
-                loading = loading.value,
-                message = message.value,
-                title = title.value,
-                selectors = selectors.value,
+                loading = loading,
+                success = success,
+                exception = exception,
+                title = title,
+                selectors = selectors,
                 onClickSelector = this::handleChangeSelector,
                 onClickRun = this::handleRunAction,
                 onClickBack = this::handleClickBack,
@@ -122,7 +125,7 @@ class RunActionActivity : ComponentActivity() {
             this@RunActionActivity.selectors.value = selectors
             loading.value = false
         }.onFailure { e ->
-            message.value = e.message ?: e.stackTraceToString()
+            exception.value = e.message ?: e.stackTraceToString()
             loading.value = false
         }
     }
@@ -145,7 +148,7 @@ class RunActionActivity : ComponentActivity() {
 
             selectors.update { newSelectors }
         }.onFailure { e ->
-            message.value = e.message ?: e.stackTraceToString()
+            exception.value = e.message ?: e.stackTraceToString()
         }
     }
 
@@ -167,7 +170,7 @@ class RunActionActivity : ComponentActivity() {
             delay(1000.milliseconds)
             finish()
         }.onFailure { e ->
-            message.value = e.message ?: e.stackTraceToString()
+            exception.value = e.message ?: e.stackTraceToString()
             loading.value = false
         }
     }
