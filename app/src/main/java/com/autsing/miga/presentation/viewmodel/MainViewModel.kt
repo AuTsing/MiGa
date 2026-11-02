@@ -3,7 +3,6 @@ package com.autsing.miga.presentation.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.autsing.miga.complication.FavoriteSceneComplicationService
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.Scene
@@ -189,7 +188,6 @@ class MainViewModel : ViewModel() {
             sceneRepository.setFavoriteSceneIds(ids).getOrThrow()
 
             MainTileService.requestUpdate(context)
-            FavoriteSceneComplicationService.requestUpdate(context)
         }.onFailure { e ->
             _uiState.update { it.copy(message = e.message ?: e.stackTraceToString()) }
         }
