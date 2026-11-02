@@ -6,6 +6,7 @@ import com.autsing.miga.presentation.data.DEVICE_URL
 import com.autsing.miga.presentation.data.Device
 import com.autsing.miga.presentation.data.DeviceInfoV2
 import com.autsing.miga.presentation.data.DevicePropertyValueV2
+import com.autsing.miga.presentation.data.GetDeviceBaikeRespDataV2
 import com.autsing.miga.presentation.data.GetDeviceInfoRespDataV2
 import com.autsing.miga.presentation.data.GetDevicePropertiesReqDataV2
 import com.autsing.miga.presentation.data.GetDevicePropertiesRespDataV2
@@ -16,6 +17,7 @@ import com.autsing.miga.presentation.data.GetHomesRespData
 import com.autsing.miga.presentation.data.GetScenesReqData
 import com.autsing.miga.presentation.data.GetScenesRespDataV2
 import com.autsing.miga.presentation.data.Home
+import com.autsing.miga.presentation.data.PRODUCT_URL
 import com.autsing.miga.presentation.data.RunActionReqData
 import com.autsing.miga.presentation.data.RunActionRespData
 import com.autsing.miga.presentation.data.RunSceneReqData
@@ -247,4 +249,12 @@ suspend fun reqRunActionV2(
     if (respData.code != 0) {
         throw Exception(respData.message)
     }
+}
+
+suspend fun reqGetDeviceIconUrlV2(model: String): Result<String> = runCatching {
+    val resp = client.get("${PRODUCT_URL}?model=$model")
+    val respData = resp.body<GetDeviceBaikeRespDataV2>()
+    val realIcon = respData.data.realIcon
+
+    realIcon
 }

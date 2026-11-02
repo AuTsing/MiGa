@@ -2,7 +2,7 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.autsing.miga.presentation.api.reqGetDeviceIconUrl
+import com.autsing.miga.presentation.api.reqGetDeviceIconUrlV2
 import com.autsing.miga.presentation.api.reqGetDeviceInfoV2
 import com.autsing.miga.presentation.api.reqGetDevicePropertiesV2
 import com.autsing.miga.presentation.api.reqGetDevicesV2
@@ -69,7 +69,7 @@ class DeviceRepository(
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
         runCatching {
             val urls = devices
-                .map { async { reqGetDeviceIconUrl(it.model).getOrDefault("") } }
+                .map { async { reqGetDeviceIconUrlV2(it.model).getOrDefault("") } }
                 .awaitAll()
                 .withIndex()
                 .associate { (i, url) -> devices[i].model to url }

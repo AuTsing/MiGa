@@ -19,39 +19,6 @@ fun genDeviceId(): String {
     return value
 }
 
-fun genNonce(length: Int = 16): String {
-    val chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    val value = (1..length)
-        .map { chars.random() }
-        .joinToString("")
-
-    return value
-}
-
-fun genSignedNonce(secret: String, nonce: String): String {
-    val messageDigest = MessageDigest.getInstance("SHA-256")
-    messageDigest.update(Base64.getDecoder().decode(secret))
-    messageDigest.update(Base64.getDecoder().decode(nonce))
-    val value = Base64.getEncoder().encodeToString(messageDigest.digest())
-
-    return value
-}
-
-fun genSignature(
-    uri: String,
-    signedNonce: String,
-    nonce: String,
-    data: String,
-): String {
-    val hmac = Mac.getInstance("HmacSHA256")
-    val sign = "$uri&$signedNonce&$nonce&data=$data"
-    val key = SecretKeySpec(Base64.getDecoder().decode(signedNonce), "HmacSHA256")
-    hmac.init(key)
-    val value = Base64.getEncoder().encodeToString(hmac.doFinal(sign.toByteArray(Charsets.UTF_8)))
-
-    return value
-}
-
 fun genNonceV2(): String {
     // 1. 生成 8 个安全随机字节 (对应 JS 的 crypto.randomBytes(8))
     val randomBytes = ByteArray(8)
