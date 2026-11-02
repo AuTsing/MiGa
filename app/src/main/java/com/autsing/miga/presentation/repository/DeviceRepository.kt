@@ -23,6 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import java.text.Collator
+import java.util.Locale
 
 class DeviceRepository(
     private val context: Context,
@@ -52,7 +54,9 @@ class DeviceRepository(
 
     suspend fun getRemoteDevices(auth: Auth): Result<List<Device>> = withContext(Dispatchers.IO) {
         runCatching {
-            val devices = reqGetDevicesV2(auth).getOrThrow().sortedByDescending { it.isOnline }
+            val devices = reqGetDevicesV2(auth).getOrThrow()
+                .sortedWith { a, b -> Collator.getInstance(Locale.CHINA).compare(a.name, b.name) }
+                .sortedByDescending { it.isOnline }
 
             context.setDevices(devices).getOrThrow()
 
