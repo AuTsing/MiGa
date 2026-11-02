@@ -11,13 +11,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.wear.protolayout.ActionBuilders.AndroidActivity
 import androidx.wear.protolayout.ActionBuilders.AndroidStringExtra
 import androidx.wear.protolayout.ActionBuilders.LaunchAction
-import com.autsing.miga.presentation.api.reqRunScene
+import com.autsing.miga.presentation.api.reqRunSceneV2
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.repository.SceneRepository
 import com.autsing.miga.presentation.screen.RunSceneScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 class RunSceneActivity : ComponentActivity() {
@@ -92,10 +94,8 @@ class RunSceneActivity : ComponentActivity() {
                 .firstOrNull { it.scene_id == sceneId }
                 ?: throw Exception("场景信息无效")
 
-            val message = reqRunScene(auth, scene).getOrThrow()
-
-            if (message != "ok") {
-                throw Exception(message)
+            withContext(Dispatchers.IO) {
+                reqRunSceneV2(scene, auth).getOrThrow()
             }
 
             success.value = true

@@ -18,6 +18,8 @@ import com.autsing.miga.presentation.data.GetScenesRespDataV2
 import com.autsing.miga.presentation.data.Home
 import com.autsing.miga.presentation.data.RunActionReqData
 import com.autsing.miga.presentation.data.RunActionRespData
+import com.autsing.miga.presentation.data.RunSceneReqData
+import com.autsing.miga.presentation.data.RunSceneRespData
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.SetDevicePropertiesReqDataV2
 import com.autsing.miga.presentation.data.SetDevicePropertiesRespDataV2
@@ -202,6 +204,21 @@ suspend fun reqSetDevicePropertyV2(
     val dataJson = data.encode().getOrThrow()
     val resp = request(uri, dataJson, auth).getOrThrow()
     val respData = resp.body<SetDevicePropertiesRespDataV2>()
+
+    if (respData.code != 0) {
+        throw Exception(respData.message)
+    }
+}
+
+suspend fun reqRunSceneV2(scene: Scene, auth: Auth): Result<Unit> = runCatching {
+    val uri = "/appgateway/miot/appsceneservice/AppSceneService/RunScene"
+    val data = RunSceneReqData(
+        scene_id = scene.scene_id,
+        trigger_key = "user.click",
+    )
+    val dataJson = data.encode().getOrThrow()
+    val resp = request(uri, dataJson, auth).getOrThrow()
+    val respData = resp.body<RunSceneRespData>()
 
     if (respData.code != 0) {
         throw Exception(respData.message)
