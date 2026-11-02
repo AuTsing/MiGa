@@ -5,7 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.autsing.miga.presentation.api.genDeviceId
 import com.autsing.miga.presentation.repository.AuthRepository
@@ -26,34 +27,39 @@ class LoginActivity : ComponentActivity() {
 
     private val authRepository: AuthRepository = AuthRepository.instance
 
-    private val loginUrlState: MutableStateFlow<String> = MutableStateFlow("")
-    private val exceptionState: MutableStateFlow<String> = MutableStateFlow("")
+    private val loginUrl: MutableStateFlow<String> = MutableStateFlow("")
+    private val exception: MutableStateFlow<String> = MutableStateFlow("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            val loginUrl by loginUrl.collectAsStateWithLifecycle()
+            val exception by exception.collectAsStateWithLifecycle()
+
             LoginScreen(
-                loginUrl = loginUrlState.collectAsState().value,
-                exception = exceptionState.collectAsState().value,
+                loginUrl = loginUrl,
+                exception = exception,
                 onRefresh = { handleLogin() },
             )
         }
+
         handleLogin()
     }
 
     private fun handleLogin() = lifecycleScope.launch {
         runCatching {
-            exceptionState.value = ""
+            exception.value = ""
             val deviceId = genDeviceId()
             val respData = authRepository.getLoginUrl(deviceId).getOrThrow()
-            loginUrlState.value = respData.loginUrl
+            loginUrl.value = respData.loginUrl
             authRepository.login(deviceId, respData).getOrThrow()
 
             finish()
         }.onFailure { e ->
             when (e) {
-                is HttpRequestTimeoutException -> exceptionState.value = "登录超时"
-                else -> exceptionState.value = "登录失败: ${e.message}"
+                is HttpRequestTimeoutException -> exception.value = "登录超时"
+                else -> exception.value = "登录失败: ${e.message}"
             }
         }
     }
