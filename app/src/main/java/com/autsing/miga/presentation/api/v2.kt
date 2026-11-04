@@ -165,9 +165,10 @@ suspend fun reqGetDevicePropertiesV2(
     info: DeviceInfoV2,
     auth: Auth,
 ): Result<Map<DeviceInfoV2.Property, DevicePropertyValueV2>> = runCatching {
+    val readableProperties = info.properties.filter { it.access.read }
     val uri = "/miotspec/prop/get"
     val data = GetDevicePropertiesReqDataV2(
-        params = info.properties.map {
+        params = readableProperties.map {
             GetDevicePropertiesReqDataV2.Params(
                 did = device.did,
                 siid = it.method.siid,
@@ -178,7 +179,7 @@ suspend fun reqGetDevicePropertiesV2(
     val dataJson = data.encode().getOrThrow()
     val resp = request(uri, dataJson, auth).getOrThrow()
     val respData = resp.body<GetDevicePropertiesRespDataV2>()
-    val properties = info.properties
+    val properties = readableProperties
         .withIndex()
         .associate { (i, it) -> it to respData.result[i].value }
 

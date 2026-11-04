@@ -1,6 +1,7 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.activity.RunActionActivity
@@ -70,6 +71,9 @@ class DeviceViewModel : ViewModel() {
                         else -> null
                     }
                 }
+            selectors.forEach {
+                Log.d("TAG", "handleLoad: $it")
+            }
             val actions = info.actions.map { Component.Trigger.from(it) }
 
             _uiState.update {
