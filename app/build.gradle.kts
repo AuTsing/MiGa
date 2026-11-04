@@ -16,8 +16,8 @@ android {
         applicationId = "com.autsing.miga"
         minSdk = 26
         targetSdk = 37
-        versionCode = 20101
-        versionName = "2.1.1"
+        versionCode = 30000
+        versionName = "3.0.0"
     }
 
     buildTypes {
