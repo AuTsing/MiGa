@@ -24,7 +24,6 @@ data class LoginUrlRespData(
     val lp: String,
 )
 
-
 @Serializable
 data class LoginLpRespData(
     val location: String,
