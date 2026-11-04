@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.autsing.miga.presentation.api.genDeviceId
 import com.autsing.miga.presentation.repository.AuthRepository
 import com.autsing.miga.presentation.screen.LoginScreen
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -50,10 +49,9 @@ class LoginActivity : ComponentActivity() {
     private fun handleLogin() = lifecycleScope.launch {
         runCatching {
             exception.value = ""
-            val deviceId = genDeviceId()
-            val respData = authRepository.getLoginUrl(deviceId).getOrThrow()
+            val respData = authRepository.getLoginUrl().getOrThrow()
             loginUrl.value = respData.loginUrl
-            authRepository.login(deviceId, respData).getOrThrow()
+            authRepository.login(respData.lp).getOrThrow()
 
             finish()
         }.onFailure { e ->

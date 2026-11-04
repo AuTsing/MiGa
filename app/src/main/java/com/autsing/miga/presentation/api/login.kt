@@ -1,29 +1,26 @@
 package com.autsing.miga.presentation.api
 
-import androidx.core.net.toUri
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.LOGIN_URL
 import com.autsing.miga.presentation.data.LoginLpRespData
 import com.autsing.miga.presentation.data.LoginUrlRespData
 import com.autsing.miga.presentation.data.SERVICE_LOGIN_URL
 import com.autsing.miga.presentation.data.ServiceLoginRespData
-import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.decode
 import com.autsing.miga.presentation.data.defaultJson
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.cookie
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.URLBuilder
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
 import java.time.Instant.now
@@ -40,98 +37,126 @@ private val client: HttpClient = HttpClient(CIO) {
         connectTimeoutMillis = 60000L
         socketTimeoutMillis = 60000L
     }
-    defaultRequest {
-        header("User-Agent", USER_AGENT)
-        header("Connection", "keep-alive")
-        cookie("uLocale", "zh_CN")
-        cookie("sdkVersion", "3.4.1")
-    }
     install(Logging) {
         logger = Logger.ANDROID
         level = LogLevel.ALL
     }
 }
+var passO: String = ""
+var userAgent: String = ""
+var deviceId: String = ""
+var cookies: MutableMap<String, String> = mutableMapOf()
 
-suspend fun reqServiceLogin(deviceId: String): Result<ServiceLoginRespData> = runCatching {
+suspend fun reqServiceLogin(): Result<ServiceLoginRespData> = runCatching {
+    passO = genPassO()
+    userAgent = genUserAgent(passO)
+    deviceId = genDeviceId()
+    cookies = mutableMapOf()
+
+    val cookie = mapOf(
+        "deviceId" to deviceId,
+        "pass_o" to passO,
+        "uLocale" to "zh_CN",
+    ).genCookie()
+
     val resp = client.get(SERVICE_LOGIN_URL) {
-        cookie("deviceId", deviceId)
+        header("User-Agent", userAgent)
+        header("Connection", "keep-alive")
+        header("Content-Type", "application/x-www-form-urlencoded")
+        header("Cookie", cookie)
     }
     val respData = resp.bodyAsText().decode<ServiceLoginRespData>().getOrThrow()
 
     respData
 }
 
-suspend fun reqServiceLogin(auth: Auth): Result<ServiceLoginRespData> = runCatching {
+suspend fun reqServiceLogin(auth: Auth): Result<Map<String, String>> = runCatching {
+    val cookie = mapOf(
+        "deviceId" to auth.deviceId,
+        "pass_o" to auth.passO,
+        "passToken" to auth.cookies["passToken"],
+        "userId" to auth.cookies["userId"],
+        "cUserId" to auth.cookies["cUserId"],
+        "uLocale" to "zh_CN",
+    ).genCookie()
+
     val resp = client.get(SERVICE_LOGIN_URL) {
-        auth.cookies.forEach { (k, v) -> cookie(k, v) }
+        header("User-Agent", auth.userAgent)
+        header("Connection", "keep-alive")
+        header("Content-Type", "application/x-www-form-urlencoded")
+        header("Cookie", cookie)
     }
     val respData = resp.bodyAsText().decode<ServiceLoginRespData>().getOrThrow()
 
-    respData
+    if (respData.code != 0) {
+        throw Exception(respData.description)
+    }
+
+//    val loginLocationCookies = reqLoginLocation(respData.location).getOrThrow()
+
+    cookies
 }
 
-suspend fun reqLoginUrl(deviceId: String): Result<LoginUrlRespData> = runCatching {
-    val serviceLoginRespData = reqServiceLogin(deviceId).getOrThrow()
-    val locationUrl = serviceLoginRespData.location.toUri()
-    val params = mapOf(
-        "_qrsize" to "240",
-        "qs" to serviceLoginRespData.qs,
-        "bizDeviceType" to "",
-        "callback" to serviceLoginRespData.callback,
-        "_json" to "true",
-        "theme" to "",
-        "sid" to "xiaomiio",
-        "needTheme" to "false",
-        "showActiveX" to "false",
-        "serviceParam" to locationUrl.getQueryParameter("serviceParam"),
-        "_local" to "zh_CN",
-        "_sign" to serviceLoginRespData._sign,
-        "_dc" to now().toEpochMilli().toString(),
-    )
-    val loginUrl = LOGIN_URL.toUri()
-        .buildUpon()
-        .apply { params.forEach { (k, v) -> appendQueryParameter(k, v) } }
-        .build()
+suspend fun reqLoginUrl(url: String): Result<LoginUrlRespData> = runCatching {
+    val locationUrl = URLBuilder(url).build()
+    val loginUrl = URLBuilder(LOGIN_URL).apply {
+        parameters.appendAll(locationUrl.parameters)
+        parameters.append("theme", "")
+        parameters.append("bizDeviceType", "")
+        parameters.append("_hasLogo", "false")
+        parameters.append("_qrsize", "240")
+        parameters.append("_dc", now().toEpochMilli().toString())
+    }
     val resp = client.get(loginUrl.toString()) {
-        cookie("deviceId", deviceId)
+        header("User-Agent", userAgent)
+        header("Connection", "keep-alive")
+        header("Content-Type", "application/x-www-form-urlencoded")
     }
     val respData = resp.bodyAsText().decode<LoginUrlRespData>().getOrThrow()
 
     respData
 }
 
-suspend fun reqLoginLp(
-    deviceId: String,
-    respData: LoginUrlRespData,
-): Result<LoginLpRespData> = runCatching {
-    val resp = client.get(respData.lp) {
-        cookie("deviceId", deviceId)
+suspend fun reqLoginLp(url: String): Result<LoginLpRespData> = runCatching {
+    val resp = client.get(url) {
+        header("User-Agent", userAgent)
+        header("Connection", "keep-alive")
+        header("Content-Type", "application/x-www-form-urlencoded")
     }
+    resp.setCookie().forEach { cookies[it.name] = it.value }
     val respData = resp.bodyAsText().decode<LoginLpRespData>().getOrThrow()
+    cookies["psecurity"] = respData.psecurity
+    cookies["nonce"] = respData.nonce.toString()
+    cookies["ssecurity"] = respData.ssecurity
+    cookies["passToken"] = respData.passToken
+    cookies["userId"] = respData.userId.toString()
+    cookies["cUserId"] = respData.cUserId
 
     respData
 }
 
-suspend fun reqLoginLocation(
-    location: String,
-    deviceId: String,
-): Result<Map<String, String>> = runCatching {
-    val resp = client.get(location) {
-        cookie("deviceId", deviceId)
+suspend fun reqLoginLocation(url: String): Result<Auth> = runCatching {
+    val cookie = cookies.genCookie()
+
+    val resp = client.get(url) {
+        header("User-Agent", userAgent)
+        header("Connection", "keep-alive")
+        header("Content-Type", "application/x-www-form-urlencoded")
+        header("Cookie", cookie)
     }
-    val cookies = resp.setCookie().associate { it.name to it.value }
+    resp.setCookie().forEach { cookies[it.name] = it.value }
+    val respData = resp.bodyAsText()
 
-    cookies
-}
-
-suspend fun reqLoginLocation(
-    location: String,
-    auth: Auth,
-): Result<Map<String, String>> = runCatching {
-    val resp = client.get(location) {
-        auth.cookies.forEach { (k, v) -> cookie(k, v) }
+    if (respData != "ok") {
+        throw Exception(respData)
     }
-    val cookies = resp.setCookie().associate { it.name to it.value }
 
-    cookies
+    val auth = Auth(
+        passO = passO,
+        userAgent = userAgent,
+        deviceId = deviceId,
+        cookies = cookies,
+    )
+
+    auth
 }

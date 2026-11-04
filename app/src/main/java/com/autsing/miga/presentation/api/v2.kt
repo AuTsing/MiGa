@@ -25,7 +25,6 @@ import com.autsing.miga.presentation.data.RunSceneRespData
 import com.autsing.miga.presentation.data.Scene
 import com.autsing.miga.presentation.data.SetDevicePropertiesReqDataV2
 import com.autsing.miga.presentation.data.SetDevicePropertiesRespDataV2
-import com.autsing.miga.presentation.data.USER_AGENT
 import com.autsing.miga.presentation.data.defaultJson
 import com.autsing.miga.presentation.data.encode
 import io.ktor.client.HttpClient
@@ -55,7 +54,6 @@ private val client: HttpClient = HttpClient(CIO) {
         )
     }
     defaultRequest {
-        header("User-Agent", USER_AGENT)
         header("Content-Type", "application/x-www-form-urlencoded")
         header("x-xiaomi-protocal-flag-cli", "PROTOCAL-HTTP2")
         cookie("countryCode", "CN")
@@ -92,6 +90,7 @@ private suspend fun request(
             append("data", data)
         },
     ) {
+        header("User-Agent", auth.userAgent)
         cookie("cUserId", auth.cookies["cUserId"] ?: "")
         cookie("yetAnotherServiceToken", auth.cookies["serviceToken"] ?: "")
         cookie("serviceToken", auth.cookies["serviceToken"] ?: "")

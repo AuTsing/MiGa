@@ -63,13 +63,11 @@ class MainViewModel : ViewModel() {
                     return@runCatching
                 }
                 .onFailure { e ->
-                    if (e.message == "未登录") {
-                        _uiState.update {
-                            it.copy(
-                                authLoading = false,
-                                auth = null,
-                            )
-                        }
+                    _uiState.update {
+                        it.copy(
+                            authLoading = false,
+                            auth = null,
+                        )
                     }
                 }
 

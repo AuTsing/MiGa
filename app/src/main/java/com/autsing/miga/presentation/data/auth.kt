@@ -4,16 +4,20 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Auth(
+    val passO: String,
+    val userAgent: String,
     val deviceId: String,
     val cookies: Map<String, String>,
 )
 
 @Serializable
 data class ServiceLoginRespData(
+    val code: Int,
     val qs: String,
     val _sign: String,
     val callback: String,
     val location: String,
+    val description: String,
 )
 
 @Serializable

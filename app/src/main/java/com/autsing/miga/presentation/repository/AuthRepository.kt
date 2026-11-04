@@ -2,12 +2,14 @@ package com.autsing.miga.presentation.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import com.autsing.miga.presentation.api.reqLoginLocation
 import com.autsing.miga.presentation.api.reqLoginLp
 import com.autsing.miga.presentation.api.reqLoginUrl
 import com.autsing.miga.presentation.api.reqServiceLogin
 import com.autsing.miga.presentation.data.Auth
 import com.autsing.miga.presentation.data.LoginUrlRespData
+import com.autsing.miga.presentation.data.encode
 import com.autsing.miga.presentation.data.getAuth
 import com.autsing.miga.presentation.data.setAuth
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class AuthRepository(
     private val context: Context,
@@ -27,41 +30,33 @@ class AuthRepository(
 
     private val auth: MutableStateFlow<Auth?> = MutableStateFlow(null)
 
-    suspend fun getLoginUrl(deviceId: String): Result<LoginUrlRespData> = runCatching {
-        val loginUrlRespData = reqLoginUrl(deviceId).getOrThrow()
+    suspend fun getLoginUrl(): Result<LoginUrlRespData> = withContext(Dispatchers.IO) {
+        runCatching {
+            val serviceLoginRespData = reqServiceLogin().getOrThrow()
+            val loginUrlRespData = reqLoginUrl(serviceLoginRespData.location).getOrThrow()
 
-        loginUrlRespData
-    }
-
-    suspend fun login(deviceId: String, respData: LoginUrlRespData): Result<Unit> = runCatching {
-        val loginLpRespData = reqLoginLp(deviceId, respData).getOrThrow()
-        val location = loginLpRespData.location
-        val cookies = reqLoginLocation(location, deviceId).getOrThrow()
-        val serviceToken = cookies["serviceToken"] ?: throw Exception("获取 serviceToken 失败")
-
-        val auth = with(loginLpRespData) {
-            Auth(
-                deviceId = deviceId,
-                cookies = mapOf(
-                    "deviceId" to deviceId,
-                    "userId" to userId.toString(),
-                    "cUserId" to cUserId,
-                    "nonce" to nonce.toString(),
-                    "ssecurity" to ssecurity,
-                    "psecurity" to psecurity,
-                    "passToken" to passToken,
-                    "serviceToken" to serviceToken,
-                ),
-            )
+            loginUrlRespData
         }
-
-        context.setAuth(auth).getOrThrow()
-        this@AuthRepository.auth.value = auth
     }
 
-    suspend fun logout(): Result<Unit> = runCatching {
-        context.setAuth(null).getOrThrow()
-        this@AuthRepository.auth.value = null
+    suspend fun login(url: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val loginLpRespData = reqLoginLp(url).getOrThrow()
+            val auth = reqLoginLocation(loginLpRespData.location).getOrThrow()
+
+            context.setAuth(auth).getOrThrow()
+            this@AuthRepository.auth.value = auth
+
+            Log.d("TAG", "login: ${JSONObject(auth.encode().getOrThrow()).toString(4)}")
+            Unit
+        }
+    }
+
+    suspend fun logout(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            context.setAuth(null).getOrThrow()
+            this@AuthRepository.auth.value = null
+        }
     }
 
     fun observeAuth(): StateFlow<Auth?> = auth.asStateFlow()
@@ -71,17 +66,22 @@ class AuthRepository(
             auth.value?.let { return@runCatching it }
 
             val auth = context.getAuth().getOrThrow() ?: throw Exception("未登录")
-            val serviceLoginRespData = reqServiceLogin(auth).getOrThrow()
-            val location = serviceLoginRespData.location
-            val cookies = reqLoginLocation(location, auth).getOrThrow()
+            throw Exception("未登录")
+            Log.d("TAG", "getValidAuth: ${JSONObject(auth.encode().getOrThrow()).toString(4)}")
+//            this@AuthRepository.auth.value = auth
+//            return@runCatching auth
 
-            val newAuth = auth.copy(
-                cookies = auth.cookies.toMutableMap().apply { putAll(cookies) },
-            )
-            context.setAuth(newAuth).getOrThrow()
-            this@AuthRepository.auth.value = newAuth
+            val cookies = reqServiceLogin(auth).getOrThrow()
+            Log.d("TAG", "getValidAuth: $cookies")
+            throw Exception("未登录")
+//            val newAuth = auth.copy(
+//                cookies = auth.cookies.toMutableMap().apply { putAll(newCookies) },
+//            )
+//            Log.d("TAG", "newAuth: $newAuth")
+//            context.setAuth(newAuth).getOrThrow()
+//            this@AuthRepository.auth.value = newAuth
 
-            newAuth
+//            newAuth
         }
     }
 }
