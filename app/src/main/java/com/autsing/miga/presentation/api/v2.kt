@@ -181,7 +181,9 @@ suspend fun reqGetDevicePropertiesV2(
     val respData = resp.body<GetDevicePropertiesRespDataV2>()
     val properties = readableProperties
         .withIndex()
-        .associate { (i, it) -> it to respData.result[i].value }
+        .associate { (i, it) -> it to respData.result[i] }
+        .filter { it.value.code == 0 }
+        .mapValues { it.value.value }
 
     properties
 }

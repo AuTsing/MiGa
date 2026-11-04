@@ -31,27 +31,49 @@ fun SelectorComponent(
             title = "${component.headline}: ${component.display}",
             style = MaterialTheme.typography.titleMedium,
         )
-        Slider(
-            value = value,
-            onValueChange = {
-                value = it
-                onClick(it)
-            },
-            valueProgression = 0..<component.size,
-            segmented = true,
-            enabled = !component.readOnly,
-            increaseIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_fluent_ios_arrow_rtl_icon),
-                    contentDescription = "Increase",
-                )
-            },
-            decreaseIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_fluent_ios_arrow_ltr_icon),
-                    contentDescription = "Decrease",
-                )
-            },
-        )
+        if (component.size > 1) {
+            Slider(
+                value = value,
+                onValueChange = {
+                    value = it
+                    onClick(it)
+                },
+                valueProgression = 0..<component.size,
+                segmented = true,
+                enabled = !component.readOnly,
+                increaseIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_fluent_ios_arrow_rtl_icon),
+                        contentDescription = "Increase",
+                    )
+                },
+                decreaseIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_fluent_ios_arrow_ltr_icon),
+                        contentDescription = "Decrease",
+                    )
+                },
+            )
+        } else {
+            Slider(
+                value = 0,
+                onValueChange = {},
+                valueProgression = 0..1,
+                segmented = true,
+                enabled = false,
+                increaseIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_fluent_ios_arrow_rtl_icon),
+                        contentDescription = "Increase",
+                    )
+                },
+                decreaseIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_fluent_ios_arrow_ltr_icon),
+                        contentDescription = "Decrease",
+                    )
+                },
+            )
+        }
     }
 }
