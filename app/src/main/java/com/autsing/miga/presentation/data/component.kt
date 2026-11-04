@@ -1,6 +1,5 @@
 package com.autsing.miga.presentation.data
 
-import android.util.Log
 import kotlin.math.roundToInt
 
 sealed interface Component {
@@ -41,7 +40,6 @@ sealed interface Component {
         companion object {
 
             fun from(property: DeviceInfoV2.Property, value: DevicePropertyValueV2): Selector {
-                Log.d(TAG, "from: $property, $value")
                 return when (property) {
                     is DeviceInfoV2.Property.DoubleRange if (value is DevicePropertyValueV2.Double || value is DevicePropertyValueV2.Long) -> {
                         val parts = 10

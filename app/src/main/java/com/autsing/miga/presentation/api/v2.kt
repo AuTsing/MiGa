@@ -32,10 +32,6 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.ANDROID
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.cookie
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -63,10 +59,6 @@ private val client: HttpClient = HttpClient(CIO) {
         cookie("is_daylight", "0")
         cookie("dst_offset", "0")
         cookie("channel", "MI_APP_STORE")
-    }
-    install(Logging) {
-        logger = Logger.ANDROID
-        level = LogLevel.ALL
     }
 }
 
