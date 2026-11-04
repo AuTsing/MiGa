@@ -15,7 +15,7 @@ data class ServiceLoginRespData(
     val code: Int,
     val location: String,
     val description: String,
-    val ssecurity: String?,
+    val ssecurity: String? = null,
 )
 
 @Serializable

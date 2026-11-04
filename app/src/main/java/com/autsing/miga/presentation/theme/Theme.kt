@@ -24,7 +24,6 @@ private val colorScheme = ColorScheme(
     onSurfaceVariant = onSurfaceVariant,
     outline = outline,
     outlineVariant = outlineVariant,
-    background = background,
     onBackground = onBackground,
     error = error,
     errorContainer = errorContainer,
