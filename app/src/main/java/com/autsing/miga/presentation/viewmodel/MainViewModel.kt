@@ -1,6 +1,7 @@
 package com.autsing.miga.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autsing.miga.presentation.data.Auth
@@ -63,6 +64,7 @@ class MainViewModel : ViewModel() {
                     return@runCatching
                 }
                 .onFailure { e ->
+                    Log.e("TAG", "handleLoadAuth: ${e.stackTraceToString()}", )
                     _uiState.update {
                         it.copy(
                             authLoading = false,

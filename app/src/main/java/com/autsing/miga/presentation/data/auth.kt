@@ -13,11 +13,9 @@ data class Auth(
 @Serializable
 data class ServiceLoginRespData(
     val code: Int,
-    val qs: String,
-    val _sign: String,
-    val callback: String,
     val location: String,
     val description: String,
+    val ssecurity: String?,
 )
 
 @Serializable

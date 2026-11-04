@@ -44,11 +44,10 @@ class AuthRepository(
             val loginLpRespData = reqLoginLp(url).getOrThrow()
             val auth = reqLoginLocation(loginLpRespData.location).getOrThrow()
 
+            Log.d("TAG", "login: ${JSONObject(auth.encode().getOrThrow()).toString(4)}")
+
             context.setAuth(auth).getOrThrow()
             this@AuthRepository.auth.value = auth
-
-            Log.d("TAG", "login: ${JSONObject(auth.encode().getOrThrow()).toString(4)}")
-            Unit
         }
     }
 
@@ -66,22 +65,16 @@ class AuthRepository(
             auth.value?.let { return@runCatching it }
 
             val auth = context.getAuth().getOrThrow() ?: throw Exception("未登录")
-            throw Exception("未登录")
             Log.d("TAG", "getValidAuth: ${JSONObject(auth.encode().getOrThrow()).toString(4)}")
-//            this@AuthRepository.auth.value = auth
-//            return@runCatching auth
 
-            val cookies = reqServiceLogin(auth).getOrThrow()
-            Log.d("TAG", "getValidAuth: $cookies")
-            throw Exception("未登录")
-//            val newAuth = auth.copy(
-//                cookies = auth.cookies.toMutableMap().apply { putAll(newCookies) },
-//            )
-//            Log.d("TAG", "newAuth: $newAuth")
-//            context.setAuth(newAuth).getOrThrow()
-//            this@AuthRepository.auth.value = newAuth
+            val respData = reqServiceLogin(auth).getOrThrow()
+            val newAuth = reqLoginLocation(respData.location).getOrThrow()
+            Log.d("TAG", "getValidAuth: ${JSONObject(newAuth.encode().getOrThrow()).toString(4)}")
 
-//            newAuth
+            context.setAuth(newAuth).getOrThrow()
+            this@AuthRepository.auth.value = newAuth
+
+            newAuth
         }
     }
 }

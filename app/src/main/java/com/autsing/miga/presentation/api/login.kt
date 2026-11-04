@@ -70,7 +70,12 @@ suspend fun reqServiceLogin(): Result<ServiceLoginRespData> = runCatching {
     respData
 }
 
-suspend fun reqServiceLogin(auth: Auth): Result<Map<String, String>> = runCatching {
+suspend fun reqServiceLogin(auth: Auth): Result<ServiceLoginRespData> = runCatching {
+    passO = auth.passO
+    userAgent = auth.userAgent
+    deviceId = auth.deviceId
+    cookies = auth.cookies.toMutableMap()
+
     val cookie = mapOf(
         "deviceId" to auth.deviceId,
         "pass_o" to auth.passO,
@@ -92,9 +97,11 @@ suspend fun reqServiceLogin(auth: Auth): Result<Map<String, String>> = runCatchi
         throw Exception(respData.description)
     }
 
-//    val loginLocationCookies = reqLoginLocation(respData.location).getOrThrow()
+    if (respData.ssecurity != null) {
+        cookies["ssecurity"] = respData.ssecurity
+    }
 
-    cookies
+    respData
 }
 
 suspend fun reqLoginUrl(url: String): Result<LoginUrlRespData> = runCatching {
