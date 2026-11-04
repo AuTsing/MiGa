@@ -1,5 +1,6 @@
 package com.autsing.miga.presentation.data
 
+import android.util.Log
 import kotlin.math.roundToInt
 
 sealed interface Component {
@@ -40,12 +41,17 @@ sealed interface Component {
         companion object {
 
             fun from(property: DeviceInfoV2.Property, value: DevicePropertyValueV2): Selector {
+                Log.d(TAG, "from: $property, $value")
                 return when (property) {
-                    is DeviceInfoV2.Property.DoubleRange if value is DevicePropertyValueV2.Double -> {
+                    is DeviceInfoV2.Property.DoubleRange if (value is DevicePropertyValueV2.Double || value is DevicePropertyValueV2.Long) -> {
                         val parts = 10
                         val from = property.from
                         val to = property.to
-                        val v = (((value.value - from) / (to - from)) * parts)
+                        val actual = when (value) {
+                            is DevicePropertyValueV2.Double -> value.value
+                            is DevicePropertyValueV2.Long -> value.value.toDouble()
+                        }
+                        val v = (((actual - from) / (to - from)) * parts)
                             .roundToInt()
                             .coerceIn(0, parts)
                         Selector(
@@ -54,7 +60,7 @@ sealed interface Component {
                             value = v,
                             size = parts + 1,
                             readOnly = !property.access.write,
-                            display = value.value.toString(),
+                            display = actual.toString(),
                         )
                     }
 
@@ -101,7 +107,7 @@ sealed interface Component {
                         )
                     }
 
-                    else -> Selector(property)
+                    else -> throw Exception("${property.urn} 解析失败")
                 }
             }
         }
