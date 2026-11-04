@@ -68,13 +68,13 @@ fun MainScreen(viewModel: MainViewModel) {
             LoadingContent("加载中...")
         } else if (uiState.auth == null) {
             LoginContent(
+                text = uiState.message,
                 onClickLogin = { LoginActivity.startActivity(context) },
             )
         } else {
             MainContent(
                 sceneLoading = uiState.sceneLoading,
                 deviceLoading = uiState.deviceLoading,
-                message = uiState.message,
                 scenes = uiState.scenes,
                 devices = uiState.devices,
                 favoriteSceneIds = uiState.favoriteSceneIds,
@@ -93,13 +93,14 @@ fun MainScreen(viewModel: MainViewModel) {
 
 @Composable
 private fun LoginContent(
+    text: String,
     onClickLogin: () -> Unit = {},
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "未登录",
+            text = text,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(24.dp),
         )
@@ -270,7 +271,6 @@ private fun EmptyCard(text: String) {
 private fun MainContent(
     sceneLoading: Boolean,
     deviceLoading: Boolean,
-    message: String,
     scenes: List<Scene>,
     devices: List<Device>,
     favoriteSceneIds: List<String>,
@@ -284,9 +284,6 @@ private fun MainContent(
     onLongClickDevice: (Device) -> Unit,
 ) {
     ScalingLazyColumn {
-        if (message.isNotEmpty()) {
-            item { Text(message) }
-        }
         item {
             Title(
                 title = "智能",
@@ -379,7 +376,6 @@ private fun PreviewEmptyContent() {
         MainContent(
             sceneLoading = false,
             deviceLoading = true,
-            message = "",
             scenes = emptyList(),
             devices = emptyList(),
             favoriteSceneIds = emptyList(),
@@ -399,6 +395,6 @@ private fun PreviewEmptyContent() {
 @Composable
 private fun PreviewLoginContent() {
     FullScreenBox {
-        LoginContent()
+        LoginContent("未登录")
     }
 }
