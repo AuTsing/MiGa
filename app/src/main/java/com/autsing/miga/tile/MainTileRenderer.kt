@@ -75,6 +75,8 @@ private fun tileLayout(
     return materialScope(
         context = context,
         deviceConfiguration = deviceParameters,
+        allowDynamicTheme = false,
+        defaultColorScheme = colorScheme,
     ) {
         val visibleScenes = state.scenes.take(6)
         val (row1, row2) = visibleScenes.chunked(if (visibleScenes.size > 4) 3 else 2)
